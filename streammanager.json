@@ -1,0 +1,42 @@
+{
+    "Twitch": {
+        "channel": "CHANNEL_NAME",
+        "forced_status": "",
+        "client_id": "xxxxxxxxxxxxxxxxx",
+        "client_secret": "xxxxxxxxxxxxx",
+        "redirect_uri": "http://localhost:777",
+        "localisation": "en-us",
+        "tags": [],
+        "authorization": {
+        }
+    },
+    "appdata": {
+        "r5apex.exe": {
+            "category": "Apex Legends",
+            "tags": []
+        },
+        "Overwatch.exe": {
+            "category": "Overwatch",
+            "tags": []
+        },
+        "houdinifx.exe": {
+            "category": "Art",
+            "tags": [
+                "Digital Art"
+            ]
+        },
+        "sublime_text.exe": {
+            "category": "Science & Technology",
+            "status": "Coding this stream manager",
+            "tags": [
+                "Software Development"
+            ]
+        }
+    },
+    "services": [
+        "Backblaze Service",
+        "Synergy",
+        "Duplicati",
+        "DbxSvc"
+    ]
+}
