@@ -1,13 +1,15 @@
 {
-    "Twitch": {
-        "channel": "CHANNEL_NAME",
-        "forced_status": "",
-        "client_id": "xxxxxxxxxxxxxxxxx",
-        "client_secret": "xxxxxxxxxxxxx",
-        "redirect_uri": "http://localhost:777",
-        "localisation": "en-us",
-        "tags": [],
-        "authorization": {
+    "streamservices": {
+        "Twitch": {
+            "channel": "regnareb",
+            "client_id": "xxxxxxxxxxxxxxxx",
+            "client_secret": "xxxxxxxxxxxxx",
+            "redirect_uri": "http://localhost:777",
+            "localisation": "en-us",
+            "tags": [],
+            "scope": "user:edit:broadcast channel_editor",
+            "authorization": {
+            },
         }
     },
     "appdata": {
@@ -25,9 +27,16 @@
                 "Digital Art"
             ]
         },
-        "sublime_text.exe": {
+        "VSCodium.exe": {
             "category": "Science & Technology",
-            "status": "Coding this stream manager",
+            "status": "Coding some streaming tools",
+            "tags": [
+                "Software Development"
+            ]
+        },
+        "sublime_text.exe": {
+            "category": "Overwatch",
+            "status": "Coding some streaming tools",
             "tags": [
                 "Software Development"
             ]
