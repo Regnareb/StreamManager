@@ -236,6 +236,3 @@ if __name__ == '__main__':
     # manager.create_services()
     manager.main()
 
-
-
-# https://www.3dvf.com/hitfilm-pro-passe-en-version-13
