@@ -10,8 +10,7 @@
             "localisation": "en-us",
             "tags": [],
             "scope": "user:edit:broadcast channel_editor",
-            "authorization": {
-            },
+            "authorization": {},
             "assignation": {
                 "Development": "Science & Technology"
             }
@@ -24,7 +23,7 @@
             "authorization_base_url": "https://mixer.com/oauth/authorize",
             "token_url": "https://mixer.com/api/v1/oauth/token",
             "scope": "channel:update:self",
-            "authorization": {
+            "authorization": {}
         }
     },
     "appdata": {
