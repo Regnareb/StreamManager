@@ -243,6 +243,39 @@ class Twitch(Service):
             logger.error(response.json())
         return response
 
+class Mixer(Service):
+    def __init__(self, config):
+        self.apibase = 'https://mixer.com/api/v1/'
+        self.name = 'Mixer'
+        super().__init__(config)
+
+    def get_channel_info(self):
+        address = '{}channels/{}'.format(self.apibase, self.config['channel_id'])
+        return super().get_channel_info(address)
+
+    def update_channel(self, title, description, category, tags):
+        data = {}
+        if title:
+            data['name'] = title
+        if description:
+            data['description'] = description
+        if category:
+            category = data['game'] = self.config.get('assignation', {}).get(category, category)
+            data['typeId'] = self.get_game_id(category)
+        if data:
+            address = '{}channels/{}'.format(self.apibase, self.config['channel_id'])
+            return super().update_channel('patch', address, data)
+
+    def get_channel_id(self):
+        address = '{}channels/{}'.format(self.apibase, self.config['channel'])
+        return super().get_channel_id(address)['id']
+
+    def get_game_id(self, game):
+        address = '{}types?&query=eq:{}'.format(self.apibase, game)
+        response = self.request('get', address)
+        for i in response.json():
+            if i['name'] == game:
+                return i['id']
 
 
 if __name__ == '__main__':

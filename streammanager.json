@@ -5,11 +5,26 @@
             "client_id": "xxxxxxxxxxxxxxxx",
             "client_secret": "xxxxxxxxxxxxx",
             "redirect_uri": "http://localhost:777",
+            "authorization_base_url": "https://id.twitch.tv/oauth2/authorize",
+            "token_url": "https://id.twitch.tv/oauth2/token",
             "localisation": "en-us",
             "tags": [],
             "scope": "user:edit:broadcast channel_editor",
             "authorization": {
             },
+            "assignation": {
+                "Development": "Science & Technology"
+            }
+        },
+        "Mixer": {
+            "channel": "regnareb",
+            "client_id": "xxxxxxxxxxxxxxxxx",
+            "client_secret": "xxxxxxxxxxxxx",
+            "redirect_uri": "http://localhost:888",
+            "authorization_base_url": "https://mixer.com/oauth/authorize",
+            "token_url": "https://mixer.com/api/v1/oauth/token",
+            "scope": "channel:update:self",
+            "authorization": {
         }
     },
     "appdata": {
@@ -28,15 +43,15 @@
             ]
         },
         "VSCodium.exe": {
-            "category": "Science & Technology",
-            "status": "Coding some streaming tools",
+            "category": "Development",
+            "title": "Coding awesome streaming tools",
             "tags": [
                 "Software Development"
             ]
         },
         "sublime_text.exe": {
-            "category": "Overwatch",
-            "status": "Coding some streaming tools",
+            "category": "Development",
+            "title": "Coding awesome streaming tools",
             "tags": [
                 "Software Development"
             ]
