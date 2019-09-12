@@ -110,6 +110,10 @@ class Service():
             'Client-ID': self.config['client_id'],
             'Authorization': 'OAuth ' + self.config['authorization']['access_token']
          }
+        self.headers2 = {
+            'Client-ID': self.config['client_id'],
+            'Authorization': 'Bearer ' + self.config['authorization']['access_token']
+         }
 
     def token_isexpired(self):
         return time.time() > self.config['authorization']['expires_at']
@@ -238,7 +242,7 @@ class Twitch(Service):
             'Authorization': 'Bearer ' + self.config['authorization']['access_token']
          }
         data = {'tag_ids': tagsid}
-        response = requests.put(address, headers=headers, json=data)
+        response = requests.put(address, headers=self.headers2, json=data)
         if not response:
             logger.error(response.json())
         return response
