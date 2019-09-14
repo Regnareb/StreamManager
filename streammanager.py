@@ -45,8 +45,6 @@ def pause_services(services):
 class ManageStream():
 
     def __init__(self):
-        self.title = ''
-        self.description = ''
         self.process = ''
         self.config_filepath = os.path.join(os.path.dirname(__file__), 'streammanager.json')
         self.load_config()
@@ -122,8 +120,8 @@ class Service():
         try:
             if self.token_isexpired():
                 self.refresh_token()
-        except KeyError:
-            logger.info('Asking for an access code')
+        except (KeyError, Warning):
+            logger.info('Asking for an access code for {}'.format(self.name))
             port = re.search(':(\d*)$', self.config['redirect_uri'])
             port = int(port.group(1))
             authorization_url, state = self.oauth2.authorization_url(self.config['authorization_base_url'], state=self.config['client_secret'])
@@ -159,7 +157,7 @@ class Service():
 
     def log_requests(self, action, address, response):
         if not response:
-            logger.error('{}: {} {}'.format(action, address, response.json()))
+            logger.error('{} - {}: {} {}'.format(self.name, action, address, response.json()))
         else:
             logger.debug(response.json())
 
@@ -168,11 +166,6 @@ class Service():
         return response.json()
 
     def update_channel(self, action, address, data):
-        self.get_token()
-        response = self.request(action, address, data=data)
-        return response
-
-    def update_tags(self, tags):
         self.get_token()
         response = self.request(action, address, data=data)
         return response
@@ -187,30 +180,31 @@ class Service():
 
 class Twitch(Service):
     def __init__(self, config):
-        super().__init__(config)
         self.name = 'Twitch'
+        self.apibase = 'https://api.twitch.tv/kraken/'
+        self.apibase2 = 'https://api.twitch.tv/helix/'
+        super().__init__(config)
 
     def set_headers(self):
         super().set_headers()
         self.headers['Accept'] = 'application/vnd.twitchtv.v5+json'
 
     def get_channel_info(self):
-        address = 'https://api.twitch.tv/kraken/channels/{}'.format(self.config['channel_id'])
+        address = '{}channels/{}'.format(self.apibase, self.config['channel_id'])
         return super().get_channel_info(address)
 
     def update_channel(self, title, description, category, tags):
         data = {}
-        if title:
-            data['status'] = title
-        if category:
-            data['game'] = self.config.get('assignation', {}).get(category, category)
+        channel_info = self.get_channel_info()
+        data['status'] = title or channel_info['status']
+        data['game'] = self.config.get('assignation', {}).get(category, category) or channel_info['game']
         if data:
             data = {'channel': data}
-            address = 'https://api.twitch.tv/kraken/channels/{}'.format(self.config['channel_id'])
+            address = '{}channels/{}'.format(self.apibase, self.config['channel_id'])
             return super().update_channel('put', address, data)
 
     def get_channel_id(self):
-        address = 'https://api.twitch.tv/kraken/users?login={}'.format(self.config['channel'])
+        address = '{}users?login={}'.format(self.apibase, self.config['channel'])
         result = super().get_channel_id(address)
         return result['users'][0]['_id']
 
@@ -218,7 +212,7 @@ class Twitch(Service):
         cursor = ''
         alltags = {}
         while cursor is not None:
-            address = 'https://api.twitch.tv/helix/tags/streams?first=100&after={}'.format(cursor)
+            address = '{}tags/streams?first=100&after={}'.format(self.apibase2, cursor)
             response = requests.get(address, headers=self.headers)
             response = response.json()
             for i in response['data']:
@@ -236,11 +230,7 @@ class Twitch(Service):
         logger.info('Set tags to: {}'.format(tags))
         self.get_alltags()
         tagsid = self.get_tagsid(tags)
-        address = 'https://api.twitch.tv/helix/streams/tags?broadcaster_id={}'.format(self.config['channel_id'])
-        headers = {
-            'Client-ID': self.config['client_id'],
-            'Authorization': 'Bearer ' + self.config['authorization']['access_token']
-         }
+        address = '{}streams/tags?broadcaster_id={}'.format(self.apibase2, self.config['channel_id'])
         data = {'tag_ids': tagsid}
         response = requests.put(address, headers=self.headers2, json=data)
         if not response:
@@ -249,8 +239,8 @@ class Twitch(Service):
 
 class Mixer(Service):
     def __init__(self, config):
-        self.apibase = 'https://mixer.com/api/v1/'
         self.name = 'Mixer'
+        self.apibase = 'https://mixer.com/api/v1/'
         super().__init__(config)
 
     def get_channel_info(self):
@@ -286,4 +276,3 @@ if __name__ == '__main__':
     manager = ManageStream()
     # manager.create_services()
     manager.main()
-
