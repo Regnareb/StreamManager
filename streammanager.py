@@ -10,6 +10,7 @@ import socket
 import ctypes
 import inspect
 import logging
+import threading
 import webbrowser
 import subprocess
 from contextlib import contextmanager
@@ -67,28 +68,34 @@ class ManageStream():
             # Call the class dynamically
             self.services.append(getattr(sys.modules[__name__], service)(self.config['streamservices'][service]))
 
+    def create_clip(self):
+        for service in self.services:
+            t1 = threading.Thread(target=service.create_clip)
+            t1.start()
     def update_channel(self, title, description, category, tags):
         for service in self.services:
             service.update_channel(title, description, category, tags)
 
     def check_application(self):
+        self.load_config()
         process = getForegroundProcess()
         tags = self.config['appdata'].get(process.name(), {}).get('tags')
-        title = self.config['appdata'].get(process.name(), {}).get('title', self.title)
+        title = self.config['appdata'].get(process.name(), {}).get('title', self.config['base'].get('title'))
         category = self.config['appdata'].get(process.name(), {}).get('category')
-        description = self.config['appdata'].get(process.name(), {}).get('description', self.description)
+        description = self.config['appdata'].get(process.name(), {}).get('description', self.config['base'].get('description'))
         if category and process!=self.process:
-            if self.config.get('forced_tags'):
-                tags = self.config['forced_tags'] + tags
-            if self.config.get('forced_title'):
-                title = self.config['forced_title']
-            if self.config.get('forced_description'):
-                description = self.config['forced_description']
+            if self.config['base'].get('forced_tags'):
+                tags = self.config['base']['forced_tags'] + tags
+            if self.config['base'].get('forced_title'):
+                title = self.config['base']['forced_title']
+            if self.config['base'].get('forced_description'):
+                description = self.config['base']['forced_description']
+            logger.debug('title: "{}" | description: "{}" | category: "{}" | tags: "{}" | '.format(title, description, category, tags))
             self.update_channel(title, description, category, tags)
             self.process = process
 
     def main(self):
-        with pause_services(self.config['services']):
+        with pause_services(self.config['base']['services']):
             obs = subprocess.Popen('obs64.exe', shell=True, cwd="C:\\Program Files (x86)\\obs-studio\\bin\\64bit\\")
             while obs.poll() is None:
                 time.sleep(4)
@@ -174,6 +181,9 @@ class Service():
         response = self.request('get', address)
         return response.json()
 
+    def create_clip(self, address):
+        response = self.request('post', address, headers=self.headers)
+        return response
 
 
 
@@ -237,6 +247,31 @@ class Twitch(Service):
             logger.error(response.json())
         return response
 
+    def create_clip(self):
+        self.get_token()
+        address = '{}streams?user_id={}'.format(self.apibase2, self.config['channel_id'])
+        response = self.request('get', address)
+        online = response.json()['data']
+        if online:
+            address = '{}clips?broadcaster_id={}'.format(self.apibase2, self.config['channel_id'])
+            response = self.request('post', address, headers=self.headers2)
+
+            for i in range(15):  # Check if the clip has been created
+                address = '{}clips?id={}'.format(self.apibase2, response.json()['data'][0]['id'])
+                response2 = self.request('get', address)
+                if response2.json()['data']:
+                    logger.info(response2.json()['data'][0]['url'])
+                    break
+                time.sleep(1)
+            else:
+                logger.error("Couldn't seem to create the clip.")
+            return response
+        else:
+            logger.error("Can't create a clip if you are not streaming.")
+
+
+
+
 class Mixer(Service):
     def __init__(self, config):
         self.name = 'Mixer'
@@ -270,6 +305,20 @@ class Mixer(Service):
         for i in response.json():
             if i['name'] == game:
                 return i['id']
+
+    def create_clip(self):
+        self.get_token()
+        if self.get_channel_info()['online']:
+            address = '{}clips/create'.format(self.apibase)
+            data = {'broadcastId': self.config['channel_id'], 'highlightTitle': 'Title'}
+            response = self.request('post', address, headers=self.headers2, data=data)
+            print(response.json())
+            if response:
+                logger.info(response.json()['contentLocators']['uri'])
+            return response
+        else:
+            logger.warning("Can't create clips when not streaming")
+
 
 
 if __name__ == '__main__':

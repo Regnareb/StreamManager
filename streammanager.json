@@ -56,10 +56,15 @@
             ]
         }
     },
-    "services": [
-        "Backblaze Service",
-        "Synergy",
-        "Duplicati",
-        "DbxSvc"
-    ]
+    "base": {
+        "title": "Getting Wrecked and Bugged",
+        "description": "Sometime playing awesome with a graphic tablet, sometimes playing very poorly with a mouse",
+        "services": [
+            "Backblaze Service",
+            "Synergy",
+            "Duplicati",
+            "DbxSvc"
+        ]
+    }
+
 }
