@@ -10,6 +10,7 @@ import socket
 import ctypes
 import inspect
 import logging
+import functools
 import threading
 import webbrowser
 import subprocess
@@ -40,6 +41,13 @@ def getForegroundProcess():
     process = psutil.Process(pid.value)
     return process
 
+def threaded(func):
+    @functools.wraps(func)
+    def async_func(*args, **kwargs):
+        func_hl = threading.Thread(target=func, args=args, kwargs=kwargs)
+        func_hl.start()
+        return func_hl
+    return async_func
 
 @contextmanager
 def pause_services(services):
@@ -79,8 +87,7 @@ class ManageStream():
 
     def create_clip(self):
         for service in self.services:
-            t1 = threading.Thread(target=service.create_clip)
-            t1.start()
+            service.create_clip()
 
     def on_press(self, key):
         if any([key in COMBO for COMBO in COMBINATIONS]):
@@ -271,6 +278,7 @@ class Twitch(Service):
             logger.error(response.json())
         return response
 
+    @threaded
     def create_clip(self):
         self.get_token()
         address = '{}streams?user_id={}'.format(self.apibase2, self.config['channel_id'])
