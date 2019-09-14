@@ -17,12 +17,19 @@ from contextlib import contextmanager
 
 import psutil
 import requests
+from pynput import keyboard
 from requests_oauthlib import OAuth2Session
 
 logger = logging.getLogger(__name__)
 logging.basicConfig()
 logging.getLogger().setLevel(logging.INFO)
 
+
+COMBINATIONS = [
+    {keyboard.Key.ctrl, keyboard.Key.f9},
+    {keyboard.Key.ctrl_l, keyboard.Key.f9},
+    {keyboard.Key.ctrl_r, keyboard.Key.f9},
+]
 
 def getForegroundProcess():
     from ctypes import wintypes
@@ -47,9 +54,11 @@ class ManageStream():
 
     def __init__(self):
         self.process = ''
+        self.currentkey = set()
         self.config_filepath = os.path.join(os.path.dirname(__file__), 'streammanager.json')
         self.load_config()
         self.create_services()
+        self.shortcuts()
         atexit.register(self.save_config)
 
     def load_config(self):
@@ -72,6 +81,21 @@ class ManageStream():
         for service in self.services:
             t1 = threading.Thread(target=service.create_clip)
             t1.start()
+
+    def on_press(self, key):
+        if any([key in COMBO for COMBO in COMBINATIONS]):
+            self.currentkey.add(key)
+            if any(all(k in self.currentkey for k in COMBO) for COMBO in COMBINATIONS):
+                self.create_clip()
+
+    def on_release(self, key):
+        if any([key in COMBO for COMBO in COMBINATIONS]):
+            self.currentkey.remove(key)
+
+    def shortcuts(self):
+        self.listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
+        self.listener.start()
+
     def update_channel(self, title, description, category, tags):
         for service in self.services:
             service.update_channel(title, description, category, tags)
