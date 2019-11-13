@@ -146,7 +146,7 @@ class Service():
             logger.info('Asking for an access code for {}'.format(self.name))
             port = re.search(r':(\d*)$', self.config['redirect_uri'])
             port = int(port.group(1))
-            authorization_url, state = self.oauth2.authorization_url(self.config['authorization_base_url'], state=self.config['client_secret'])
+            authorization_url, state = self.oauth2.authorization_url(self.config['authorization_base_url'], state=self.config['client_secret'], access_type='offline')
             serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             serversocket.bind(('localhost', port))
             serversocket.listen(5)
@@ -340,6 +340,50 @@ class Mixer(Service):
             logger.warning("Can't create clips when not streaming")
 
 
+
+class Youtube(Service):
+    def __init__(self, config):
+        self.name = 'Youtube'
+        self.apibase = 'https://www.googleapis.com/youtube/v3'
+        config['channel_id'] = ''  # Reset the id each time because Youtube
+        super().__init__(config)
+
+    def get_channel_info(self):
+        address = '{}/liveBroadcasts?part=snippet&broadcastType=persistent&mine=true'.format(self.apibase)
+        return super().get_channel_info(address)
+
+    def update_channel(self, title, description, category, tags):
+        data = {'id': self.config['channel_id'], 'snippet': {}}
+        if title:
+            data['snippet']['title'] = title
+        if description:
+            data['snippet']['description'] = description
+        if category:
+            category = self.config.get('assignation', {}).get(category, category)
+            data['snippet']['categoryId'] = self.get_game_id(category)
+        if data['snippet']:
+            address = '{}/videos?part=snippet'.format(self.apibase)
+            return super().update_channel('put', address, data)
+
+    def get_channel_id(self):
+        result = self.get_channel_info()
+        self.config['channel_id'] = result['items'][0]['id']
+        return result['items'][0]['id']
+
+    def get_game_id(self, game):
+        try:
+            return self.gamesid.get(game, '')
+        except AttributeError:
+            self.gamesid = {}
+            address = '{}/videoCategories?part=snippet&regionCode=us'.format(self.apibase)
+            response = self.request('get', address)
+            for i in response.json()['items']:
+                self.gamesid[i['snippet']['title']] = i['id']
+            return self.gamesid.get(game, '')
+
+
+    def create_clip(self):
+        pass  # Not supported yet
 
 if __name__ == '__main__':
     manager = ManageStream()
