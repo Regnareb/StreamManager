@@ -46,6 +46,7 @@ def threaded(func):
 
 @contextmanager
 def pause_services(services):
+    # Use pssuspend and kill -STOP on mac
     for service in services:
         subprocess.Popen('net stop "{}"'.format(service))
     yield
@@ -54,7 +55,6 @@ def pause_services(services):
 
 
 class ManageStream():
-
     def __init__(self):
         self.process = ''
         self.currentkey = set()
@@ -111,7 +111,7 @@ class ManageStream():
 
     def main(self):
         with pause_services(self.config['base']['services']):
-            obs = subprocess.Popen('obs64.exe', shell=True, cwd="C:\\Program Files (x86)\\obs-studio\\bin\\64bit\\")
+            obs = subprocess.Popen('obs64.exe --startreplaybuffer', shell=True, cwd="C:\\Program Files (x86)\\obs-studio\\bin\\64bit\\")
             while obs.poll() is None:
                 time.sleep(4)
                 self.check_application()
