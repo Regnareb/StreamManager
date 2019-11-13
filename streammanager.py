@@ -5,6 +5,7 @@ import re
 import sys
 import time
 import json
+import urllib
 import atexit
 import socket
 import ctypes
@@ -20,6 +21,7 @@ import psutil
 import requests
 import keyboard
 from requests_oauthlib import OAuth2Session
+from oauthlib.oauth2.rfc6749.errors import InvalidGrantError, MissingTokenError, InvalidClientError, InvalidTokenError, InvalidClientIdError
 
 logger = logging.getLogger(__name__)
 logging.basicConfig()
@@ -140,9 +142,9 @@ class Service():
         try:
             if self.token_isexpired():
                 self.refresh_token()
-        except (KeyError, Warning):
+        except (KeyError, Warning, InvalidGrantError):
             logger.info('Asking for an access code for {}'.format(self.name))
-            port = re.search(':(\d*)$', self.config['redirect_uri'])
+            port = re.search(r':(\d*)$', self.config['redirect_uri'])
             port = int(port.group(1))
             authorization_url, state = self.oauth2.authorization_url(self.config['authorization_base_url'], state=self.config['client_secret'])
             serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -156,14 +158,19 @@ class Service():
                     break
             code = re.search('code=(.*?)&', str(buf))
             code = code.group(1)
+            code = urllib.parse.unquote(code)
             logger.debug('The code is {}. Asking for the authorization token'.format(code))
-
             self.config['authorization'] = self.oauth2.fetch_token(self.config['token_url'], code, include_client_id=True, client_secret=self.config['client_secret'])
         finally:
             self.set_headers()
 
     def refresh_token(self):
-        self.config['authorization'] = self.oauth2.refresh_token(self.config['token_url'], **{'client_id': self.config['client_id'], 'client_secret': self.config['client_secret']})
+        # oauthlib.oauth2.rfc6749.errors.InvalidGrantError: (invalid_grant) Refresh token is invalid, has been revoked, or has already been used.
+        try:
+            self.config['authorization'] = self.oauth2.refresh_token(self.config['token_url'], **{'client_id': self.config['client_id'], 'client_secret': self.config['client_secret']})
+        except InvalidGrantError:
+            logger.error("Couldn't refresh the token")
+            raise
 
     def request(self, action, address, headers=None, data=None):
         if not headers:
