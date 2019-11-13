@@ -300,10 +300,10 @@ class Mixer(Service):
         data = {}
         if title:
             data['name'] = title
-        if description:
-            data['description'] = description
+        # if description:  # Not supported anymore
+        #     data['description'] = description
         if category:
-            category = data['game'] = self.config.get('assignation', {}).get(category, category)
+            category = self.config.get('assignation', {}).get(category, category)
             data['typeId'] = self.get_game_id(category)
         if data:
             address = '{}/channels/{}'.format(self.apibase, self.config['channel_id'])
@@ -324,8 +324,8 @@ class Mixer(Service):
         self.get_token()
         if self.get_channel_info()['online']:
             address = '{}/clips/create'.format(self.apibase)
+            data = {'broadcastId': self.config['channel_id'], 'highlightTitle': 'Auto Clip', 'clipDurationInSeconds': 60}
             response = self.request('post', address, headers=self.headers2, data=data)
-            print(response.json())
             if response:
                 logger.info(response.json()['contentLocators']['uri'])
             return response
