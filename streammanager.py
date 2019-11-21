@@ -243,34 +243,37 @@ class Twitch(Service):
         result = super().get_channel_id(address)
         return result['users'][0]['_id']
 
-    def get_alltags(self):
-        cursor = ''
-        alltags = {}
-        while cursor is not None:
-            address = '{}tags/streams?first=100&after={}'.format(self.apibase2, cursor)
-            response = requests.get(address, headers=self.headers)
-            response = response.json()
-            for i in response['data']:
-                alltags[i['localization_names'][self.config['localisation']]] = i['tag_id']
-            cursor = response['pagination'].get('cursor')
-        self.alltags = alltags
-        return alltags
+    @property
+    def alltags(self):
+        try:
+            return self._alltags
+        except AttributeError:
+            self._alltags = {}
+            cursor = ''
+            while cursor is not None:
+                address = '{}tags/streams?first=100&after={}'.format(self.apibase2, cursor)
+                response = requests.get(address, headers=self.headers)
+                response = response.json()
+                for i in response['data']:
+                    self._alltags[i['localization_names'][self.config['localisation']]] = i['tag_id']
+                cursor = response['pagination'].get('cursor')
+            return self._alltags
 
     def get_tagsid(self, tags):
         tagsid = [v for k,v in self.alltags.items() if k in tags]
         return tagsid
 
     def update_tags(self, tags):
-        self.get_token()
-        logger.info('Set tags to: {}'.format(tags))
-        self.get_alltags()
-        tagsid = self.get_tagsid(tags)
-        address = '{}streams/tags?broadcaster_id={}'.format(self.apibase2, self.config['channel_id'])
-        data = {'tag_ids': tagsid}
-        response = requests.put(address, headers=self.headers2, json=data)
-        if not response:
-            logger.error(response.json())
-        return response
+        if tags:
+            self.get_token()
+            logger.info('Set tags to: {}'.format(tags))
+            tagsid = self.get_tagsid(tags)
+            address = '{}streams/tags?broadcaster_id={}'.format(self.apibase2, self.config['channel_id'])
+            data = {'tag_ids': tagsid}
+            response = requests.put(address, headers=self.headers2, json=data)
+            if not response:
+                logger.error(response.json())
+            return response
 
     @threaded
     def create_clip(self):
@@ -372,17 +375,17 @@ class Youtube(Service):
         self.config['channel_id'] = result['items'][0]['id']
         return result['items'][0]['id']
 
-    def get_game_id(self, game):
+    @property
+    def gamesid(self):
         try:
-            return self.gamesid.get(game, '')
+            return self._gamesid
         except AttributeError:
-            self.gamesid = {}
+            self._gamesid = {}
             address = '{}/videoCategories?part=snippet&regionCode=us'.format(self.apibase)
             response = self.request('get', address)
             for i in response.json()['items']:
-                self.gamesid[i['snippet']['title']] = i['id']
-            return self.gamesid.get(game, '')
-
+                self._gamesid[i['snippet']['title']] = i['id']
+            return self._gamesid
 
     def create_clip(self):
         pass  # Not supported yet
