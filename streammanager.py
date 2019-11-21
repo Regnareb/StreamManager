@@ -91,28 +91,28 @@ class ManageStream():
             if service.config['enabled']:
                 service.create_clip()
 
-    def update_channel(self, title, description, category, tags):
+    def update_channel(self, infos):
         for service in self.services:
             if service.config['enabled']:
-                service.update_channel(title, description, category, tags)
+                service.update_channel(infos)
 
     def check_application(self):
         self.load_config()
         process = getForegroundProcess()
-        tags = self.config['appdata'].get(process.name(), {}).get('tags')
-        title = self.config['appdata'].get(process.name(), {}).get('title', self.config['base'].get('title'))
         category = self.config['appdata'].get(process.name(), {}).get('category')
-        description = self.config['appdata'].get(process.name(), {}).get('description', self.config['base'].get('description'))
         if category and process!=self.process:
-            if self.config['base'].get('forced_tags'):
-                tags = self.config['base']['forced_tags'] + tags
-            if self.config['base'].get('forced_title'):
-                title = self.config['base']['forced_title']
-            if self.config['base'].get('forced_description'):
-                description = self.config['base']['forced_description']
-            logger.debug('title: "{}" | description: "{}" | category: "{}" | tags: "{}" | '.format(title, description, category, tags))
-            self.update_channel(title, description, category, tags)
+            infos = self.get_informations(process.name())
+            infos['category'] = category
+            logger.debug(f'title: "{infos['title']}" | description: "{infos['description']}" | category: "{infos['category']}" | tags: "{infos['tags']}"')
+            self.update_channel(infos)
             self.process = process
+
+    def get_informations(self, name):
+        infos = {}
+        infos['tags'] = self.config['base'].get('forced_tags', []) + self.config['appdata'].get(name, {}).get('tags', [])
+        infos['title'] = self.config['base'].get('forced_title') or self.config['appdata'].get(name, {}).get('title') or self.config['base'].get('title', '')
+        infos['description'] = self.config['base'].get('forced_description') or self.config['appdata'].get(name, {}).get('description') or self.config['base'].get('description', '')
+        return infos
 
     def main(self):
         with pause_services(self.config['base']['services']):
@@ -228,11 +228,12 @@ class Twitch(Service):
         address = '{}/channels/{}'.format(self.apibase, self.config['channel_id'])
         return super().get_channel_info(address)
 
-    def update_channel(self, title, description, category, tags):
+    def update_channel(self, infos):
         data = {}
         channel_info = self.get_channel_info()
-        data['status'] = title or channel_info['status']
-        data['game'] = self.config.get('assignation', {}).get(category, category) or channel_info['game']
+        data['status'] = infos['title'] or channel_info['status']
+        data['game'] = self.config.get('assignation', {}).get(infos['category'], infos['category']) or channel_info['game']
+        self.update_tags(infos['tags'])
         if data:
             data = {'channel': data}
             address = '{}/channels/{}'.format(self.apibase, self.config['channel_id'])
@@ -308,14 +309,14 @@ class Mixer(Service):
         address = '/{}channels/{}'.format(self.apibase, self.config['channel_id'])
         return super().get_channel_info(address)
 
-    def update_channel(self, title, description, category, tags):
+    def update_channel(self, infos):
         data = {}
         if title:
-            data['name'] = title
+            data['name'] = infos['title']
         # if description:  # Not supported anymore
         #     data['description'] = description
         if category:
-            category = self.config.get('assignation', {}).get(category, category)
+            category = self.config.get('assignation', {}).get(infos['category'], infos['category'])
             data['typeId'] = self.get_game_id(category)
         if data:
             address = '{}/channels/{}'.format(self.apibase, self.config['channel_id'])
@@ -357,15 +358,15 @@ class Youtube(Service):
         address = '{}/liveBroadcasts?part=snippet&broadcastType=persistent&mine=true'.format(self.apibase)
         return super().get_channel_info(address)
 
-    def update_channel(self, title, description, category, tags):
+    def update_channel(self, infos):
         data = {'id': self.config['channel_id'], 'snippet': {}}
         if title:
-            data['snippet']['title'] = title
+            data['snippet']['title'] = infos['title']
         if description:
-            data['snippet']['description'] = description
+            data['snippet']['description'] = infos['description']
         if category:
-            category = self.config.get('assignation', {}).get(category, category)
-            data['snippet']['categoryId'] = self.get_game_id(category)
+            category = self.config.get('assignation', {}).get(infos['category'], infos['category'])
+            data['snippet']['categoryId'] = self.gamesid.get(category, '')
         if data['snippet']:
             address = '{}/videos?part=snippet'.format(self.apibase)
             return super().update_channel('put', address, data)
