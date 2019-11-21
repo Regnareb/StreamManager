@@ -170,7 +170,6 @@ class Service():
             self.set_headers()
 
     def refresh_token(self):
-        # oauthlib.oauth2.rfc6749.errors.InvalidGrantError: (invalid_grant) Refresh token is invalid, has been revoked, or has already been used.
         try:
             self.config['authorization'] = self.oauth2.refresh_token(self.config['token_url'], **{'client_id': self.config['client_id'], 'client_secret': self.config['client_secret']})
         except InvalidGrantError:
@@ -282,7 +281,6 @@ class Twitch(Service):
         if online:
             address = '{}clips?broadcaster_id={}'.format(self.apibase2, self.config['channel_id'])
             response = self.request('post', address, headers=self.headers2)
-
             for i in range(15):  # Check if the clip has been created
                 address = '{}clips?id={}'.format(self.apibase2, response.json()['data'][0]['id'])
                 response2 = self.request('get', address)
@@ -313,8 +311,6 @@ class Mixer(Service):
         data = {}
         if title:
             data['name'] = infos['title']
-        # if description:  # Not supported anymore
-        #     data['description'] = description
         if category:
             category = self.config.get('assignation', {}).get(infos['category'], infos['category'])
             data['typeId'] = self.get_game_id(category)
