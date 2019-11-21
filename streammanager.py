@@ -251,7 +251,7 @@ class Twitch(Service):
             self._alltags = {}
             cursor = ''
             while cursor is not None:
-                address = '{}tags/streams?first=100&after={}'.format(self.apibase2, cursor)
+                address = '{}/tags/streams?first=100&after={}'.format(self.apibase2, cursor)
                 response = requests.get(address, headers=self.headers)
                 response = response.json()
                 for i in response['data']:
@@ -268,7 +268,7 @@ class Twitch(Service):
             self.get_token()
             logger.info('Set tags to: {}'.format(tags))
             tagsid = self.get_tagsid(tags)
-            address = '{}streams/tags?broadcaster_id={}'.format(self.apibase2, self.config['channel_id'])
+            address = '{}/streams/tags?broadcaster_id={}'.format(self.apibase2, self.config['channel_id'])
             data = {'tag_ids': tagsid}
             response = requests.put(address, headers=self.headers2, json=data)
             if not response:
@@ -278,14 +278,14 @@ class Twitch(Service):
     @threaded
     def create_clip(self):
         self.get_token()
-        address = '{}streams?user_id={}'.format(self.apibase2, self.config['channel_id'])
+        address = '{}/streams?user_id={}'.format(self.apibase2, self.config['channel_id'])
         response = self.request('get', address)
         online = response.json()['data']
         if online:
-            address = '{}clips?broadcaster_id={}'.format(self.apibase2, self.config['channel_id'])
+            address = '{}/clips?broadcaster_id={}'.format(self.apibase2, self.config['channel_id'])
             response = self.request('post', address, headers=self.headers2)
             for i in range(15):  # Check if the clip has been created
-                address = '{}clips?id={}'.format(self.apibase2, response.json()['data'][0]['id'])
+                address = '{}/clips?id={}'.format(self.apibase2, response.json()['data'][0]['id'])
                 response2 = self.request('get', address)
                 if response2.json()['data']:
                     logger.info(response2.json()['data'][0]['url'])
