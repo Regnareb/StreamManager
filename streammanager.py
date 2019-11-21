@@ -57,6 +57,7 @@ def pause_services(services):
 class ManageStream():
     def __init__(self):
         self.process = ''
+        self.services = {}
         self.currentkey = set()
         self.config_filepath = os.path.join(os.path.dirname(__file__), 'streammanager.json')
         self.load_config()
@@ -78,18 +79,22 @@ class ManageStream():
         keyboard.add_hotkey('ctrl+F9', self.create_clip)
 
     def create_services(self):
-        self.services = []
         for service in self.config['streamservices']:
-            # Call the class dynamically
-            self.services.append(getattr(sys.modules[__name__], service)(self.config['streamservices'][service]))
+            self.create_service(service)
+
+    def create_service(self, service):
+        if self.config['streamservices'][service]['enabled'] and service not in self.services:
+            self.services[service] = getattr(sys.modules[__name__], service)(self.config['streamservices'][service])  # Call the class dynamically
 
     def create_clip(self):
         for service in self.services:
-            service.create_clip()
+            if service.config['enabled']:
+                service.create_clip()
 
     def update_channel(self, title, description, category, tags):
         for service in self.services:
-            service.update_channel(title, description, category, tags)
+            if service.config['enabled']:
+                service.update_channel(title, description, category, tags)
 
     def check_application(self):
         self.load_config()
