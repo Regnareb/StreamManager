@@ -70,8 +70,8 @@ class ManageStream():
             self.config = json.load(json_file)
 
     def save_config(self):
-        for service in self.services:
-            self.config['streamservices'][service.name] = service.config
+        for name, service in self.services.items():
+            self.config['streamservices'][name] = service.config
         with open(self.config_filepath, 'w') as json_file:
             json.dump(self.config, json_file, indent=4)
 
