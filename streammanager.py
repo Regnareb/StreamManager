@@ -87,12 +87,12 @@ class ManageStream():
             self.services[service] = getattr(sys.modules[__name__], service)(self.config['streamservices'][service])  # Call the class dynamically
 
     def create_clip(self):
-        for service in self.services:
+        for service in self.services.values():
             if service.config['enabled']:
                 service.create_clip()
 
     def update_channel(self, infos):
-        for service in self.services:
+        for service in self.services.values():
             if service.config['enabled']:
                 service.update_channel(infos)
 
