@@ -103,7 +103,7 @@ class ManageStream():
         if category and process!=self.process:
             infos = self.get_informations(process.name())
             infos['category'] = category
-            logger.debug(f'title: "{infos['title']}" | description: "{infos['description']}" | category: "{infos['category']}" | tags: "{infos['tags']}"')
+            logger.debug(f"title: {infos['title']} | description: {infos['description']} | category: {infos['category']} | tags: {infos['tags']}")
             self.update_channel(infos)
             self.process = process
 
