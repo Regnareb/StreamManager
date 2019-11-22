@@ -193,25 +193,6 @@ class Service():
         else:
             logger.debug(response.json())
 
-    def get_channel_info(self, address):
-        response = self.request('get', address)
-        return response.json()
-
-    def update_channel(self, action, address, data):
-        self.get_token()
-        response = self.request(action, address, data=data)
-        return response
-
-    def get_channel_id(self, address):
-        response = self.request('get', address)
-        return response.json()
-
-    def create_clip(self, address):
-        response = self.request('post', address, headers=self.headers)
-        return response
-
-
-
 
 class Twitch(Service):
     def __init__(self, config):
@@ -225,7 +206,7 @@ class Twitch(Service):
 
     def get_channel_info(self):
         address = '{}/channels/{}'.format(self.apibase, self.config['channel_id'])
-        return super().get_channel_info(address)
+        return self.request('get', address).json()
 
     def update_channel(self, infos):
         data = {}
@@ -236,13 +217,14 @@ class Twitch(Service):
             data['game'] = self.config.get('assignation', {}).get(infos['category'], infos['category']) or channel_info['game']
         self.update_tags(infos['tags'])
         if data:
+            self.get_token()
             data = {'channel': data}
             address = '{}/channels/{}'.format(self.apibase, self.config['channel_id'])
-            return super().update_channel('put', address, data)
+            return self.request('put', address, data=data)
 
     def get_channel_id(self):
         address = '{}/users?login={}'.format(self.apibase, self.config['channel'])
-        result = super().get_channel_id(address)
+        result = self.request('get', address).json()
         return result['users'][0]['_id']
 
     @property
@@ -309,7 +291,7 @@ class Mixer(Service):
 
     def get_channel_info(self):
         address = '/{}channels/{}'.format(self.apibase, self.config['channel_id'])
-        return super().get_channel_info(address)
+        return self.request('get', address).json()
 
     def update_channel(self, infos):
         data = {}
@@ -319,12 +301,13 @@ class Mixer(Service):
             category = self.config.get('assignation', {}).get(infos['category'], infos['category'])
             data['typeId'] = self.get_game_id(category)
         if data:
+            self.get_token()
             address = '{}/channels/{}'.format(self.apibase, self.config['channel_id'])
-            return super().update_channel('patch', address, data)
+            return self.request('patch', address, data=data)
 
     def get_channel_id(self):
         address = '{}/channels/{}'.format(self.apibase, self.config['channel'])
-        return super().get_channel_id(address)['id']
+        return self.request('get', address).json()['id']
 
     def get_game_id(self, game):
         address = '{}/types?&query=eq:{}'.format(self.apibase, game)
@@ -355,7 +338,7 @@ class Youtube(Service):
 
     def get_channel_info(self):
         address = '{}/liveBroadcasts?part=snippet&broadcastType=persistent&mine=true'.format(self.apibase)
-        return super().get_channel_info(address)
+        return self.request('get', address).json()
 
     def update_channel(self, infos):
         data = {'id': self.config['channel_id'], 'snippet': {}}
@@ -367,8 +350,9 @@ class Youtube(Service):
             category = self.config.get('assignation', {}).get(infos['category'], infos['category'])
             data['snippet']['categoryId'] = self.gamesid.get(category, '')
         if data['snippet']:
+            self.get_token()
             address = '{}/videos?part=snippet'.format(self.apibase)
-            return super().update_channel('put', address, data)
+            return self.request('put', address, data=data)
 
     def get_channel_id(self):
         result = self.get_channel_info()
