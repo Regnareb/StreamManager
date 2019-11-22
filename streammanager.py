@@ -236,8 +236,7 @@ class Twitch(Service):
             cursor = ''
             while cursor is not None:
                 address = '{}/tags/streams?first=100&after={}'.format(self.apibase2, cursor)
-                response = requests.get(address, headers=self.headers)
-                response = response.json()
+                response = self.request('get', address).json()
                 for i in response['data']:
                     self._alltags[i['localization_names'][self.config['localisation']]] = i['tag_id']
                 cursor = response['pagination'].get('cursor')
@@ -254,7 +253,7 @@ class Twitch(Service):
             tagsid = self.get_tagsid(tags)
             address = '{}/streams/tags?broadcaster_id={}'.format(self.apibase2, self.config['channel_id'])
             data = {'tag_ids': tagsid}
-            response = requests.put(address, headers=self.headers2, json=data)
+            response = self.request('put', address, headers=self.headers2, data=data)
             if not response:
                 logger.error(response.json())
             return response
@@ -280,8 +279,6 @@ class Twitch(Service):
             return response
         else:
             logger.error("Can't create a clip if you are not streaming.")
-
-
 
 
 class Mixer(Service):
@@ -327,7 +324,6 @@ class Mixer(Service):
             return response
         else:
             logger.warning("Can't create clips when not streaming")
-
 
 
 class Youtube(Service):
