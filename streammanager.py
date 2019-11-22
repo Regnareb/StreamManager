@@ -124,6 +124,7 @@ class ManageStream():
 
 class Service():
     def __init__(self, config):
+        self.name = self.__class__.__name__
         self.config = config
         self.oauth2 = OAuth2Session(token=self.config['authorization'], client_id=self.config['client_id'], scope=self.config['scope'], redirect_uri=self.config['redirect_uri'])
         self.get_token()
@@ -214,7 +215,6 @@ class Service():
 
 class Twitch(Service):
     def __init__(self, config):
-        self.name = 'Twitch'
         self.apibase = 'https://api.twitch.tv/kraken'
         self.apibase2 = 'https://api.twitch.tv/helix'
         super().__init__(config)
@@ -304,7 +304,6 @@ class Twitch(Service):
 
 class Mixer(Service):
     def __init__(self, config):
-        self.name = 'Mixer'
         self.apibase = 'https://mixer.com/api/v1'
         super().__init__(config)
 
@@ -350,7 +349,6 @@ class Mixer(Service):
 
 class Youtube(Service):
     def __init__(self, config):
-        self.name = 'Youtube'
         self.apibase = 'https://www.googleapis.com/youtube/v3'
         config['channel_id'] = ''  # Reset the id each time because Youtube
         super().__init__(config)
