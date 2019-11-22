@@ -230,8 +230,10 @@ class Twitch(Service):
     def update_channel(self, infos):
         data = {}
         channel_info = self.get_channel_info()
-        data['status'] = infos['title'] or channel_info['status']
-        data['game'] = self.config.get('assignation', {}).get(infos['category'], infos['category']) or channel_info['game']
+        if infos['title']:
+            data['status'] = infos['title'] or channel_info['status']
+        if infos['category']:
+            data['game'] = self.config.get('assignation', {}).get(infos['category'], infos['category']) or channel_info['game']
         self.update_tags(infos['tags'])
         if data:
             data = {'channel': data}
@@ -312,9 +314,9 @@ class Mixer(Service):
 
     def update_channel(self, infos):
         data = {}
-        if title:
+        if infos['title']:
             data['name'] = infos['title']
-        if category:
+        if infos['category']:
             category = self.config.get('assignation', {}).get(infos['category'], infos['category'])
             data['typeId'] = self.get_game_id(category)
         if data:
@@ -359,11 +361,11 @@ class Youtube(Service):
 
     def update_channel(self, infos):
         data = {'id': self.config['channel_id'], 'snippet': {}}
-        if title:
+        if infos['title']:
             data['snippet']['title'] = infos['title']
-        if description:
+        if infos['description']:
             data['snippet']['description'] = infos['description']
-        if category:
+        if infos['category']:
             category = self.config.get('assignation', {}).get(infos['category'], infos['category'])
             data['snippet']['categoryId'] = self.gamesid.get(category, '')
         if data['snippet']:
