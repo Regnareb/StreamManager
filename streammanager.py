@@ -152,13 +152,13 @@ class Service():
             logger.info('Asking for an access code for {}'.format(self.name))
             port = re.search(r':(\d*)$', self.config['redirect_uri'])
             port = int(port.group(1))
-            authorization_url, state = self.oauth2.authorization_url(self.config['authorization_base_url'], state=self.config['client_secret'], access_type='offline')
+            authorization_url, _ = self.oauth2.authorization_url(self.config['authorization_base_url'], state=self.config['client_secret'], access_type='offline')
             serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             serversocket.bind(('localhost', port))
             serversocket.listen(5)
             webbrowser.open(authorization_url)
             while True:
-                connection, address = serversocket.accept()
+                connection, _ = serversocket.accept()
                 buf = connection.recv(4096)
                 if buf:
                     break
@@ -268,7 +268,7 @@ class Twitch(Service):
         if online:
             address = '{}/clips?broadcaster_id={}'.format(self.apibase2, self.config['channel_id'])
             response = self.request('post', address, headers=self.headers2)
-            for i in range(15):  # Check if the clip has been created
+            for _ in range(15):  # Check if the clip has been created
                 address = '{}/clips?id={}'.format(self.apibase2, response.json()['data'][0]['id'])
                 response2 = self.request('get', address)
                 if response2.json()['data']:
