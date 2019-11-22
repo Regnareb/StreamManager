@@ -82,9 +82,3 @@ class ManageStream():
             while obs.poll() is None:
                 time.sleep(4)
                 self.check_application()
-
-
-if __name__ == '__main__':
-    manager = ManageStream()
-    # manager.create_services()
-    manager.main()
