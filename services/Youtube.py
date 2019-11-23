@@ -10,7 +10,7 @@ class Main(Service):
     token_url = "https://oauth2.googleapis.com/token"
     redirect_uri = "http://localhost:778/"
     apibase = 'https://www.googleapis.com/youtube/v3'
-    features = {'title': True, 'description': True, 'category': True, 'tags': True}
+    features = {'title': True, 'description': True, 'category': True, 'tags': False, 'clips': False}
 
     def __init__(self, config):
         config['channel_id'] = ''  # Reset the id each time because Youtube

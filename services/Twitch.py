@@ -14,7 +14,7 @@ class Main(Service):
     redirect_uri = "http://localhost:776/"
     apibase = 'https://api.twitch.tv/kraken'
     apibase2 = 'https://api.twitch.tv/helix'
-    features = {'title': True, 'description': False, 'category': True, 'tags': True}
+    features = {'title': True, 'description': False, 'category': True, 'tags': True, 'clips': True}
 
     def set_headers(self):
         super().set_headers()
