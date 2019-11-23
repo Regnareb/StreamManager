@@ -7,13 +7,14 @@ import logging
 import subprocess
 
 import keyboard
-import tools
+
+import common.tools as tools
 
 logger = logging.getLogger(__name__)
 logging.basicConfig()
 logging.getLogger().setLevel(logging.INFO)
 
-SERVICES = tools.loadmodules('services')
+SERVICES = tools.loadmodules(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')), 'services')
 
 
 class ManageStream():
@@ -21,7 +22,7 @@ class ManageStream():
         self.process = ''
         self.services = {}
         self.currentkey = set()
-        self.config_filepath = os.path.join(os.path.dirname(__file__), 'streammanager.json')
+        self.config_filepath = os.path.join(os.path.dirname(__file__), 'settings.json')
         self.load_config()
         self.create_services()
         self.shortcuts()

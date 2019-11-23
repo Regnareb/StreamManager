@@ -1,6 +1,6 @@
 # coding: utf-8
 import logging
-from service import *
+from common.service import *
 logger = logging.getLogger(__name__)
 
 class Main(Service):

@@ -1,5 +1,8 @@
+import os.path
+import glob
 import ctypes
 import logging
+import importlib
 import functools
 import threading
 import subprocess
@@ -25,12 +28,9 @@ def threaded(func):
         return func_hl
     return async_func
 
-def loadmodules(subfolder):
-    import glob
-    import os.path
-    import importlib
-    modules = glob.glob(os.path.join(os.path.dirname(__file__), subfolder, '*.py'))
-    modules = ['.'.join([subfolder, os.path.basename(i)[:-3]]) for i in modules]
+def loadmodules(path, subfolders):
+    modules = glob.glob(os.path.join(path, subfolders, '*.py'))
+    modules = ['.'.join([subfolders, os.path.basename(i)[:-3]]) for i in modules]
     data = {}
     for module in modules:
         data[module] = importlib.import_module(module)

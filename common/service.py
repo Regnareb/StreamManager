@@ -7,9 +7,11 @@ import inspect
 import logging
 import requests
 import webbrowser
+
 from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2.rfc6749.errors import InvalidGrantError, MissingTokenError, InvalidClientError, InvalidTokenError, InvalidClientIdError
-import tools
+
+import common.tools as tools
 logger = logging.getLogger(__name__)
 
 
