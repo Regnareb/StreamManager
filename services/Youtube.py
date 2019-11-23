@@ -5,6 +5,10 @@ logger = logging.getLogger(__name__)
 
 class Main(Service):
     name = 'Youtube'
+    scope = "https://www.googleapis.com/auth/youtubepartner https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.force-ssl"
+    authorization_base_url = "https://accounts.google.com/o/oauth2/v2/auth"
+    token_url = "https://oauth2.googleapis.com/token"
+    redirect_uri = "http://localhost:778/"
     apibase = 'https://www.googleapis.com/youtube/v3'
     features = {'title': True, 'description': True, 'category': True, 'tags': True}
 

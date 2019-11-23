@@ -16,7 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 class Service():
-    name = ''
     def __init__(self, config):
         if config:
             self.config = config
@@ -24,6 +23,17 @@ class Service():
             self.get_token()
             if not self.config.get('channel_id'):
                 self.config['channel_id'] = self.get_channel_id()
+        else:
+            self.config = {
+                "enabled": False,
+                "scope": self.scope,
+                "client_id": "",
+                "client_secret": "",
+                "authorization_base_url": self.authorization_base_url,
+                "token_url": self.token_url,
+                "redirect_uri": self.redirect_uri,
+                "authorization": {}
+            }
 
     def set_headers(self):
         self.headers = {

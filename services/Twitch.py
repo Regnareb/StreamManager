@@ -8,6 +8,10 @@ logger = logging.getLogger(__name__)
 
 class Main(Service):
     name = 'Twitch'
+    scope = "user:edit:broadcast channel_editor clips:edit"
+    authorization_base_url = "https://id.twitch.tv/oauth2/authorize"
+    token_url = "https://id.twitch.tv/oauth2/token"
+    redirect_uri = "http://localhost:776/"
     apibase = 'https://api.twitch.tv/kraken'
     apibase2 = 'https://api.twitch.tv/helix'
     features = {'title': True, 'description': False, 'category': True, 'tags': True}
