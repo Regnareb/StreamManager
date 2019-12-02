@@ -54,16 +54,3 @@ class Main(Service):
 
     def create_clip(self):
         pass  # Not supported yet
-
-
-    # config = {}
-    # config =  {
-    #     "enabled": False,
-    #     "scope": "user_videos publish_video",
-    #     "client_id": "",
-    #     "client_secret": "",
-    #     "authorization_base_url": "https://www.facebook.com/dialog/oauth",
-    #     "token_url": "https://graph.facebook.com/oauth/access_token",
-    #     "redirect_uri": "http://localhost:779",
-    #     "authorization": {}
-    # }
