@@ -151,10 +151,10 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.gameslayout['category'].setButtonVisibility(True)
         self.gameslayout['description'].setButtonVisibility(True)
         self.gameslayout['tags'].setButtonVisibility(True)
-        self.gameslayout['title'].changeButtonState(val.get('forced_title'))
-        self.gameslayout['category'].changeButtonState(val.get('forced_category'))
-        self.gameslayout['description'].changeButtonState(val.get('forced_description'))
-        self.gameslayout['tags'].changeButtonState(val.get('forced_tags'))
+        self.gameslayout['title'].changeButtonState(val.get('forced_title', ''))
+        self.gameslayout['category'].changeButtonState(val.get('forced_category', ''))
+        self.gameslayout['description'].changeButtonState(val.get('forced_description', ''))
+        self.gameslayout['tags'].changeButtonState(val.get('forced_tags', []))
         self.block_signals(False)
 
     def create_serviceslayout(self):
