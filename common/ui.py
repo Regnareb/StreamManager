@@ -48,7 +48,6 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.gameslayout['stacked'].setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed))
         self.gameslayout['stacked_process'] = QtWidgets.QLineEdit()
         self.gameslayout['stacked_process'].setMinimumHeight(40)
-        self.gameslayout['stacked_process'].setPlaceholderText('process')
         self.gameslayout['stacked_process'].setEnabled(False)
         self.gameslayout['stacked_label'] = QtWidgets.QLabel()
         self.gameslayout['stacked_label'].setText('Applied by default for all games if there is no data\nLocks will force this setting no matter what')
@@ -70,7 +69,6 @@ class StreamManager_UI(QtWidgets.QMainWindow):
                 self.gameslayout[key] = LineEdit(icons)
                 self.gameslayout[key].setMinimumHeight(30)
             self.gameslayout[key].editingFinished.connect(self.save_appdata)
-            self.gameslayout[key].setPlaceholderText(key)
             s = self.gameslayout[key].sizePolicy()
             s.setRetainSizeWhenHidden(True)
             self.gameslayout[key].setSizePolicy(s)
@@ -126,11 +124,16 @@ class StreamManager_UI(QtWidgets.QMainWindow):
                     self.gameslayout[key].removeAction(action)
             self.gameslayout['stacked'].setCurrentWidget(self.gameslayout['stacked_process'])
             val = self.manager.config['appdata'][current._process]
+            finalvals = self.manager.get_informations(current._process)
             self.gameslayout['stacked_process'].setText(current._process)
             self.gameslayout['category'].setText(val.get('category'))
             self.gameslayout['title'].setText(val.get('title'))
             self.gameslayout['description'].setPlainText(val.get('description'))
             self.gameslayout['tags'].setText(', '.join(val.get('tags', [])))
+            self.gameslayout['title'].setPlaceholderText(finalvals.get('title'))
+            self.gameslayout['category'].setPlaceholderText(finalvals.get('category'))
+            self.gameslayout['description'].setPlaceholderText(finalvals.get('description'))
+            self.gameslayout['tags'].setPlaceholderText(', '.join(finalvals.get('tags', [])))
             self.gameslayout['title'].setButtonVisibility(False)
             self.gameslayout['category'].setButtonVisibility(False)
             self.gameslayout['description'].setButtonVisibility(False)
@@ -143,6 +146,9 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.gameslayout['table'].setCurrentCell(-1, -1)
         self.gameslayout['stacked'].setCurrentWidget(self.gameslayout['stacked_label'])
         val = self.manager.config['base']
+        elements = ['category', 'title', 'tags']
+        for key in elements:
+            self.gameslayout[key].setPlaceholderText(key.capitalize())
         self.gameslayout['category'].setText(val.get('category'))
         self.gameslayout['title'].setText(val.get('title'))
         self.gameslayout['description'].setPlainText(val.get('description'))
