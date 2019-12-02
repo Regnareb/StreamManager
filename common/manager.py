@@ -62,19 +62,22 @@ class ManageStream():
     def check_application(self):
         self.load_config()
         process = tools.getForegroundProcess()
-        category = self.config['appdata'].get(process.name(), {}).get('category')
-        if category and process!=self.process:
+        existing = self.config['appdata'].get(process.name(), '')
+        if existing and process!=self.process:
             infos = self.get_informations(process.name())
-            infos['category'] = category
             logger.debug(f"title: {infos['title']} | description: {infos['description']} | category: {infos['category']} | tags: {infos['tags']}")
             self.update_channel(infos)
             self.process = process
 
     def get_informations(self, name):
         infos = {}
-        infos['tags'] = self.config['base'].get('forced_tags', []) + self.config['appdata'].get(name, {}).get('tags', [])
-        infos['title'] = self.config['base'].get('forced_title') or self.config['appdata'].get(name, {}).get('title') or self.config['base'].get('title', '')
-        infos['description'] = self.config['base'].get('forced_description') or self.config['appdata'].get(name, {}).get('description') or self.config['base'].get('description', '')
+        infos['tags'] = self.config['appdata'].get(name, {}).get('tags', []) + self.config['base'].get('tags', [])
+        infos['title'] = self.config['appdata'].get(name, {}).get('title') or self.config['base'].get('title', '')
+        infos['category'] = self.config['appdata'].get(name, {}).get('category') or self.config['base'].get('category', '')
+        infos['description'] = self.config['appdata'].get(name, {}).get('description') or self.config['base'].get('description', '')
+        for element in ['title', 'description', 'category', 'tags']:
+            if self.config['base'].get('forced_' + element):
+                infos[element] = self.config['base'].get(element)
         return infos
 
     def main(self):
