@@ -26,6 +26,14 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.centralwidget.setCurrentWidget(self.gameslayout['main'])
         self.load_appdata()
 
+    def mouseDoubleClickEvent(self, event):
+        super().mouseDoubleClickEvent(event)
+        self.menuBar().setVisible(not self.menuBar().isVisible())
+        if self.menuBar().isVisible():
+            self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowStaysOnTopHint & ~QtCore.Qt.FramelessWindowHint)
+        else:
+            self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.FramelessWindowHint)
+        self.show()
     def create_gamelayout(self):
         self.gameslayout = {}
         self.gameslayout['llayout'] = QtWidgets.QVBoxLayout()
