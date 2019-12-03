@@ -61,7 +61,7 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.gameslayout['stacked'] = QtWidgets.QStackedWidget()
         self.gameslayout['stacked'].setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed))
         self.gameslayout['stacked_process'] = QtWidgets.QLineEdit()
-        self.gameslayout['stacked_process'].setMinimumHeight(40)
+        self.gameslayout['stacked_process'].setMinimumHeight(30)
         self.gameslayout['stacked_process'].setEnabled(False)
         self.gameslayout['stacked_label'] = QtWidgets.QLabel()
         self.gameslayout['stacked_label'].setText('Applied by default for all games if there is no data\nLocks will force this setting no matter what')
@@ -74,7 +74,7 @@ class StreamManager_UI(QtWidgets.QMainWindow):
 
         elements = ['category', 'title', 'description', 'tags']
         folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'theme', 'images'))
-        icons = {True: folder + "/lock.png", False: folder + "/unlock.png"}
+        icons = {True: QtGui.QIcon(folder + "/lock.png"), False: QtGui.QIcon(folder + "/unlock.png")}
         for key in elements:
             if key == 'description':
                 self.gameslayout[key] = PlainTextEdit(icons)
@@ -134,7 +134,7 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         if current:
             self.manager.config['appdata'][current._process].update(data)
         else:
-            for key, val in data.copy().items():
+            for key in data.copy():
                 data['forced_' + key] = self.gameslayout[key].button.state
                 self.manager.config['base'].update(data)
         logger.debug(data)
@@ -189,7 +189,7 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         val = self.manager.config['base']
         elements = ['category', 'title', 'tags']
         for key in elements:
-            self.gameslayout[key].setPlaceholderText(key.capitalize())
+            self.gameslayout[key].setPlaceholderText(key)
         self.gameslayout['category'].setText(val.get('category'))
         self.gameslayout['title'].setText(val.get('title'))
         self.gameslayout['description'].setPlainText(val.get('description'))
@@ -218,11 +218,11 @@ class StreamManager_UI(QtWidgets.QMainWindow):
 class StateButtons():
     buttonClicked = QtCore.Signal(bool)
 
-    def __init__(self, icon_files, parent=None):
+    def __init__(self, icons, parent=None):
         super().__init__(parent)
         self.button = QtWidgets.QToolButton(self)
         self.button.state = False
-        self.button.icons = {True: QtGui.QIcon(icon_files[True]), False: QtGui.QIcon(icon_files[False])}
+        self.button.icons = {True: icons[True], False: icons[False]}
         self.button.setIcon(self.button.icons[self.button.state])
         self.button.setStyleSheet('border: none; padding: 0px;')
         self.button.setCursor(QtCore.Qt.PointingHandCursor)
@@ -266,6 +266,4 @@ class PlainTextEdit(StateButtons, QtWidgets.QPlainTextEdit):
 
 class LineEdit(StateButtons, QtWidgets.QLineEdit):
     pass
-
-
 
