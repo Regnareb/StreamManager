@@ -28,9 +28,9 @@ def threaded(func):
         return func_hl
     return async_func
 
-def loadmodules(path, subfolders):
-    modules = glob.glob(os.path.join(path, subfolders, '*.py'))
-    modules = ['.'.join([subfolders, os.path.basename(i)[:-3]]) for i in modules]
+def loadmodules(path, subfolder):
+    modules = glob.glob(os.path.join(path, subfolder, '*.py'))
+    modules = ['.'.join([subfolder, os.path.basename(i)[:-3]]) for i in modules]
     data = {}
     for module in modules:
         data[module] = importlib.import_module(module)
