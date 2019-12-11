@@ -46,11 +46,11 @@ def getForegroundProcess():
     return process
 
 def parse_strings(infos):
-    for key, val in infos.items():
+    for key in infos:
         try:
-            infos[key] = val.replace('%SERVICE%', infos.get('name', '%SERVICE%'))
-            infos[key] = val.replace('%CATEGORY%', infos.get('category', '%CATEGORY%'))
-            infos[key] = val.replace('%CUSTOMTEXT%', infos.get('customtext', '%CUSTOMTEXT%'))
+            infos[key] = infos[key].replace('%SERVICE%', infos.get('name', '%SERVICE%'))
+            infos[key] = infos[key].replace('%CATEGORY%', infos.get('category', '%CATEGORY%'))
+            infos[key] = infos[key].replace('%CUSTOMTEXT%', infos.get('customtext', '%CUSTOMTEXT%'))
         except AttributeError:
             pass
     return infos
