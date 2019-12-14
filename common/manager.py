@@ -19,12 +19,12 @@ SERVICES = tools.loadmodules(os.path.abspath(os.path.join(os.path.dirname(__file
 
 class ManageStream():
     def __init__(self):
+        super().__init__()
         self.process = ''
         self.services = {}
         self.currentkey = set()
         self.config_filepath = os.path.join(os.path.dirname(__file__), 'settings.json')
         self.load_config()
-        self.create_services()
         self.shortcuts()
         atexit.register(self.save_config)
 
@@ -60,7 +60,6 @@ class ManageStream():
                 service.update_channel(infos)
 
     def check_application(self):
-        self.load_config()
         process = tools.getForegroundProcess()
         existing = self.config['appdata'].get(process.name(), '')
         if existing and process!=self.process:
@@ -68,6 +67,7 @@ class ManageStream():
             logger.debug(f"title: {infos['title']} | description: {infos['description']} | category: {infos['category']} | tags: {infos['tags']}")
             self.update_channel(infos)
             self.process = process
+            return infos
 
     def get_informations(self, name):
         infos = {}

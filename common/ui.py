@@ -3,7 +3,7 @@ import sys
 import logging
 import functools
 logger = logging.getLogger(__name__)
-from PySide2 import QtCore, QtWidgets, QtGui
+from PySide2 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
 
 import common.manager
 
@@ -13,27 +13,31 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         super().__init__()
         self.setStyleSheet("QTableWidget {margin: 10px;} QPlainTexxtEdit, QxLineEdit {margin: 3px;} QHeaderView::section { background-color: #3697FE;border:1px solid #ccc;font-weight: bold} QHeaderView::section:checked { background-color: #fff;border:1px solid #ccc;} QPlainTextEdit {background:white}")
         self.setWindowTitle('Stream Manager')
-        self.manager = common.manager.ManageStream()
-        self.centralwidget = QtWidgets.QTabWidget(self)
-        self.centralwidget.setDocumentMode(True)
-        self.setCentralWidget(self.centralwidget)
-
+        self.manager = ManagerStreamThread()
         self.create_gamelayout()
-        # self.create_serviceslayout()
-        # self.centralwidget.addTab(self.services, 'Streams')
-        self.centralwidget.addTab(self.gameslayout['main'], 'Games')
-        self.centralwidget.tabBar().hide()
-        self.centralwidget.setCurrentWidget(self.gameslayout['main'])
+        self.create_serviceslayout()
+        self.create_statuslayout()
         self.load_appdata()
+        self.load_generalsettings()
+        self.centralwidget = QtWidgets.QTabWidget(self)
+        self.centralwidget.setMovable(True)
+        # self.centralwidget.setDocumentMode(True)  # To be able to see tabs when drag&drop
+        self.setCentralWidget(self.centralwidget)
+        self.centralwidget.addTab(self.panel_status['main'], 'Status')
+        self.centralwidget.addTab(self.panel_services['main'], 'Services')
+        self.centralwidget.addTab(self.gameslayout['main'], 'Games')
 
     def mouseDoubleClickEvent(self, event):
         super().mouseDoubleClickEvent(event)
-        self.menuBar().setVisible(not self.menuBar().isVisible())
         if self.menuBar().isVisible():
-            self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowStaysOnTopHint & ~QtCore.Qt.FramelessWindowHint)
-        else:
             self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.FramelessWindowHint)
+            self.centralwidget.tabBar().hide()
+        else:
+            self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowStaysOnTopHint & ~QtCore.Qt.FramelessWindowHint)
+            self.centralwidget.tabBar().show()
         self.show()
+        self.menuBar().setVisible(not self.menuBar().isVisible())
+
     def create_gamelayout(self):
         self.gameslayout = {}
         self.gameslayout['llayout'] = QtWidgets.QVBoxLayout()
@@ -108,7 +112,8 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.gameslayout['main'].addWidget(self.gameslayout['container_rlayout'])
         self.gameslayout['main'].setStretchFactor(0, 0)
         self.gameslayout['main'].setStretchFactor(1, 1)
-        self.load_generalsettings()
+        self.gameslayout['main'].setCollapsible(0, 0)
+        self.gameslayout['main'].setCollapsible(1, 0)
 
     def create_filedialog(self):
         self.filedialog = QtWidgets.QFileDialog()
@@ -120,10 +125,12 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         path = self.create_filedialog()
         if path:
             process = os.path.basename(path)
-            print(process)
-            self.manager.config['appdata'][process] = {}
-            self.create_row(process)
-            self.gameslayout['table'].sortByColumn(0, QtCore.Qt.AscendingOrder)
+            if self.manager.config['appdata'].get(process):
+                logger.warning('The same process is already registered: {}'.format(self.manager.config['appdata'].get(process)))
+            else:
+                self.manager.config['appdata'][process] = {}
+                self.create_row(process)
+                self.gameslayout['table'].sortByColumn(0, QtCore.Qt.AscendingOrder)
 
     def remove_game(self):
         current = self.gameslayout['table'].currentItem()
@@ -145,6 +152,7 @@ class StreamManager_UI(QtWidgets.QMainWindow):
             for key in data.copy():
                 data['forced_' + key] = self.gameslayout[key].button.state
                 self.manager.config['base'].update(data)
+        self.manager.process = ''  # Reset current process to be able to apply new settings
         logger.debug(data)
 
     def create_row(self, process):
@@ -213,14 +221,124 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.gameslayout['remove_game'].setEnabled(False)
         self.block_signals(False)
 
+    def create_services(self):
+        for service in common.manager.SERVICES.values():
+            servicename = service.Main.name
+            row = QtWidgets.QTableWidgetItem()
+            row.setText(servicename)
+            row.setFlags(row.flags() & ~QtCore.Qt.ItemIsEditable)
+            rowcount = self.panel_services['list'].rowCount()
+            self.panel_services['list'].insertRow(rowcount)
+            self.panel_services['list'].setItem(rowcount, 0, row)
+        self.panel_services['list'].sortItems(QtCore.Qt.AscendingOrder)
+
     def create_serviceslayout(self):
-        self.services = QtWidgets.QWidget()
-        self.serviceslayout = QtWidgets.QGridLayout(self.services)
+        # Refresh token
+
+        self.panel_services = {}
+        self.panel_services['main'] = QtWidgets.QWidget()
+        self.panel_services['main_container'] = QtWidgets.QGridLayout()
+        self.panel_services['list'] = QtWidgets.QTableWidget()
+        self.panel_services['list'].setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.panel_services['list'].setColumnCount(1)
+        self.panel_services['list'].setWordWrap(False)
+        self.panel_services['list'].verticalHeader().setVisible(False)
+        self.panel_services['list'].horizontalHeader().setVisible(False)
+        self.panel_services['list'].horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.panel_services['list'].currentCellChanged.connect(self.service_changed)
+
+        for i, elem in enumerate(['enabled', 'channel', 'channel_id', 'client_id', 'client_secret', 'scope', 'redirect_uri', 'authorization_base_url', 'token_url']):
+            namelabel = 'label_' + elem
+            nameline = 'line_' + elem
+            self.panel_services[namelabel] = QtWidgets.QLabel()
+            self.panel_services[namelabel].setText(elem.capitalize() + ':')
+            self.panel_services['main_container'].addWidget(self.panel_services[namelabel], i, 1)
+            if elem == 'enabled':
+                self.panel_services[nameline] = QtWidgets.QCheckBox()
+                self.panel_services[nameline].stateChanged.connect(self.save_servicedata)
+            else:
+                self.panel_services[nameline] = QtWidgets.QLineEdit()
+                self.panel_services[nameline].editingFinished.connect(self.save_servicedata)
+                # self.panel_services[nameline].setEnabled(False)
+            self.panel_services[nameline].setMinimumHeight(30)
+            self.panel_services['main_container'].addWidget(self.panel_services[nameline], i, 2)
+        self.panel_services['main_container'].setRowStretch(self.panel_services['main_container'].rowCount(), 10)
+        self.panel_services['list'].setFixedWidth(150)
+        self.panel_services['main'].setLayout(self.panel_services['main_container'])
+        self.panel_services['main_container'].addWidget(self.panel_services['list'], 0, 0, -1, 1)
+        self.create_services()
+        self.panel_services['list'].itemSelectionChanged.connect(self.service_changed)
+        self.panel_services['list'].setCurrentCell(0, 0)
+
+    def service_changed(self):
+        self.block_signals(True)
+        item = self.panel_services['list'].currentItem()
+        service = item.text()
+        config = self.manager.config['streamservices'][service]
+        for elem in ['enabled', 'channel', 'channel_id', 'client_id', 'client_secret', 'scope', 'redirect_uri', 'authorization_base_url', 'token_url']:
+            if elem == 'enabled':
+                val = config.get(elem, False)
+                self.panel_services['line_' + elem].setChecked(val)
+                set_disabledrowstyle(item, val)
+            else:
+                self.panel_services['line_' + elem].setText(str(config.get(elem, '')))
+        self.block_signals(False)
+
+    def save_servicedata(self):
+        item = self.panel_services['list'].currentItem()
+        service = item.text()
+        for elem in ['enabled', 'channel', 'channel_id', 'client_id', 'client_secret', 'scope', 'redirect_uri', 'authorization_base_url', 'token_url']:
+            if elem == 'enabled':
+                result = self.panel_services['line_' + elem].isChecked()
+                set_disabledrowstyle(item, result)
+            else:
+                result = self.panel_services['line_' + elem].text()
+            self.manager.config['streamservices'][service][elem] = result
+
+    def create_statuslayout(self):
+        self.panel_status = {}
+        self.panel_status['main'] = QtWidgets.QWidget()
+        self.panel_status['main_container'] = QtWidgets.QHBoxLayout()
+        self.panel_status['webpage'] = QtWebEngineWidgets.QWebEngineView()
+        self.panel_status['webpage'].load(QtCore.QUrl("http://localhost:8080/"))
+        self.panel_status['main_container'].addWidget(self.panel_status['webpage'])
+        self.panel_status['main'].setLayout(self.panel_status['main_container'])
 
     def block_signals(self, block):
         for i in self.gameslayout:
             self.gameslayout[i].blockSignals(block)
+        for i in self.panel_services:
+            self.panel_services[i].blockSignals(block)
 
+
+def set_disabledrowstyle(item, val):
+    if val:
+        item.setForeground(QtGui.QColor(0,0,0))
+    else:
+        item.setForeground(QtGui.QColor(150,150,150))
+
+
+import bottle
+class WebRemote(QtCore.QThread):
+    def run(self):
+        @bottle.route('/')
+        def hello():
+            return "Hello World!"
+        bottle.run(host='localhost', port=8080, quiet=True)
+
+
+class ManagerStreamThread(common.manager.ManageStream, QtCore.QThread):
+
+    def run(self):
+        result = self.check_application()
+        if result:
+            logger.info(result)
+
+    def main(self):
+        self.create_services()
+        timer = QtCore.QTimer(self)
+        timer.timeout.connect(self.start)
+        timer.start(1000)
 
 
 class StateButtons():
@@ -229,9 +347,8 @@ class StateButtons():
     def __init__(self, icons, parent=None):
         super().__init__(parent)
         self.button = QtWidgets.QToolButton(self)
-        self.button.state = False
-        self.button.icons = {True: icons[True], False: icons[False]}
-        self.button.setIcon(self.button.icons[self.button.state])
+        self.button.state = None
+        self.button.icons = icons
         self.button.setStyleSheet('border: none; padding: 0px;')
         self.button.setCursor(QtCore.Qt.PointingHandCursor)
         self.button.clicked.connect(functools.partial(self.changeButtonState))
@@ -251,9 +368,14 @@ class StateButtons():
 
     def changeButtonState(self, state=None):
         if state == None:
-            self.button.state = not self.button.state
+            try:
+                keys = list(self.button.icons.keys())
+                i = keys.index(self.button.state)
+                self.button.state = keys[i+1]
+            except (ValueError, IndexError):
+                self.button.state = keys[0]
         else:
-            self.button.state = bool(state)
+            self.button.state = state
         self.button.setIcon(self.button.icons[self.button.state])
         self.buttonClicked.emit(self.button.state)
         self.editingFinished.emit()
