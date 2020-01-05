@@ -62,13 +62,15 @@ class StreamManager_UI(MovableWindow, QtWidgets.QMainWindow):
 
     def mouseDoubleClickEvent(self, event):
         super().mouseDoubleClickEvent(event)
+        pos = self.pos()
+        geo = self.geometry()
         if self.menuBar().isVisible():
             self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint | QtCore.Qt.FramelessWindowHint)
-            self.centralwidget.tabBar().hide()
         else:
             self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowStaysOnTopHint & ~QtCore.Qt.FramelessWindowHint)
-            self.centralwidget.tabBar().show()
         self.show()
+        self.move(pos)
+        self.setGeometry(geo)
         self.menuBar().setVisible(not self.menuBar().isVisible())
 
     def create_gamelayout(self):
