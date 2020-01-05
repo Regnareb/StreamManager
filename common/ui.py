@@ -1,6 +1,8 @@
 import os
 import sys
+import copy
 import logging
+import threading
 import functools
 logger = logging.getLogger(__name__)
 from PySide2 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
@@ -34,11 +36,12 @@ class StreamManager_UI(MovableWindow, QtWidgets.QMainWindow):
         self.webremote.check.connect(self.check)
         self.webremote.updated.connect(self.updated)
         self.webremote.start()
-        self.create_menu()
+        self.preferences = Preferences(self.manager)
         self.create_gamelayout()
         self.create_statuslayout()
         self.load_appdata()
         self.load_generalsettings()
+        self.create_menu()
         self.gameslayout['dock'].setTitleBarWidget(QtWidgets.QWidget())
         self.panel_status['dock'].setTitleBarWidget(QtWidgets.QWidget())
         self.setTabPosition(QtCore.Qt.AllDockWidgetAreas, QtWidgets.QTabWidget.North)
@@ -72,6 +75,10 @@ class StreamManager_UI(MovableWindow, QtWidgets.QMainWindow):
         self.move(pos)
         self.setGeometry(geo)
         self.menuBar().setVisible(not self.menuBar().isVisible())
+
+    def create_menu(self):
+        action = QtWidgets.QAction('Preferences', self, triggered=self.preferences.exec_)
+        self.menuBar().addAction(action)
 
     def create_gamelayout(self):
         self.gameslayout = {}
@@ -281,9 +288,45 @@ def set_disabledrowstyle(item, val):
     else:
         item.setForeground(QtGui.QColor(150,150,150))
 
+
+class Preferences(QtWidgets.QDialog):
+    # Make a dirty attribute to prevent closing the window without saving
+    def __init__(self, manager, parent=None):
+        super().__init__(parent)
+        self.tabs = QtWidgets.QTabWidget()
+        self.tab_streams = Preferences_Streams(manager)
+        self.tab_pauseservices = Preferences_Pauseservices(manager)
+        self.tabs.addTab(self.tab_streams, "Streams")
+        self.tabs.addTab(self.tab_pauseservices, "Services (Windows)")
+
+        self.buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        self.buttons.accepted.connect(self.accept)
+        self.buttons.rejected.connect(self.reject)
+
+        self.mainLayout = QtWidgets.QVBoxLayout()
+        self.mainLayout.addWidget(self.tabs)
+        self.mainLayout.addWidget(self.buttons)
+        self.setLayout(self.mainLayout)
+        self.setWindowTitle('Preferences')
+
+    def accept(self):
+        self.tab_streams.accept()
+        self.tab_pauseservices.accept()
+        super().accept()
+
+    def exec_(self):
+        self.tab_streams.reset()
+        self.tab_pauseservices.reset()
+        super().exec_()
+
+class Preferences_Streams(QtWidgets.QWidget):
+    def __init__(self, manager, parent=None):
+        # add get token button
+        super().__init__(parent)
+        self.manager = manager
         self.panel_services = {}
-        self.panel_services['main'] = QtWidgets.QWidget()
-        self.panel_services['main_container'] = QtWidgets.QGridLayout()
+        self.panel_services['container'] = QtWidgets.QGridLayout()
+
         self.panel_services['list'] = QtWidgets.QTableWidget()
         self.panel_services['list'].setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.panel_services['list'].setColumnCount(1)
@@ -298,37 +341,53 @@ def set_disabledrowstyle(item, val):
             nameline = 'line_' + elem
             self.panel_services[namelabel] = QtWidgets.QLabel()
             self.panel_services[namelabel].setText(elem.capitalize() + ':')
-            self.panel_services['main_container'].addWidget(self.panel_services[namelabel], i, 1)
+            self.panel_services['container'].addWidget(self.panel_services[namelabel], i, 1)
             if elem == 'enabled':
                 self.panel_services[nameline] = QtWidgets.QCheckBox()
                 self.panel_services[nameline].stateChanged.connect(self.save_servicedata)
             else:
                 self.panel_services[nameline] = QtWidgets.QLineEdit()
-                self.panel_services[nameline].editingFinished.connect(self.save_servicedata)
-                # self.panel_services[nameline].setEnabled(False)
+                # self.panel_services[nameline].editingFinished.connect(self.save_servicedata)
+                self.panel_services[nameline].setEnabled(False)
             self.panel_services[nameline].setMinimumHeight(30)
-            self.panel_services['main_container'].addWidget(self.panel_services[nameline], i, 2)
-        self.panel_services['main_container'].setRowStretch(self.panel_services['main_container'].rowCount(), 10)
+            self.panel_services['container'].addWidget(self.panel_services[nameline], i, 2)
+        self.panel_services['container'].setRowStretch(self.panel_services['container'].rowCount(), 10)
         self.panel_services['list'].setFixedWidth(150)
-        self.panel_services['main'].setLayout(self.panel_services['main_container'])
-        self.panel_services['main_container'].addWidget(self.panel_services['list'], 0, 0, -1, 1)
-        self.create_services()
+        self.setLayout(self.panel_services['container'])
+        self.panel_services['container'].addWidget(self.panel_services['list'], 0, 0, -1, 1)
         self.panel_services['list'].itemSelectionChanged.connect(self.service_changed)
-        self.panel_services['list'].setCurrentCell(0, 0)
+        self.reset()
+
+    def create_services(self):
+        self.panel_services['list'].blockSignals(True)
+        while self.panel_services['list'].rowCount():
+            self.panel_services['list'].removeRow(0)
+        for service in common.manager.SERVICES.values():
+            servicename = service.Main.name
+            row = QtWidgets.QTableWidgetItem()
+            row.setText(servicename)
+            row.setFlags(row.flags() & ~QtCore.Qt.ItemIsEditable)
+            rowcount = self.panel_services['list'].rowCount()
+            self.panel_services['list'].insertRow(rowcount)
+            self.panel_services['list'].setItem(rowcount, 0, row)
+        self.panel_services['list'].sortItems(QtCore.Qt.AscendingOrder)
+        self.panel_services['list'].blockSignals(False)
 
     def service_changed(self):
-        self.block_signals(True)
+        # self.block_signals(True)
         item = self.panel_services['list'].currentItem()
         service = item.text()
-        config = self.manager.config['streamservices'][service]
+        config = self.temporary_settings[service]
         for elem in ['enabled', 'channel', 'channel_id', 'client_id', 'client_secret', 'scope', 'redirect_uri', 'authorization_base_url', 'token_url']:
             if elem == 'enabled':
                 val = config.get(elem, False)
+                self.panel_services['line_' + elem].blockSignals(True)
                 self.panel_services['line_' + elem].setChecked(val)
+                self.panel_services['line_' + elem].blockSignals(False)
                 set_disabledrowstyle(item, val)
             else:
                 self.panel_services['line_' + elem].setText(str(config.get(elem, '')))
-        self.block_signals(False)
+        # self.block_signals(False)
 
     def save_servicedata(self):
         item = self.panel_services['list'].currentItem()
@@ -339,28 +398,132 @@ def set_disabledrowstyle(item, val):
                 set_disabledrowstyle(item, result)
             else:
                 result = self.panel_services['line_' + elem].text()
-            self.manager.config['streamservices'][service][elem] = result
+            self.temporary_settings[service][elem] = result
 
-    def create_statuslayout(self):
-        self.panel_status = {}
-        self.panel_status['main'] = QtWidgets.QWidget()
-        self.panel_status['main_container'] = QtWidgets.QHBoxLayout()
-        self.panel_status['webpage'] = QtWebEngineWidgets.QWebEngineView()
-        self.panel_status['webpage'].load(QtCore.QUrl("http://localhost:8080/"))
-        self.panel_status['main_container'].addWidget(self.panel_status['webpage'])
-        self.panel_status['main'].setLayout(self.panel_status['main_container'])
+    def accept(self):
+        for service in self.temporary_settings:
+            self.manager.config['streamservices'][service]['enabled'] = self.temporary_settings[service]['enabled']
 
-    def block_signals(self, block):
-        for i in self.gameslayout:
-            self.gameslayout[i].blockSignals(block)
-        for i in self.panel_services:
-            self.panel_services[i].blockSignals(block)
+    def reset(self):
+        self.temporary_settings = copy.deepcopy(self.manager.config['streamservices'])
+        self.create_services()
+        self.panel_services['list'].setCurrentCell(0, 0)
 
 
-def set_disabledrowstyle(item, val):
-    if val:
-        item.setForeground(QtGui.QColor(0,0,0))
-    else:
+class Preferences_Pauseservices(QtWidgets.QWidget):
+    def __init__(self, manager, parent=None):
+        super().__init__(parent)
+        self.manager = manager
+        self.panel_pause = {}
+        self.panel_pause['container'] = QtWidgets.QGridLayout()
+        self.panel_pause['label'] = QtWidgets.QLabel('Test')
+
+        for elem in ['list', 'list_pause']:
+            self.panel_pause[elem] = QtWidgets.QTableWidget()
+            self.panel_pause[elem].setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+            self.panel_pause[elem].setColumnCount(1)
+            self.panel_pause[elem].setWordWrap(False)
+            self.panel_pause[elem].verticalHeader().setVisible(False)
+            self.panel_pause[elem].horizontalHeader().setVisible(False)
+            self.panel_pause[elem].horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+
+        # self.panel_pause['refresh'] = QtWidgets.QPushButton('🔃')
+        self.panel_pause['add'] = QtWidgets.QPushButton('→')
+        self.panel_pause['remove'] = QtWidgets.QPushButton('←')
+        # self.panel_pause['refresh'].setFlat(True)
+        self.panel_pause['add'].setFlat(True)
+        self.panel_pause['remove'].setFlat(True)
+
+        # self.panel_pause['refresh'].clicked.connect(self.populate_pauseprocess)
+        self.panel_pause['add'].clicked.connect(functools.partial(self.transfer_pauseprocess, 'add'))
+        self.panel_pause['remove'].clicked.connect(functools.partial(self.transfer_pauseprocess, 'remove'))
+
+        self.panel_pause['addremove_widget'] = QtWidgets.QWidget()
+        self.panel_pause['addremove_layout'] = QtWidgets.QVBoxLayout()
+
+        # self.panel_pause['addremove_layout'].addWidget(self.panel_pause['refresh'])
+        self.panel_pause['addremove_layout'].addStretch()
+        self.panel_pause['addremove_layout'].addWidget(self.panel_pause['add'])
+        self.panel_pause['addremove_layout'].addWidget(self.panel_pause['remove'])
+        self.panel_pause['addremove_layout'].addStretch()
+        self.panel_pause['addremove_widget'].setLayout(self.panel_pause['addremove_layout'])
+
+        # self.panel_pause['container'].setRowStretch(self.panel_pause['container'].rowCount(), 10)
+        self.setLayout(self.panel_pause['container'])
+        self.panel_pause['container'].addWidget(self.panel_pause['list'], 0, 0, 1, -1)
+        self.panel_pause['container'].addWidget(self.panel_pause['list'], 1, 0, -1, 1)
+        self.panel_pause['container'].addWidget(self.panel_pause['addremove_widget'], 1, 1, -1, 1)
+        self.panel_pause['container'].addWidget(self.panel_pause['list_pause'], 1, 2, -1, 1)
+        # self.reset()
+
+    def populate_pauseprocess(self):
+        while self.panel_pause['list'].rowCount():
+            self.panel_pause['list'].removeRow(0)
+        while self.panel_pause['list_pause'].rowCount():
+            self.panel_pause['list_pause'].removeRow(0)
+
+        currentconfig = self.manager.config['base']['services'].copy()
+        import time
+        current = time.time()
+        currentprocesses = common.tools.listservices()
+        print(time.time()-current)
+        for service in currentprocesses.values():
+            row = QtWidgets.QTableWidgetItem()
+            row.setText((service['name']))
+            tooltip = '{} ({})\n\n{}'.format(service['display_name'], service['status'].upper(), service['description'].replace('. ', '.\n'))
+            row.setToolTip(tooltip.strip())
+            if service['name'] in currentconfig:
+                destination = self.panel_pause['list_pause']
+                currentconfig.remove(service['name'])
+            else:
+                destination = self.panel_pause['list']
+            rowcount = destination.rowCount()
+            destination.insertRow(rowcount)
+            destination.setItem(rowcount, 0, row)
+
+        for service in currentconfig:
+            rowcount = self.panel_pause['list_pause'].rowCount()
+            row = QtWidgets.QTableWidgetItem()
+            row.setText(service)
+            self.panel_pause['list_pause'].insertRow(rowcount)
+            self.panel_pause['list_pause'].setItem(rowcount, 0, row)
+        self.panel_pause['list'].sortByColumn(0, QtCore.Qt.AscendingOrder)
+        self.panel_pause['list_pause'].sortByColumn(0, QtCore.Qt.AscendingOrder)
+
+    def transfer_pauseprocess(self, operation):
+        if operation == 'add':
+            source = self.panel_pause['list']
+            destination = self.panel_pause['list_pause']
+        else:
+            source = self.panel_pause['list_pause']
+            destination = self.panel_pause['list']
+        item = source.currentItem()
+        if item:
+            item = item.text()
+            row = QtWidgets.QTableWidgetItem()
+            row.setText(item)
+            rowcount = destination.rowCount()
+            source.removeRow(source.currentRow())
+            destination.insertRow(rowcount)
+            destination.setItem(rowcount, 0, row)
+            # if operation == 'add':
+            #     self.manager.config['base']['services'].append(item)
+            # else:
+            #     self.manager.config['base']['services'].remove(item)
+        self.panel_pause['list'].sortByColumn(0, QtCore.Qt.AscendingOrder)
+        self.panel_pause['list_pause'].sortByColumn(0, QtCore.Qt.AscendingOrder)
+
+    def accept(self):
+        rowdata = []
+        for row in range(self.panel_pause['list_pause'].rowCount()):
+            item = self.panel_pause['list_pause'].item(row, 0)
+            rowdata.append(item.text())
+        self.manager.config['base']['services'] = rowdata
+
+    def reset(self):
+        self.populate_pauseprocess()
+
+
 class WebRemote(common.remote.WebRemote, QtCore.QThread):
     check = QtCore.Signal()
     updated = QtCore.Signal(dict)
