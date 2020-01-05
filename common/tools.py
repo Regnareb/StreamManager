@@ -1,4 +1,4 @@
-import os.path
+import sys
 import glob
 import ctypes
 import logging
@@ -67,3 +67,10 @@ def parse_strings(infos):
         except AttributeError:
             pass
     return infos
+
+
+class Borg:
+    __shared_state = {}
+    def __init__(self):
+        super().__init__()
+        self.__dict__ = self.__shared_state

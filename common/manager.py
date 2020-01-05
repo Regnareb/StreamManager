@@ -17,16 +17,17 @@ logging.getLogger().setLevel(logging.INFO)
 SERVICES = tools.loadmodules(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')), 'services')
 
 
-class ManageStream():
+class ManageStream(tools.Borg):
     def __init__(self):
         super().__init__()
-        self.process = ''
-        self.services = {}
-        self.currentkey = set()
-        self.config_filepath = os.path.join(os.path.dirname(__file__), 'settings.json')
-        self.load_config()
-        self.shortcuts()
-        atexit.register(self.save_config)
+        if not self._Borg__shared_state:
+            self.process = ''
+            self.services = {}
+            self.currentkey = set()
+            self.config_filepath = os.path.join(os.path.dirname(__file__), '..', 'data', 'settings.json')
+            self.load_config()
+            self.shortcuts()
+            atexit.register(self.save_config)
 
     def load_config(self):
         with open(self.config_filepath) as json_file:
