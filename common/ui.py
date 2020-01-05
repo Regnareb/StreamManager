@@ -6,26 +6,59 @@ logger = logging.getLogger(__name__)
 from PySide2 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
 
 import common.manager
+import common.remote
 
-class StreamManager_UI(QtWidgets.QMainWindow):
+class MovableWindow():
+    def mousePressEvent(self, QMouseEvent):
+        self.windowPos = QMouseEvent.pos()
+        self.setCursor(QtGui.QCursor(QtCore.Qt.SizeAllCursor))
+
+    def mouseReleaseEvent(self, QMouseEvent):
+        self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
+
+    def mouseMoveEvent(self, QMouseEvent):
+        pos = QtCore.QPoint(QMouseEvent.globalPos())
+        self.window().move(pos - self.windowPos + QtCore.QPoint(self.pos().x() - self.geometry().x(), self.pos().y() - self.geometry().y()))
+
+
+class StreamManager_UI(MovableWindow, QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
         self.setStyleSheet("QTableWidget {margin: 10px;} QPlainTexxtEdit, QxLineEdit {margin: 3px;} QHeaderView::section { background-color: #3697FE;border:1px solid #ccc;font-weight: bold} QHeaderView::section:checked { background-color: #fff;border:1px solid #ccc;} QPlainTextEdit {background:white}")
         self.setWindowTitle('Stream Manager')
+        self.setCentralWidget(None)
         self.manager = ManagerStreamThread()
+        self.manager.updated.connect(self.updated)
+        self.webremote = WebRemote()
+        self.webremote.check.connect(self.check)
+        self.webremote.updated.connect(self.updated)
+        self.webremote.start()
+        self.create_menu()
         self.create_gamelayout()
-        self.create_serviceslayout()
         self.create_statuslayout()
         self.load_appdata()
         self.load_generalsettings()
-        self.centralwidget = QtWidgets.QTabWidget(self)
-        self.centralwidget.setMovable(True)
-        # self.centralwidget.setDocumentMode(True)  # To be able to see tabs when drag&drop
-        self.setCentralWidget(self.centralwidget)
-        self.centralwidget.addTab(self.panel_status['main'], 'Status')
-        self.centralwidget.addTab(self.panel_services['main'], 'Services')
-        self.centralwidget.addTab(self.gameslayout['main'], 'Games')
+        self.gameslayout['dock'].setTitleBarWidget(QtWidgets.QWidget())
+        self.panel_status['dock'].setTitleBarWidget(QtWidgets.QWidget())
+        self.setTabPosition(QtCore.Qt.AllDockWidgetAreas, QtWidgets.QTabWidget.North)
+        self.setDockOptions(QtWidgets.QMainWindow.AllowNestedDocks | QtWidgets.QMainWindow.AllowTabbedDocks)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.panel_status['dock'])
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.gameslayout['dock'])
+        self.tabifyDockWidget(self.panel_status['dock'], self.gameslayout['dock'])
+        self.panel_status['dock'].raise_()
+
+    def check(self):
+        self.manager.start()
+
+    def updated(self, infos):
+        pass
+
+    def closeEvent(self, event):
+        self.manager.quit()
+        self.webremote.quit()
+        self.webremote.terminate()
+        super().closeEvent(event)
 
     def mouseDoubleClickEvent(self, event):
         super().mouseDoubleClickEvent(event)
@@ -107,6 +140,8 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.gameslayout['container_llayout'].setLayout(self.gameslayout['llayout'])
         self.gameslayout['container_rlayout'] = QtWidgets.QWidget()
         self.gameslayout['container_rlayout'].setLayout(self.gameslayout['rlayout'])
+        self.gameslayout['dock'] = QtWidgets.QDockWidget('Games')
+        self.gameslayout['dock_layout'] = QtWidgets.QHBoxLayout()
         self.gameslayout['main'] = QtWidgets.QSplitter()
         self.gameslayout['main'].addWidget(self.gameslayout['container_llayout'])
         self.gameslayout['main'].addWidget(self.gameslayout['container_rlayout'])
@@ -114,6 +149,8 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.gameslayout['main'].setStretchFactor(1, 1)
         self.gameslayout['main'].setCollapsible(0, 0)
         self.gameslayout['main'].setCollapsible(1, 0)
+        self.gameslayout['main'].addWidget(self.gameslayout['container_rlayout'])
+        self.gameslayout['dock'].setWidget(self.gameslayout['main'])
 
     def create_filedialog(self):
         self.filedialog = QtWidgets.QFileDialog()
@@ -129,7 +166,7 @@ class StreamManager_UI(QtWidgets.QMainWindow):
                 logger.warning('The same process is already registered: {}'.format(self.manager.config['appdata'].get(process)))
             else:
                 self.manager.config['appdata'][process] = {}
-                self.create_row(process)
+                self.create_gamerow(process)
                 self.gameslayout['table'].sortByColumn(0, QtCore.Qt.AscendingOrder)
 
     def remove_game(self):
@@ -148,6 +185,7 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         data = {'category': cat, 'title': title, 'description': desc, 'tags': tags}
         if current:
             self.manager.config['appdata'][current._process].update(data)
+            self.update_gamerow(current)
         else:
             for key in data.copy():
                 data['forced_' + key] = self.gameslayout[key].button.state
@@ -155,10 +193,13 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.manager.process = ''  # Reset current process to be able to apply new settings
         logger.debug(data)
 
-    def create_row(self, process):
+    def update_gamerow(self, row):
+        row.setText('{} ({})'.format(self.manager.config['appdata'][row._process].get('category', ''), row._process))
+
+    def create_gamerow(self, process):
         row = QtWidgets.QTableWidgetItem()
-        row.setText('{} ({})'.format(self.manager.config['appdata'][process].get('category', ''), process))
         row._process = process
+        self.update_gamerow(row)
         row.setFlags(row.flags() & ~QtCore.Qt.ItemIsEditable)
         rowcount = self.gameslayout['table'].rowCount()
         self.gameslayout['table'].insertRow(rowcount)
@@ -167,7 +208,7 @@ class StreamManager_UI(QtWidgets.QMainWindow):
 
     def load_appdata(self):
         for process in self.manager.config['appdata']:
-            self.create_row(process)
+            self.create_gamerow(process)
         self.gameslayout['table'].sortByColumn(0, QtCore.Qt.AscendingOrder)
 
     def load_appsettings(self, *args):
@@ -221,19 +262,22 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.gameslayout['remove_game'].setEnabled(False)
         self.block_signals(False)
 
-    def create_services(self):
-        for service in common.manager.SERVICES.values():
-            servicename = service.Main.name
-            row = QtWidgets.QTableWidgetItem()
-            row.setText(servicename)
-            row.setFlags(row.flags() & ~QtCore.Qt.ItemIsEditable)
-            rowcount = self.panel_services['list'].rowCount()
-            self.panel_services['list'].insertRow(rowcount)
-            self.panel_services['list'].setItem(rowcount, 0, row)
-        self.panel_services['list'].sortItems(QtCore.Qt.AscendingOrder)
+    def create_statuslayout(self):
+        self.panel_status = {}
+        self.panel_status['dock'] = QtWidgets.QDockWidget('Status')
+        self.panel_status['webpage'] = QtWebEngineWidgets.QWebEngineView()
+        self.panel_status['webpage'].load(QtCore.QUrl("http://localhost:8080/"))
+        self.panel_status['dock'].setWidget(self.panel_status['webpage'])
 
-    def create_serviceslayout(self):
-        # Refresh token
+    def block_signals(self, block):
+        for i in self.gameslayout:
+            self.gameslayout[i].blockSignals(block)
+
+def set_disabledrowstyle(item, val):
+    if val:
+        item.setForeground(QtGui.QColor(0,0,0))
+    else:
+        item.setForeground(QtGui.QColor(150,150,150))
 
         self.panel_services = {}
         self.panel_services['main'] = QtWidgets.QWidget()
@@ -315,31 +359,33 @@ def set_disabledrowstyle(item, val):
     if val:
         item.setForeground(QtGui.QColor(0,0,0))
     else:
-        item.setForeground(QtGui.QColor(150,150,150))
+class WebRemote(common.remote.WebRemote, QtCore.QThread):
+    check = QtCore.Signal()
+    updated = QtCore.Signal(dict)
 
+    def check_process(self):
+        self.check.emit()
 
-import bottle
-class WebRemote(QtCore.QThread):
     def run(self):
-        @bottle.route('/')
-        def hello():
-            return "Hello World!"
-        bottle.run(host='localhost', port=8080, quiet=True)
+        self.server()
+        self.exec_()
 
 
 class ManagerStreamThread(common.manager.ManageStream, QtCore.QThread):
+    updated = QtCore.Signal(dict)
 
     def run(self):
-        result = self.check_application()
-        if result:
-            logger.info(result)
+        self.create_services()
+        timer = QtCore.QTimer()
+        timer.timeout.connect(self.main)
+        timer.start(1000)
+        self.exec_()
 
     def main(self):
-        self.create_services()
-        timer = QtCore.QTimer(self)
-        timer.timeout.connect(self.start)
-        timer.start(1000)
-
+        result = self.check_application()
+        if result:
+            self.updated.emit(result)
+            logger.info(result)
 
 class StateButtons():
     buttonClicked = QtCore.Signal(bool)
