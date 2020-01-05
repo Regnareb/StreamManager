@@ -52,12 +52,13 @@ class Service():
         try:
             if self.token_isexpired():
                 self.refresh_token()
-        except (KeyError, Warning, InvalidGrantError):
+        except (KeyError, Warning, InvalidGrantError, MissingTokenError, InvalidClientIdError):
             logger.info('Asking for an access code for {}'.format(self.name))
             port = re.search(r':(\d*)/?$', self.config['redirect_uri'])
             port = int(port.group(1))
             authorization_url, _ = self.oauth2.authorization_url(self.config['authorization_base_url'], state=self.config['client_secret'], access_type='offline')
             serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            serversocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             serversocket.bind(('localhost', port))
             serversocket.listen(5)
             webbrowser.open(authorization_url)
@@ -71,13 +72,12 @@ class Service():
             code = urllib.parse.unquote(code)
             logger.debug('The code is {}. Asking for the authorization token'.format(code))
             self.config['authorization'] = self.oauth2.fetch_token(self.config['token_url'], code, include_client_id=True, client_secret=self.config['client_secret'])
-        finally:
-            self.set_headers()
+        self.set_headers()
 
     def refresh_token(self):
         try:
             self.config['authorization'] = self.oauth2.refresh_token(self.config['token_url'], **{'client_id': self.config['client_id'], 'client_secret': self.config['client_secret']})
-        except InvalidGrantError:
+        except (InvalidGrantError, MissingTokenError, InvalidClientIdError):
             logger.error("Couldn't refresh the token")
             raise
 
