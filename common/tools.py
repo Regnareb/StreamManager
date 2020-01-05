@@ -37,14 +37,27 @@ def loadmodules(path, subfolder):
     return data
 
 def getForegroundProcess():
-    from ctypes import wintypes
-    user32 = ctypes.windll.user32
-    h_wnd = user32.GetForegroundWindow()
-    pid = ctypes.wintypes.DWORD()
-    user32.GetWindowThreadProcessId(h_wnd, ctypes.byref(pid))
-    process = psutil.Process(pid.value)
+    if sys.platform == 'win32':
+        from ctypes import wintypes
+        user32 = ctypes.windll.user32
+        h_wnd = user32.GetForegroundWindow()
+        pid = ctypes.wintypes.DWORD()
+        user32.GetWindowThreadProcessId(h_wnd, ctypes.byref(pid))
+        process = psutil.Process(pid.value).name()
+    elif sys.platform=='darwin':
+        # import AppKit
+        process = ''
+    else:
+        process = ''
     return process
 
+def listservices(namefilter='', status=''):
+    services = {}
+    for i in psutil.win_service_iter():
+        if namefilter and namefilter.lower() not in i.name().lower() or status and i.status() != status:
+            continue
+        services[i.binpath()] = i.as_dict()
+    return services
 def parse_strings(infos):
     for key in infos:
         try:
