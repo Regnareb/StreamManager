@@ -33,7 +33,8 @@ class StreamManager_UI(MovableWindow, QtWidgets.QMainWindow):
         self.manager = ManagerStreamThread()
         self.manager.updated.connect(self.updated)
         self.webremote = WebRemote()
-        self.webremote.check.connect(self.check)
+        self.webremote.startedcheck.connect(self.start_check)
+        self.webremote.stoppedcheck.connect(self.stop_check)
         self.webremote.updated.connect(self.updated)
         self.webremote.start()
         self.preferences = Preferences(self.manager)
@@ -51,8 +52,11 @@ class StreamManager_UI(MovableWindow, QtWidgets.QMainWindow):
         self.tabifyDockWidget(self.panel_status['dock'], self.gameslayout['dock'])
         self.panel_status['dock'].raise_()
 
-    def check(self):
+    def start_check(self):
         self.manager.start()
+
+    def stop_check(self):
+        self.manager.quit()
 
     def updated(self, infos):
         pass
@@ -525,11 +529,15 @@ class Preferences_Pauseservices(QtWidgets.QWidget):
 
 
 class WebRemote(common.remote.WebRemote, QtCore.QThread):
-    check = QtCore.Signal()
+    startedcheck = QtCore.Signal()
+    stoppedcheck = QtCore.Signal()
     updated = QtCore.Signal(dict)
 
-    def check_process(self):
-        self.check.emit()
+    def start_check(self):
+        self.startedcheck.emit()
+
+    def stop_check(self):
+        self.stoppedcheck.emit()
 
     def run(self):
         self.server()

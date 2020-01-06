@@ -17,19 +17,27 @@ class WebRemote():
         print('Updated to:', infos)
 
     @common.tools.threaded
-    def check_process_threaded(self):
+    def start_check_threaded(self):
         self.threaded = False
-        self.check_process()
+        self.start_check()
         self.threaded = True
 
     def check_process(self):
-        if self.threaded:
-            self.check_process_threaded()
+        self.running = True
         while self.running:
             infos = self.manager.check_application()
             time.sleep(1)
             if infos:
                 self.update_infos(infos)
+
+    def start_check(self):
+        if self.threaded:
+            self.start_check_threaded()
+        else:
+            self.check_process()
+
+    def stop_check(self):
+        pass
 
     def server(self):
         app = bottle.Bottle()
@@ -48,9 +56,10 @@ class WebRemote():
             action = bottle.request.forms.get('action')
             if action == 'Run':
                 self.running = True
-                self.check_process()
+                self.start_check()
             else:
                 self.running = False
-            action= 'Stop' if self.running else 'Run'
+                self.stop_check()
+            action = 'Stop' if self.running else 'Run'
             return bottle.template('data/theme/remote.tpl', action=action, services=self.manager.services)
         app.run(quiet=True)
