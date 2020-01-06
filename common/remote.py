@@ -11,6 +11,7 @@ class WebRemote():
         super().__init__()
         self.threaded = False
         self.running = False
+        self.timer = 1
         self.manager = common.manager.ManageStream()
 
     def update_infos(self, infos):
@@ -26,9 +27,9 @@ class WebRemote():
         self.running = True
         while self.running:
             infos = self.manager.check_application()
-            time.sleep(1)
             if infos:
                 self.update_infos(infos)
+            time.sleep(self.timer)
 
     def start_check(self):
         if self.threaded:
