@@ -51,6 +51,11 @@ class StreamManager_UI(MovableWindow, QtWidgets.QMainWindow):
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.gameslayout['dock'])
         self.tabifyDockWidget(self.panel_status['dock'], self.gameslayout['dock'])
         self.panel_status['dock'].raise_()
+        self.manager.updated.connect(self.updated)
+        self.manager.createdservices.connect(self.panel_status['webpage'].reload)
+        self.webremote.startedcheck.connect(self.start_check)
+        self.webremote.stoppedcheck.connect(self.stop_check)
+        self.webremote.updated.connect(self.updated)
 
     def start_check(self):
         self.manager.start()
@@ -544,6 +549,7 @@ class WebRemote(common.remote.WebRemote, QtCore.QThread):
 
 class ManagerStreamThread(common.manager.ManageStream, QtCore.QThread):
     updated = QtCore.Signal(dict)
+    createdservices = QtCore.Signal()
 
     def run(self):
         self.create_services()
@@ -557,6 +563,10 @@ class ManagerStreamThread(common.manager.ManageStream, QtCore.QThread):
         if result:
             self.updated.emit(result)
             logger.info(result)
+
+    def create_services(self):
+        super().create_services()
+        self.createdservices.emit()
 
 class StateButtons():
     buttonClicked = QtCore.Signal(bool)
