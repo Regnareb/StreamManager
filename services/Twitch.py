@@ -40,9 +40,9 @@ class Main(Service):
             return self.request('put', address, data=data)
 
     def get_channel_id(self):
-        address = '{}/users?login={}'.format(self.apibase, self.config['channel'])
-        result = self.request('get', address).json()
-        return result['users'][0]['_id']
+        address = '{}/users'.format(self.apibase2)
+        result = self.request('get', address, self.headers2).json()
+        self.config['channel_id'] = result['data'][0]['id']
 
     @property
     def alltags(self):

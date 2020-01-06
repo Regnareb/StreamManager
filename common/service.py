@@ -21,8 +21,7 @@ class Service():
             self.config = config
             self.oauth2 = OAuth2Session(token=self.config['authorization'], client_id=self.config['client_id'], scope=self.config['scope'], redirect_uri=self.config['redirect_uri'])
             self.get_token()
-            if not self.config.get('channel_id'):
-                self.config['channel_id'] = self.get_channel_id()
+            self.get_channel_id()
         else:
             self.config = {
                 "enabled": False,

@@ -30,8 +30,8 @@ class Main(Service):
             return self.request('patch', address, data=data)
 
     def get_channel_id(self):
-        address = '{}/channels/{}'.format(self.apibase, self.config['channel'])
-        return self.request('get', address).json()['id']
+        address = '{}/users/current'.format(self.apibase)
+        self.config['channel_id'] = self.request('get', address).json()['channel']['id']
 
     def get_game_id(self, game):
         address = '{}/types?&query=eq:{}'.format(self.apibase, game)

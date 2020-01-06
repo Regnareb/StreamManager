@@ -12,10 +12,6 @@ class Main(Service):
     apibase = 'https://www.googleapis.com/youtube/v3'
     features = {'title': True, 'description': True, 'category': True, 'tags': False, 'clips': False}
 
-    def __init__(self, config):
-        config['channel_id'] = ''  # Reset the id each time because Youtube
-        super().__init__(config)
-
     def get_channel_info(self):
         address = '{}/liveBroadcasts?part=snippet&broadcastType=persistent&mine=true'.format(self.apibase)
         return self.request('get', address).json()
@@ -38,7 +34,6 @@ class Main(Service):
     def get_channel_id(self):
         result = self.get_channel_info()
         self.config['channel_id'] = result['items'][0]['id']
-        return result['items'][0]['id']
 
     @property
     def gamesid(self):
