@@ -374,6 +374,7 @@ class Preferences_Streams(QtWidgets.QWidget):
             rowcount = self.panel_services['list'].rowCount()
             self.panel_services['list'].insertRow(rowcount)
             self.panel_services['list'].setItem(rowcount, 0, row)
+            set_disabledrowstyle(row, self.temporary_settings[service.Main.name].get('enabled', False))
         self.panel_services['list'].sortItems(QtCore.Qt.AscendingOrder)
         self.panel_services['list'].blockSignals(False)
 
@@ -467,10 +468,7 @@ class Preferences_Pauseservices(QtWidgets.QWidget):
             self.panel_pause['list_pause'].removeRow(0)
 
         currentconfig = self.manager.config['base']['services'].copy()
-        import time
-        current = time.time()
         currentprocesses = common.tools.listservices()
-        print(time.time()-current)
         for service in currentprocesses.values():
             row = QtWidgets.QTableWidgetItem()
             row.setText((service['name']))
