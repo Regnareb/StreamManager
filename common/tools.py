@@ -1,3 +1,4 @@
+import os
 import sys
 import glob
 import ctypes
@@ -13,12 +14,29 @@ logger = logging.getLogger(__name__)
 
 @contextmanager
 def pause_services(services):
-    # Use pssuspend and kill -STOP on mac
-    for service in services:
-        subprocess.Popen('net stop "{}"'.format(service))
-    yield
-    for service in services:
-        subprocess.Popen('net start "{}"'.format(service))
+    if sys.platform=='win32':
+        for service in services:
+            subprocess.Popen('net stop "{}"'.format(service))
+        yield
+        for service in services:
+            subprocess.Popen('net start "{}"'.format(service))
+    else:
+        yield
+
+@contextmanager
+def pause_processes(processes):
+    if sys.platform=='win32':
+        for process in processes:
+            subprocess.Popen('pssuspend.exe "{}"'.format(process), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+        yield
+        for process in processes:
+            subprocess.Popen('pssuspend.exe -r "{}"'.format(process), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+    else:
+        for process in processes:
+           subprocess.Popen('pkill -STOP -c "{}$"'.format(process))
+        yield
+        for process in processes:
+            subprocess.Popen('pkill -CONT -c "{}$"'.format(process))
 
 def threaded(func):
     @functools.wraps(func)
@@ -52,12 +70,32 @@ def getForegroundProcess():
     return process
 
 def listservices(namefilter='', status=''):
+    if sys.platform != 'win32':
+        return {}
     services = {}
     for i in psutil.win_service_iter():
         if namefilter and namefilter.lower() not in i.name().lower() or status and i.status() != status:
             continue
         services[i.binpath()] = i.as_dict()
     return services
+
+def listprocesses():
+    result = {}
+    ignorelist = ['System Idle Process', 'System', 'svchost.exe', 'csrss.exe', 'services.exe', 'conhost.exe', 'wininit.exe', 'lsass.exe', 'lsm.exe', 'winlogon.exe', 'rundll32.exe', 'taskkill.exe']
+    for proc in psutil.process_iter():
+        try:
+            name = proc.name()
+            exe = proc.exe()
+            if name in ignorelist:
+                continue
+            if exe in result:
+                result[exe]['memory_percent'] += proc.memory_percent()
+            else:
+                result[exe] = proc.as_dict(attrs=['name', 'exe', 'memory_percent', 'nice', 'num_threads'])
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    return result
+
 def parse_strings(infos):
     for key in infos:
         try:
