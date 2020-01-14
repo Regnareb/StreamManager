@@ -122,6 +122,8 @@ try:
 except IOError:
     _stdout = lambda x: sys.stdout.write(x)
     _stderr = lambda x: sys.stderr.write(x)
+except AttributeError:
+     sys.stdout = sys.stderr = print
 
 # Lots of stdlib and builtin differences.
 if py3k:
