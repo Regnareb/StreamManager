@@ -1,0 +1,56 @@
+/* .refresh {float:right;margin-top:-4px} */
+
+ul {padding: 0px; margin: 0px}
+
+li {
+    margin: 5px;
+    padding: 5px;
+    height: 50px;
+    list-style-type: none;
+    list-style-position: inside;
+    vertical-align: middle
+}
+
+span {float: left}
+
+.service_name {
+    height:100%;
+    margin: 5px;
+    min-width: 100px;
+    text-align: center;
+    display: inline-block
+}
+.online {background-color: #afa}
+.started .offline, input[value="STOP"] {background-color: #faa}
+.stopped li, .started li {background-color: rgba(97, 205, 255, 0.5)}
+
+input.action {width:100%; height:10%; min-height:50px; text-align:center}
+
+
+
+/* html {
+    height: 100%;
+    box-sizing: border-box;
+  }
+
+  *,
+  *:before,
+  *:after {
+    box-sizing: inherit;
+  }
+
+  body {
+    position: relative;
+    margin: 0;
+    padding-bottom: 6rem;
+    min-height: 98%;
+  }
+
+
+  input.action {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    text-align: center;
+  } */

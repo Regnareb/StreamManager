@@ -4,7 +4,7 @@ import lib.bottle as bottle
 import common.manager
 import common.tools
 
-# AJAX? Change background color when there is an update?
+# AJAX? Change background color when there is an update?
 
 class WebRemote():
     def __init__(self):
@@ -13,6 +13,7 @@ class WebRemote():
         self.running = False
         self.timer = 1
         self.manager = common.manager.ManageStream()
+        self.manager.update_servicesinfos()
 
     def update_infos(self, infos):
         print('Updated to:', infos)
@@ -47,20 +48,26 @@ class WebRemote():
         def strip_path():
             bottle.request.environ['PATH_INFO'] = bottle.request.environ['PATH_INFO'].rstrip('/')
 
+        @app.route('/remote.css')
+        def remotecss():
+             return bottle.static_file('remote.css', root='data/theme/')
+
         @app.route('/')
         def index():
-            action= 'Stop' if self.running else 'Run'
-            return bottle.template('data/theme/remote.tpl', action=action, services=self.manager.services)
+            self.manager.update_servicesinfos()
+            action = 'STOP' if self.running else 'START'
+            services = {s.name: {'enabled': s.config['enabled'], 'infos': s.infos} for s in self.manager.services.values()}
+            return bottle.template('data/theme/remote.tpl', action=action, services=services)
 
         @app.route('/', method="POST")
         def formhandler():
             action = bottle.request.forms.get('action')
-            if action == 'Run':
+            if action == 'START':
                 self.running = True
                 self.start_check()
             else:
                 self.running = False
                 self.stop_check()
-            action = 'Stop' if self.running else 'Run'
-            return bottle.template('data/theme/remote.tpl', action=action, services=self.manager.services)
-        app.run(quiet=True)
+            bottle.redirect('/')
+
+        app.run(quiet=True, server='cherrypy')
