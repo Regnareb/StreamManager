@@ -6,6 +6,8 @@ logger = logging.getLogger(__name__)
 class Main(Service):
     name = 'Mixer'
     scope = "channel:update:self channel:clip:create:self"
+    client_id = "e1902ca98fbf96b908dd9002727f56ae4578fb0c10052cdf"
+    client_secret = "49172d24929486942577f0e7e23acce884f03c2801cf1222077f145599e17a71"
     authorization_base_url = "https://mixer.com/oauth/authorize"
     token_url = "https://mixer.com/api/v1/oauth/token"
     redirect_uri = "http://localhost:777/"

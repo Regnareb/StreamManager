@@ -22,6 +22,7 @@ class ManageStream(tools.Borg):
         super().__init__()
         if not self._Borg__shared_state:
             self.process = ''
+            self.config = {}
             self.services = {}
             self.currentkey = set()
             self.config_filepath = os.path.join(os.path.dirname(__file__), '..', 'data', 'settings.json')
@@ -29,9 +30,41 @@ class ManageStream(tools.Borg):
             self.shortcuts()
             atexit.register(self.save_config)
 
+    def conform_preferences(self):
+        template = {
+        "streamservices": {service.Main.name: service.Main.default_config() for service in SERVICES.values()},
+        "appdata": {},
+        "base": {
+            "title": "",
+            "description": "",
+            "services": [],
+            "processes": [],
+            "category": "",
+            "tags": [],
+            "forced_category": False,
+            "forced_title": False,
+            "forced_description": False,
+            "forced_tags": False
+            },
+        "assignations": {}
+        }
+        for key, value in template.items():
+            self.config.setdefault(key, value)
+            for k, v in value.items():
+                self.config[key].setdefault(k, v)
+
     def load_config(self):
-        with open(self.config_filepath) as json_file:
-            self.config = json.load(json_file)
+        try:
+            with open(self.config_filepath) as json_file:
+                self.config = json.load(json_file)
+        except FileNotFoundError:
+            pass
+        except json.decoder.JSONDecodeError:
+            import shutil
+            shutil.move(self.config_filepath, self.config_filepath+'_error')
+            os.remove(self.config_filepath)
+        finally:
+            self.conform_preferences()
 
     def save_config(self):
         for name, service in self.services.items():

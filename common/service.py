@@ -19,20 +19,24 @@ class Service():
     def __init__(self, config):
         if config:
             self.config = config
-            self.oauth2 = OAuth2Session(token=self.config['authorization'], client_id=self.config['client_id'], scope=self.config['scope'], redirect_uri=self.config['redirect_uri'])
-            self.get_token()
-            self.get_channel_id()
         else:
-            self.config = {
-                "enabled": False,
-                "scope": self.scope,
-                "client_id": "",
-                "client_secret": "",
-                "authorization_base_url": self.authorization_base_url,
-                "token_url": self.token_url,
-                "redirect_uri": self.redirect_uri,
-                "authorization": {}
-            }
+            self.config = self.default_config()
+        self.oauth2 = OAuth2Session(token=self.config['authorization'], client_id=self.config['client_id'], scope=self.config['scope'], redirect_uri=self.config['redirect_uri'])
+        self.get_token()
+        self.get_channel_id()
+
+    @classmethod
+    def default_config(cls):
+        return {
+            "enabled": False,
+            "scope": cls.scope,
+            "client_id": cls.client_id,
+            "client_secret": cls.client_secret,
+            "authorization_base_url": cls.authorization_base_url,
+            "token_url": cls.token_url,
+            "redirect_uri": cls.redirect_uri,
+            "authorization": {}
+        }
 
     def set_headers(self):
         self.headers = {
