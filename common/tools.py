@@ -16,10 +16,10 @@ logger = logging.getLogger(__name__)
 def pause_services(services):
     if sys.platform=='win32':
         for service in services:
-            subprocess.Popen('net stop "{}"'.format(service))
+            subprocess.Popen('net stop "{}"'.format(service), creationflags=subprocess.CREATE_NO_WINDOW)
         yield
         for service in services:
-            subprocess.Popen('net start "{}"'.format(service))
+            subprocess.Popen('net start "{}"'.format(service), creationflags=subprocess.CREATE_NO_WINDOW)
     else:
         yield
 
@@ -27,16 +27,16 @@ def pause_services(services):
 def pause_processes(processes):
     if sys.platform=='win32':
         for process in processes:
-            subprocess.Popen('pssuspend.exe "{}"'.format(process), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+            subprocess.Popen('pssuspend.exe "{}"'.format(process), creationflags=subprocess.CREATE_NO_WINDOW, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
         yield
         for process in processes:
-            subprocess.Popen('pssuspend.exe -r "{}"'.format(process), stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+            subprocess.Popen('pssuspend.exe -r "{}"'.format(process), creationflags=subprocess.CREATE_NO_WINDOW, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
     else:
         for process in processes:
-           subprocess.Popen('pkill -STOP -c "{}$"'.format(process))
+           subprocess.Popen('pkill -STOP -c "{}$"'.format(process), creationflags=subprocess.CREATE_NO_WINDOW)
         yield
         for process in processes:
-            subprocess.Popen('pkill -CONT -c "{}$"'.format(process))
+            subprocess.Popen('pkill -CONT -c "{}$"'.format(process), creationflags=subprocess.CREATE_NO_WINDOW)
 
 def threaded(func):
     @functools.wraps(func)
