@@ -15,6 +15,12 @@ import common.tools as tools
 logger = logging.getLogger(__name__)
 
 
+socket.setdefaulttimeout(10)
+
+class Timeout(Exception):
+    pass
+
+
 class Service():
     def __init__(self, config):
         self.infos = {'online': '', 'title': '', 'name': '', 'category': '', 'description': ''}
@@ -66,11 +72,14 @@ class Service():
             serversocket.bind(('localhost', port))
             serversocket.listen(5)
             webbrowser.open(authorization_url)
+            currenttime = time.time()
             while True:
                 connection, _ = serversocket.accept()
                 buf = connection.recv(4096)
                 if buf:
                     break
+                if time.time() - currenttime > 10:
+                    raise Timeout()
             code = re.search('code=(.*?)&', str(buf))
             code = code.group(1)
             code = urllib.parse.unquote(code)
