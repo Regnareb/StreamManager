@@ -55,11 +55,12 @@ class StreamManager_UI(MovableWindow, QtWidgets.QMainWindow):
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.gameslayout['dock'])
         self.tabifyDockWidget(self.panel_status['dock'], self.gameslayout['dock'])
         self.panel_status['dock'].raise_()
-
+        self.manager.createdservices.connect(self.updated)
         self.webremote.startedcheck.connect(self.start_check)
         self.webremote.stoppedcheck.connect(self.stop_check)
         self.webremote.updated.connect(self.updated)
         self.manager.validate.connect(self.update_invalidcategory)
+        self.manager.updated.connect(self.updated)
 
     def start_check(self):
         self.manager.start()
@@ -67,8 +68,8 @@ class StreamManager_UI(MovableWindow, QtWidgets.QMainWindow):
     def stop_check(self):
         self.manager.quit()
 
-    def updated(self, infos):
-        pass
+    def updated(self, infos=None):
+        self.panel_status['webpage'].reload()
 
     def closeEvent(self, event):
         self.manager.quit()
