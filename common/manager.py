@@ -86,7 +86,7 @@ class ManageStream(tools.Borg):
         self.save_config()
 
     def create_service(self, service):
-        if self.config['streamservices'].get(service.Main.name, {}).get('enabled', True) and service.Main.name not in self.services:
+        if self.config['streamservices'].get(service.Main.name, {}).get('enabled', False) and service.Main.name not in self.services:
             self.services[service.Main.name] = service.Main(self.config['streamservices'].get(service.Main.name))
 
     def create_clip(self):
