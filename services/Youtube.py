@@ -16,7 +16,19 @@ class Main(Service):
 
     def get_channel_info(self):
         address = '{}/liveBroadcasts?part=snippet&broadcastType=persistent&mine=true'.format(self.apibase)
-        return self.request('get', address).json()
+        result = self.request('get', address).json()
+        address = '{}/channels?part=snippet&mine=true'.format(self.apibase)
+        name = self.request('get', address).json()['items'][0]['snippet']['title']
+        address = '{}/liveBroadcasts?part=snippet&broadcastStatus=active&broadcastType=persistent'.format(self.apibase)
+        online = bool(self.request('get', address).json()['items'])
+        self.infos = {'online': online, 'title': result['items'][0]['snippet']['title'], 'name': name, 'category': '', 'description': result['items'][0]['snippet']['description']}
+        return result
+
+    def query_category(self, category):
+        return self.gamesid
+
+    def validate_category(self, category):
+        return bool(self.gamesid.get(category, False))
 
     def update_channel(self, infos):
         infos = super().update_channel(infos)

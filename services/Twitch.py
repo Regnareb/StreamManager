@@ -5,7 +5,7 @@ import common.tools as tools
 from common.service import *
 logger = logging.getLogger(__name__)
 
-
+# create stream markers
 class Main(Service):
     name = 'Twitch'
     scope = "user:edit:broadcast channel_editor clips:edit"
@@ -24,16 +24,36 @@ class Main(Service):
 
     def get_channel_info(self):
         address = '{}/channels/{}'.format(self.apibase, self.config['channel_id'])
-        return self.request('get', address).json()
+        result = self.request('get', address).json()
+        address = '{}/streams?user_id={}'.format(self.apibase2, self.config['channel_id'])
+        online = self.request('get', address).json()['data']
+        self.infos = {'online': bool(online), 'title': result['status'], 'name': result['display_name'], 'category': result['game'], 'description': result['description']}
+        return result
+
+    def query_category(self, category):
+        if category:
+            params = {'query': category}
+            address = '{}/search/games'.format(self.apibase)
+            response = self.request('get', address, params=params)
+            result = {}
+            for i in response.json()['games'] or []:
+                result[i['name']] = i['_id']
+            return result
+
+    def validate_category(self, category):
+        if category:
+            params = {'name': category}
+            address = '{}/games'.format(self.apibase2)
+            result = self.request('get', address, params=params).json()['data']
+            return bool(result)
 
     def update_channel(self, infos):
         infos = super().update_channel(infos)
         data = {}
-        channel_info = self.get_channel_info()
         if infos['title']:
-            data['status'] = infos['title'] or channel_info['status']
+            data['status'] = infos['title']
         if infos['category']:
-            data['game'] = self.config.get('assignation', {}).get(infos['category'], infos['category']) or channel_info['game']
+            data['game'] = self.config.get('assignation', {}).get(infos['category'], infos['category'])
         self.update_tags(infos['tags'])
         if data:
             self.get_token()

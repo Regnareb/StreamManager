@@ -17,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 class Service():
     def __init__(self, config):
+        self.infos = {'online': '', 'title': '', 'name': '', 'category': '', 'description': ''}
         if config:
             self.config = config
         else:
@@ -84,16 +85,19 @@ class Service():
             logger.error("Couldn't refresh the token")
             raise
 
+    def validate_category(self, category):
+        return True
+
     def update_channel(self, infos):
         infos['name'] = self.name
         infos['customtext'] = self.config.get('customtext', '%CUSTOMTEXT%')
         return tools.parse_strings(infos)
 
-    def request(self, action, address, headers=None, data=None):
+    def request(self, action, address, headers=None, data=None, params=None):
         if not headers:
             headers = self.headers
         action = getattr(requests, action)
-        response = action(address, headers=headers, json=data)
+        response = action(address, headers=headers, json=data, params=params)
         curframe = inspect.currentframe()
         outframe = inspect.getouterframes(curframe, 2)[1][3]
         self.log_requests(outframe, address, response)

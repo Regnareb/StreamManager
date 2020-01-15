@@ -93,6 +93,25 @@ class ManageStream(tools.Borg):
             if service.config['enabled']:
                 service.update_channel(infos)
 
+    def validate_assignations(self, config, category=None):
+        if category:
+            config.setdefault(category, {})
+        for cat in config:
+            if category and cat != category:
+                continue
+            for service in self.services.values():
+                if not service.features['category']:
+                    config.setdefault(cat, {}).setdefault(service.name, {})
+                    config[cat][service.name] = {'name': '', 'valid': True}
+                    continue
+                assigned_category = config.get(cat, {}).get(service.name, {}).get('name', '') or cat
+                isvalid = config.get(cat, {}).get(service.name, {}).get('valid', False)
+                if assigned_category and not isvalid:
+                    valid = service.validate_category(assigned_category)
+                    config.setdefault(cat, {}).setdefault(service.name, {})
+                    config[cat][service.name] = {'name': assigned_category, 'valid': valid}
+        return config
+
     def check_application(self):
         process = tools.getForegroundProcess()
         existing = self.config['appdata'].get(process, '')
@@ -114,9 +133,14 @@ class ManageStream(tools.Borg):
                 infos[element] = self.config['base'].get(element)
         return infos
 
+    def update_servicesinfos(self):
+        for service in self.services.values():
+            service.get_channel_info()
+
     def main(self):
         with tools.pause_services(self.config['base']['services']):
-            obs = subprocess.Popen('obs64.exe --startreplaybuffer', shell=True, cwd="C:\\Program Files (x86)\\obs-studio\\bin\\64bit\\")
-            while obs.poll() is None:
-                time.sleep(4)
-                self.check_application()
+            with tools.pause_processes(self.config['base']['processes']):
+                obs = subprocess.Popen('obs64.exe --startreplaybuffer', shell=True, cwd="C:\\Program Files (x86)\\obs-studio\\bin\\64bit\\")
+                while obs.poll() is None:
+                    time.sleep(4)
+                    self.check_application()

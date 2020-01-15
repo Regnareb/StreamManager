@@ -15,8 +15,10 @@ class Main(Service):
     features = {'title': True, 'description': False, 'category': True, 'tags': False, 'clips': True}
 
     def get_channel_info(self):
-        address = '/{}channels/{}'.format(self.apibase, self.config['channel_id'])
-        return self.request('get', address).json()
+        address = '{}/channels/{}'.format(self.apibase, self.config['channel_id'])
+        result = self.request('get', address).json()
+        self.infos = {'online': result['online'], 'title': result['name'], 'name': result['token'], 'category': result['type']['name'], 'description': result['description']}
+        return result
 
     def update_channel(self, infos):
         infos = super().update_channel(infos)
@@ -35,12 +37,24 @@ class Main(Service):
         address = '{}/users/current'.format(self.apibase)
         self.config['channel_id'] = self.request('get', address).json()['channel']['id']
 
-    def get_game_id(self, game):
-        address = '{}/types?&query=eq:{}'.format(self.apibase, game)
-        response = self.request('get', address)
+    def query_category(self, category):
+        params = {'query': 'eq:'+category}
+        address = '{}/types'.format(self.apibase)
+        response = self.request('get', address, params=params)
+        result = {}
         for i in response.json():
-            if i['name'] == game:
-                return i['id']
+            result[i['name']] = i['id']
+        return result
+
+    def get_game_id(self, category):
+        if category:
+            categories = self.query_category(category)
+            for k, v in categories.items():
+                if k == category:
+                    return v
+
+    def validate_category(self, category):
+        return bool(self.get_game_id(category))
 
     def create_clip(self):
         self.get_token()
