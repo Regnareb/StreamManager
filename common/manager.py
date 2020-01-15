@@ -5,6 +5,7 @@ import json
 import atexit
 import logging
 import subprocess
+import concurrent.futures
 
 import keyboard
 
@@ -76,8 +77,13 @@ class ManageStream(tools.Borg):
         keyboard.add_hotkey('ctrl+F9', self.create_clip)
 
     def create_services(self):
-        for service in SERVICES.values():
-            self.create_service(service)
+        nb = len(SERVICES) or 1
+        pool = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=nb) as executor:
+            for service in SERVICES.values():
+                pool.append(executor.submit(self.create_service, service))
+        concurrent.futures.wait(pool, timeout=5)
+        self.save_config()
 
     def create_service(self, service):
         if self.config['streamservices'].get(service.Main.name, {}).get('enabled', True) and service.Main.name not in self.services:
@@ -134,8 +140,12 @@ class ManageStream(tools.Borg):
         return infos
 
     def update_servicesinfos(self):
-        for service in self.services.values():
-            service.get_channel_info()
+        nb = len(SERVICES) or 1
+        pool = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=nb) as executor:
+            for service in self.services.values():
+                pool.append(executor.submit(service.get_channel_info))
+        concurrent.futures.wait(pool, timeout=5)
 
     def main(self):
         with tools.pause_services(self.config['base']['services']):
