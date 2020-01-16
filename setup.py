@@ -2,7 +2,8 @@ from cx_Freeze import setup, Executable
 
 # Dependencies are automatically detected, but it might need
 # fine tuning.
-buildOptions = dict(packages=['concurrent.futures', 'PySide2', 'keyboard', 'cherrypy', 'psutil', 'requests_oauthlib', 'oauthlib.oauth2.rfc6749.errors'], excludes=[], include_files=['common', 'services', ('lib/bottle.py', 'lib/bottle.py'), 'data', 'pssuspend.exe'])
+buildOptions = dict(packages=['PySide2', 'concurrent.futures', 'keyboard', 'cherrypy', 'psutil', 'requests_oauthlib', 'oauthlib.oauth2.rfc6749.errors'],
+                    include_files=['common', 'services', ('lib/bottle.py', 'lib/bottle.py'), 'data', ('lib/pssuspend.exe', 'lib/pssuspend.exe')])
 
 import sys
 base = 'Win32GUI' if sys.platform=='win32' else None

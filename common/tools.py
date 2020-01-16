@@ -27,10 +27,10 @@ def pause_services(services):
 def pause_processes(processes):
     if sys.platform=='win32':
         for process in processes:
-            subprocess.Popen('pssuspend.exe "{}"'.format(process), creationflags=subprocess.CREATE_NO_WINDOW, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+            subprocess.Popen('lib/pssuspend.exe "{}"'.format(process), creationflags=subprocess.CREATE_NO_WINDOW, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
         yield
         for process in processes:
-            subprocess.Popen('pssuspend.exe -r "{}"'.format(process), creationflags=subprocess.CREATE_NO_WINDOW, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
+            subprocess.Popen('lib/pssuspend.exe -r "{}"'.format(process), creationflags=subprocess.CREATE_NO_WINDOW, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
     else:
         for process in processes:
            subprocess.Popen('pkill -STOP -c "{}$"'.format(process), creationflags=subprocess.CREATE_NO_WINDOW)
