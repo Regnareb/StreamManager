@@ -9,8 +9,6 @@ logger = logging.getLogger(__name__)
 class Main(Service):
     name = 'Twitch'
     scope = "user:edit:broadcast channel_editor clips:edit"
-    client_id = "l4b52ea1o7d2hpmyezyyflq0ya1rrr"
-    client_secret = "hg751cb5qzwsjwdfw0ggr2n30p7e0s"
     authorization_base_url = "https://id.twitch.tv/oauth2/authorize"
     token_url = "https://id.twitch.tv/oauth2/token"
     redirect_uri = "http://localhost:776/"

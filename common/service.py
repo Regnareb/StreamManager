@@ -37,8 +37,6 @@ class Service():
         return {
             "enabled": False,
             "scope": cls.scope,
-            "client_id": cls.client_id,
-            "client_secret": cls.client_secret,
             "authorization_base_url": cls.authorization_base_url,
             "token_url": cls.token_url,
             "redirect_uri": cls.redirect_uri,

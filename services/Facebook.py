@@ -6,8 +6,6 @@ logger = logging.getLogger(__name__)
 class Main(Service):
     name = 'Facebook'
     scope = "user_videos publish_video"
-    client_id = "139854916052250"
-    client_secret = "abd7d2e496bace2a5f5456a1e23dd9c9"
     authorization_base_url = "https://www.facebook.com/dialog/oauth"
     token_url = "https://graph.facebook.com/oauth/access_token"
     redirect_uri = "http://localhost:779/"
