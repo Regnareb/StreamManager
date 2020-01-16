@@ -55,7 +55,8 @@ class ManageStream(tools.Borg):
             for k, v in value.items():
                 self.config[key].setdefault(k, v)
         for service, values in self.credentials.items():
-            self.config['streamservices'][service].setdefault(service, values)
+            for k, v in values.items():
+                self.config['streamservices'][service][k] = v
 
     def load_config(self):
         def load_json(path):
