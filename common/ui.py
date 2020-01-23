@@ -445,9 +445,13 @@ class Preferences_Assignations(QtWidgets.QDialog):
         self.manager = manager
         self.interface = {}
         self.interface['layout'] = QtWidgets.QVBoxLayout()
+        self.interface['label'] = QtWidgets.QLabel('Some services do not use the same name for the same activity. You can match the category for each services.\nFor example Youtube has only "Gaming" and no specific game in its database.')
+        self.interface['label'].setAlignment(QtCore.Qt.AlignCenter)
         self.interface['hlayout'] = QtWidgets.QHBoxLayout()
         self.interface['processes'] = QtWidgets.QComboBox()
         self.interface['validate'] = QtWidgets.QPushButton('Check All')
+        self.interface['processes'].setFixedHeight(27)
+        self.interface['validate'].setFixedHeight(27)
         self.interface['validate'].clicked.connect(self.validate)
         self.interface['table'] = QtWidgets.QTableWidget()
         self.interface['table'].horizontalHeader().setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
@@ -456,6 +460,7 @@ class Preferences_Assignations(QtWidgets.QDialog):
         self.interface['table'].setWordWrap(True)
         self.interface['hlayout'].addWidget(self.interface['processes'])
         self.interface['hlayout'].addWidget(self.interface['validate'])
+        self.interface['layout'].addWidget(self.interface['label'])
         self.interface['layout'].addLayout(self.interface['hlayout'])
         self.interface['layout'].addWidget(self.interface['table'])
         self.servicesorder = sorted(common.manager.SERVICES)

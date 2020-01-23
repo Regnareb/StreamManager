@@ -1,0 +1,20 @@
+#table_games QHeaderView::section { background-color: #3697FE;border:1px solid #ccc;font-weight: bold}
+#table_games QHeaderView::section:checked { background-color: #fff;border:1px solid #ccc;}
+
+
+QDockWidget {color:transparent;}
+QDockWidget::title {
+    background: qlineargradient(spread:pad, x1:0, y1:1, x2:0, y2:0, stop:0.75 transparent, stop:0.95 rgba(0, 0, 0, 20));
+    border-top: 1px solid rgba(0,0,0,0.1);
+}
+
+xQTableWidget#table_services::item:focus {border:1px solid #f00  !important;}
+QTableView::indicator{background-color:  rgb(253, 237, 91);}
+QTableView::indicator:unchecked{background-color:  rgb(50, 189, 96);}
+QTableView::indicator:checked{background-color:  rgb(240, 140, 126);}
+
+
+QPushButton#enable_service::checked { background: url('data/theme/images/toggle_on.png'); }
+QPushButton#enable_service::pressed { background: url('data/theme/images/toggle_on.png'); }
+QPushButton#enable_service { background: url('data/theme/images/toggle_off.png');border:none}
+[mandatory="true"] { border: 1px solid rgb(0, 153, 255) }
