@@ -24,7 +24,6 @@ class ManageStream(tools.Borg):
         if not self._Borg__shared_state:
             self.process = ''
             self.config = {}
-            self.credentials = {}
             self.services = {}
             self.currentkey = set()
             self.config_filepath = os.path.join(os.path.dirname(__file__), '..', 'data', 'settings.json')
@@ -54,25 +53,19 @@ class ManageStream(tools.Borg):
             self.config.setdefault(key, value)
             for k, v in value.items():
                 self.config[key].setdefault(k, v)
-        for service, values in self.credentials.items():
-            for k, v in values.items():
-                self.config['streamservices'][service][k] = v
 
     def load_config(self):
-        def load_json(path):
-            try:
-                with open(path) as json_file:
-                    content = json.load(json_file)
-            except FileNotFoundError:
-                pass
-            except json.decoder.JSONDecodeError:
-                import shutil
-                shutil.move(path, path+'_error')
-                os.remove(path)
-            return content
-        self.config = load_json(self.config_filepath)
-        self.credentials = load_json(self.config_filepath.replace('settings.json', 'credentials.json'))
+        self.config = tools.load_json(self.config_filepath)
         self.conform_preferences()
+
+    def load_credentials(self, path=''):
+        if not path:
+            path = self.config_filepath.replace('settings.json', 'credentials.json')
+        config = tools.load_json(path)
+        for service, values in config.items():
+            logger.info('Loading credentials for "{}" service'.format(service))
+            for k, v in values.items():
+                self.config['streamservices'][service][k] = v
 
     def save_config(self):
         for name, service in self.services.items():

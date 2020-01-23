@@ -77,6 +77,12 @@ class StreamManager_UI(MovableWindow, QtWidgets.QMainWindow):
         self.webremote.terminate()
         super().closeEvent(event)
 
+    def dropEvent(self, event):
+        for url in event.mimeData().urls():
+            self.manager.load_credentials(url.toLocalFile())
+
+    def dragEnterEvent(self, event):
+        event.acceptProposedAction()
     def mouseDoubleClickEvent(self, event):
         super().mouseDoubleClickEvent(event)
         pos = self.pos()
@@ -823,6 +829,11 @@ class ManagerStreamThread(common.manager.ManageStream, QtCore.QThread):
             self.validate.emit(category)
         return result
 
+    def load_credentials(self, path=''):
+        try:
+            super().load_credentials(path)
+        except AttributeError:
+            raise  # Show a notification telling the user the json file is not right
 
 class StateButtons():
     buttonClicked = QtCore.Signal(bool)

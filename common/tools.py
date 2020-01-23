@@ -1,6 +1,7 @@
 import os
 import sys
 import glob
+import json
 import ctypes
 import logging
 import importlib
@@ -106,6 +107,19 @@ def parse_strings(infos):
             pass
     return infos
 
+def load_json(path):
+    content = {}
+    try:
+        with open(path) as json_file:
+            content = json.load(json_file)
+    except FileNotFoundError:
+        return 0
+    except json.decoder.JSONDecodeError:
+        import shutil
+        shutil.copy(path, path+'_error')
+        logger.error('There was an error in the json file, you can view it at this path: {}'.format(path+'_error'))
+        return 0
+    return content
 
 class Borg:
     __shared_state = {}
