@@ -94,20 +94,41 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.manager.validate.connect(self.update_invalidcategory)
         self.manager.updated.connect(self.updated)
         self.setAcceptDrops(True)
+        self.read_settings()
 
-    def start_check(self):
-        self.manager.start()
+    def set_dockable(self, state):
+        self.dockable = state
+        for i in [self.log_panel, self.gameslayout['dock'], self.panel_status['dock']]:
+            dummy = None if state else QtWidgets.QWidget()
+            i.setTitleBarWidget(dummy)
 
-    def stop_check(self):
-        self.manager.quit()
+    def read_settings(self):
+        self.settings = QtCore.QSettings('regnareb', 'Stream Manager')
+        if self.settings.value('initialised_once'):
+            self.restoreGeometry(self.settings.value('geometry'))
+            self.restoreState(self.settings.value('windowState'))
+            self.log_panel.interface['levels'].setCurrentIndex(self.log_panel.interface['levels'].findText(self.settings.value('logslevel')))
+            logger.info('Loaded settings from last session.')
+            self.set_dockable(self.settings.value('dockable'))
+        else:
+            self.first_launch()
 
-    def updated(self, infos=None):
-        self.panel_status['webpage'].reload()
+    def first_launch(self):
+        logger.info('First launch.')
+        self.log_panel.set_level('info')
+        self.preferences.open()
+        self.preferences.tabs.tabBar().hide()
+        self.set_dockable(False)
+        self.settings.setValue('initialised_once', 1)
 
     def closeEvent(self, event):
         self.manager.quit()
         self.webremote.quit()
         self.webremote.terminate()
+        self.settings.setValue("geometry", self.saveGeometry())
+        self.settings.setValue("windowState", self.saveState())
+        self.settings.setValue("dockable", True if self.dockable else '')
+        self.settings.setValue("logslevel", self.log_panel.interface['levels'].currentText())
         super().closeEvent(event)
 
     def load_stylesheet(self):
@@ -233,6 +254,7 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.gameslayout['container_rlayout'] = QtWidgets.QWidget()
         self.gameslayout['container_rlayout'].setLayout(self.gameslayout['rlayout'])
         self.gameslayout['dock'] = QtWidgets.QDockWidget('Games')
+        self.gameslayout['dock'].setObjectName('dockgames')
         self.gameslayout['dock_layout'] = QtWidgets.QHBoxLayout()
         self.gameslayout['main'] = QtWidgets.QSplitter()
         self.gameslayout['main'].addWidget(self.gameslayout['container_llayout'])
@@ -291,6 +313,7 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         category = self.gameslayout['category'].text()
         self.preferences.open()
         self.preferences.tabs.setCurrentIndex(1)
+        self.preferences.tabs.tabBar().hide()
         if category:
             index = self.preferences.tab_assignations.interface['processes'].findText(category)
             self.preferences.tab_assignations.interface['processes'].setCurrentIndex(index)
@@ -385,6 +408,7 @@ class StreamManager_UI(QtWidgets.QMainWindow):
     def create_statuslayout(self):
         self.panel_status = {}
         self.panel_status['dock'] = QtWidgets.QDockWidget('Status')
+        self.panel_status['dock'].setObjectName('dockstatus')
         self.panel_status['webpage'] = QtWebEngineWidgets.QWebEngineView()
         self.panel_status['webpage'].setAcceptDrops(False)
         self.panel_status['webpage'].page().profile().clearHttpCache()
@@ -422,6 +446,7 @@ class Preferences(QtWidgets.QDialog):
         self.setWindowTitle('Preferences')
 
     def reset(self):
+        self.tabs.tabBar().show()
         self.tab_streams.reset()
         self.tab_pauseservices.reset()
         self.tab_pauseprocesses.reset()
