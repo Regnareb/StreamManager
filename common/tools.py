@@ -1,3 +1,4 @@
+import re
 import os
 import sys
 import glob
@@ -126,3 +127,32 @@ class Borg:
     def __init__(self):
         super().__init__()
         self.__dict__ = self.__shared_state
+
+
+class HtmlStreamHandler(logging.StreamHandler):
+    CRITICAL = {'color': 'brown', 'size': '120%', 'special': 'font-weight:bold', 'after': '' }
+    ERROR    = {'color': 'red', 'size': '100%', 'special': '', 'after': ''}
+    WARNING  = {'color': 'darkorange', 'size': '100%', 'special': '', 'after': ''}
+    INFO     = {'color': 'black', 'size': '100%', 'special': '', 'after': ''}
+    DEFAULT  = {'color': 'black', 'size': '100%', 'special': '', 'after': ''}
+    DEBUG    = {'color': 'aquamarine', 'size': '100%', 'special': '', 'after': ''}
+
+    def __init__(self, stream=None):
+        super().__init__(stream=stream)
+
+    @classmethod
+    def _get_params(cls, level):
+        if level >= logging.CRITICAL:return cls.CRITICAL
+        elif level >= logging.ERROR:   return cls.ERROR
+        elif level >= logging.WARNING: return cls.WARNING
+        elif level >= logging.INFO:    return cls.INFO
+        elif level >= logging.DEBUG:   return cls.DEBUG
+        else:                          return cls.DEFAULT
+
+    def format(self, record):
+        regex = r"((?:\w):(?:\\|/)[^\s/$.?#].[^\s]*)"
+        regex = re.compile(regex, re.MULTILINE)
+        text = logging.StreamHandler.format(self, record)
+        text = re.sub(regex, r'<a href="file:///\g<1>">\g<1></a>', text)
+        params = self._get_params(record.levelno)
+        return '<span class="{1}" style="color:{color};font-size:{size};{special}">{0}</span>{after}'.format(text, record.levelname.lower(), **params)

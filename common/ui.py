@@ -12,25 +12,60 @@ import common.remote
 import common.tools
 
 
+class QLoggerHandler(common.tools.HtmlStreamHandler):
+    def __init__(self, signal):
+        super().__init__()
+        self.signal = signal
+
+    def emit(self, record):
+        message = self.format(record)
+        self.signal.emit(QtCore.SIGNAL("logMsg(QString)"), message)
 
 
-class MovableWindow():
-    def mousePressEvent(self, QMouseEvent):
-        self.windowPos = QMouseEvent.pos()
-        self.setCursor(QtGui.QCursor(QtCore.Qt.SizeAllCursor))
+class LogPanel(QtWidgets.QDockWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent=parent)
+        self.setWindowTitle('Logs')
+        self.setObjectName('docklogs')
+        self.levels = ['Debug', 'Info', 'Warning', 'Error', 'Critical']
+        self.interface = {}
+        self.interface['main'] = QtWidgets.QWidget()
+        self.interface['layoutv'] = QtWidgets.QVBoxLayout()
+        self.interface['layouth'] = QtWidgets.QHBoxLayout()
+        self.interface['label'] = QtWidgets.QLabel('Logs Level:')
+        self.interface['levels'] = QtWidgets.QComboBox()
+        self.interface['levels'].insertItems(0, self.levels)
+        self.interface['levels'].currentIndexChanged.connect(self.set_level)
+        self.interface['textedit'] = QtWidgets.QTextBrowser()
+        self.interface['textedit'].setOpenLinks(False)
+        self.interface['layouth'].addStretch()
+        self.interface['layouth'].addWidget(self.interface['label'])
+        self.interface['layouth'].addWidget(self.interface['levels'])
+        self.interface['layouth'].addStretch()
+        self.interface['layoutv'].addLayout(self.interface['layouth'])
+        self.interface['layoutv'].addWidget(self.interface['textedit'])
+        self.interface['main'].setLayout(self.interface['layoutv'])
+        self.setWidget(self.interface['main'])
+        # Use old syntax signals as you can't have multiple inheritance with QObject
+        self.emitter = QtCore.QObject()
+        self.connect(self.emitter, QtCore.SIGNAL("logMsg(QString)"), self.interface['textedit'].append)
+        self.handler = QLoggerHandler(self.emitter)
+        formatter = logging.Formatter('<span title="line %(lineno)d">%(levelname)s %(name)s.%(funcName)s() - %(message)s</span>')
+        self.handler.setFormatter(formatter)
+        logging.getLogger().addHandler(self.handler)
 
-    def mouseReleaseEvent(self, QMouseEvent):
-        self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
+    def set_level(self, level=''):
+        if level not in self.levels:
+            level = self.interface['levels'].currentText()
+        attr = getattr(logging, level.upper())
+        logging.getLogger().setLevel(attr)
 
-    def mouseMoveEvent(self, QMouseEvent):
-        pos = QtCore.QPoint(QMouseEvent.globalPos())
-        self.window().move(pos - self.windowPos + QtCore.QPoint(self.pos().x() - self.geometry().x(), self.pos().y() - self.geometry().y()))
 
-
-class StreamManager_UI(MovableWindow, QtWidgets.QMainWindow):
+class StreamManager_UI(QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
+        self.log_panel = LogPanel()
         self.setWindowTitle('Stream Manager')
         self.load_stylesheet()
         self.setCentralWidget(None)
@@ -44,13 +79,13 @@ class StreamManager_UI(MovableWindow, QtWidgets.QMainWindow):
         self.load_appdata()
         self.load_generalsettings()
         self.create_menu()
-        self.gameslayout['dock'].setTitleBarWidget(QtWidgets.QWidget())
-        self.panel_status['dock'].setTitleBarWidget(QtWidgets.QWidget())
         self.setTabPosition(QtCore.Qt.AllDockWidgetAreas, QtWidgets.QTabWidget.North)
         self.setDockOptions(QtWidgets.QMainWindow.AllowNestedDocks | QtWidgets.QMainWindow.AllowTabbedDocks)
+        self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.log_panel)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.panel_status['dock'])
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.gameslayout['dock'])
         self.tabifyDockWidget(self.panel_status['dock'], self.gameslayout['dock'])
+        self.tabifyDockWidget(self.gameslayout['dock'], self.log_panel)
         self.panel_status['dock'].raise_()
         self.manager.createdservices.connect(self.updated)
         self.webremote.startedcheck.connect(self.start_check)

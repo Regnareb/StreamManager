@@ -14,6 +14,11 @@ License: MIT (see LICENSE for details)
 """
 
 import sys
+import logging
+logger = logging.getLogger(__name__)
+
+_stderr = logger.error
+_stdout = logger.info
 
 __author__ = 'Marcel Hellkamp'
 __version__ = '0.13-dev'
@@ -117,13 +122,13 @@ py3k = py.major > 2
 
 # Workaround for the "print is a keyword/function" Python 2/3 dilemma
 # and a fallback for mod_wsgi (resticts stdout/err attribute access)
-try:
-    _stdout, _stderr = sys.stdout.write, sys.stderr.write
-except IOError:
-    _stdout = lambda x: sys.stdout.write(x)
-    _stderr = lambda x: sys.stderr.write(x)
-except AttributeError:
-     sys.stdout = sys.stderr = print
+# try:
+#     _stdout, _stderr = sys.stdout.write, sys.stderr.write
+# except IOError:
+#     _stdout = lambda x: sys.stdout.write(x)
+#     _stderr = lambda x: sys.stderr.write(x)
+# except AttributeError:
+#      sys.stdout = sys.stderr = print
 
 # Lots of stdlib and builtin differences.
 if py3k:
@@ -3715,14 +3720,11 @@ def run(app=None,
 
         server.quiet = server.quiet or quiet
         if not server.quiet:
-            _stderr("Bottle v%s server starting up (using %s)...\n" %
-                    (__version__, repr(server)))
+            _stdout("Bottle v{} server starting up (using {})...".format(__version__, repr(server)))
             if server.host.startswith("unix:"):
-                _stderr("Listening on %s\n" % server.host)
+                _stdout("Listening on {}".format(server.host))
             else:
-                _stderr("Listening on http://%s:%d/\n" %
-                        (server.host, server.port))
-            _stderr("Hit Ctrl-C to quit.\n\n")
+                _stdout("Listening on http://{}:{}/".format(server.host, server.port))
 
         if reloader:
             lockfile = os.environ.get('BOTTLE_LOCKFILE')

@@ -3,6 +3,8 @@ import threading
 import lib.bottle as bottle
 import common.manager
 import common.tools
+import logging
+logger = logging.getLogger(__name__)
 
 # AJAX? Change background color when there is an update?
 
@@ -70,4 +72,4 @@ class WebRemote():
                 self.stop_check()
             bottle.redirect('/')
 
-        app.run(quiet=True, server='cherrypy')
+        app.run(quiet=False, server='cherrypy')
