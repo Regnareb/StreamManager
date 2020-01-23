@@ -422,7 +422,6 @@ def block_signals(iterable, block):
 
 
 class Preferences(QtWidgets.QDialog):
-    # Make a dirty attribute to prevent closing the window without saving
     def __init__(self, manager, parent=None):
         super().__init__(parent)
         self.tabs = QtWidgets.QTabWidget()
@@ -559,33 +558,6 @@ class Preferences_Assignations(QtWidgets.QDialog):
             self.temporary_settings.setdefault(category, {}).setdefault(service, {})
             self.temporary_settings[category][service] = {'name': current, 'valid': ''}
             self.validate(category)
-
-    def set_layouthorizontal(self):
-        self.interface['processes'].hide()
-        for i in self.servicesorder:
-            self.interface['table'].insertColumn(0)
-        self.interface['table'].setHorizontalHeaderLabels(self.servicesorder)
-        for process, values in self.temporary_settings.items():
-            rowcount = self.interface['table'].rowCount()
-            self.interface['table'].insertRow(rowcount)
-            row = QtWidgets.QTableWidgetItem()
-            row.setText(process)
-            self.interface['table'].setVerticalHeaderItem(rowcount, row)
-            for i, service in enumerate(self.servicesorder):
-                row = QtWidgets.QLineEdit()
-                row.setText(values.get(service, {}).get('name', '') or '')
-                row.setStyleSheet('border: none; padding: 0px;')
-                self.interface['table'].setCellWidget(rowcount, i, row)
-
-        rowcount = self.interface['table'].rowCount()
-        for column, service in enumerate(self.servicesorder):
-            s = self.manager.services.get(service)
-            if s:
-                completer = QtWidgets.QCompleter(['test', 'caca', 'toto'])
-                completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
-                for row in range(rowcount):
-                    widget = self.interface['table'].cellWidget(row, column+1)
-                    widget.setCompleter(completer)  # If activated() then validated automatically
 
     def accept(self):
         assignations = self.manager.validate_assignations(self.temporary_settings)
