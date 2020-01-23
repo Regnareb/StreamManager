@@ -29,14 +29,14 @@ class Main(Service):
         return result
 
     def query_category(self, category):
+        result = {}
         if category:
             params = {'query': category}
             address = '{}/search/games'.format(self.apibase)
             response = self.request('get', address, params=params)
-            result = {}
             for i in response.json()['games'] or []:
                 result[i['name']] = i['_id']
-            return result
+        return result
 
     def validate_category(self, category):
         if category:
@@ -51,7 +51,7 @@ class Main(Service):
         if infos['title']:
             data['status'] = infos['title']
         if infos['category']:
-            data['game'] = self.config.get('assignation', {}).get(infos['category'], infos['category'])
+            data['game'] = infos['category']
         self.update_tags(infos['tags'])
         if data:
             self.get_token()

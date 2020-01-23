@@ -2,6 +2,7 @@
 import os
 import time
 import json
+import socket
 import atexit
 import logging
 import subprocess
@@ -12,8 +13,6 @@ import keyboard
 import common.tools as tools
 
 logger = logging.getLogger(__name__)
-logging.basicConfig()
-logging.getLogger().setLevel(logging.INFO)
 
 SERVICES = tools.loadmodules(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')), 'services')
 
@@ -76,18 +75,36 @@ class ManageStream(tools.Borg):
     def shortcuts(self):
         keyboard.add_hotkey('ctrl+F9', self.create_clip)
 
-    def create_services(self):
-        nb = len(SERVICES) or 1
-        pool = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=nb) as executor:
-            for service in SERVICES.values():
-                pool.append(executor.submit(self.create_service, service))
-        concurrent.futures.wait(pool, timeout=5)
-        self.save_config()
+    def create_services(self, force=False, threading=True):
+        if threading:
+            nb = len(SERVICES) or 1
+            pool = []
+            with concurrent.futures.ThreadPoolExecutor(max_workers=nb) as executor:
+                for service in SERVICES:
+                    pool.append(executor.submit(self.create_service, service, self.config['streamservices'].get(service), force=force))
+            concurrent.futures.wait(pool, timeout=5)
+            for service in pool:
+                if service.result() :
+                    self.services[service.result().name] = service.result()
+        else:
+            for service in SERVICES:
+                self.services[service] = self.create_service(service, self.config['streamservices'].get(service), force=force)
 
-    def create_service(self, service):
-        if self.config['streamservices'].get(service.Main.name, {}).get('enabled', False) and service.Main.name not in self.services:
-            self.services[service.Main.name] = service.Main(self.config['streamservices'].get(service.Main.name))
+    def create_service(self, service, config, force=False):
+        try:
+            if force:
+                self.services.pop(service, None)
+            if force or config.get('enabled', False) and service not in self.services:
+                service = SERVICES[service].Main(config)
+                logger.info('Created service "{}"'.format(service.name))
+                return service
+        except (socket.timeout, SERVICES[service].Timeout):
+            logger.error('Timeout when creating service {}'.format(service))
+            self.config['streamservices'][service]['authorization'] = {}
+            return False
+
+    def deactivate_service(self, service):
+        self.services.pop(service, None)
 
     def create_clip(self):
         for service in self.services.values():

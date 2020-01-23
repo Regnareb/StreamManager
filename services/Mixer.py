@@ -24,10 +24,8 @@ class Main(Service):
         if infos['title']:
             data['name'] = infos['title']
         if infos['category']:
-            category = self.config.get('assignation', {}).get(infos['category'], infos['category'])
-            data['typeId'] = self.get_game_id(category)
+            data['typeId'] = self.get_game_id(infos['category'])
         if data:
-            self.get_token()
             address = '{}/channels/{}'.format(self.apibase, self.config['channel_id'])
             return self.request('patch', address, data=data)
 

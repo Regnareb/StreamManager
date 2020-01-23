@@ -36,8 +36,9 @@ class Main(Service):
         if infos['description']:
             data['snippet']['description'] = infos['description']
         if infos['category']:
-            category = self.config.get('assignation', {}).get(infos['category'], infos['category'])
-            data['snippet']['categoryId'] = self.gamesid.get(category, '')
+            gameid = self.gamesid.get(infos['category'], '')
+            if gameid:
+                data['snippet']['categoryId'] = gameid
         if data['snippet']:
             self.get_token()
             address = '{}/videos?part=snippet'.format(self.apibase)

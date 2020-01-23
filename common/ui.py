@@ -9,12 +9,9 @@ from PySide2 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
 
 import common.manager
 import common.remote
+import common.tools
 
 
-STYLESHEET = """
-#table_games QHeaderView::section { background-color: #3697FE;border:1px solid #ccc;font-weight: bold}
-#table_games QHeaderView::section:checked { background-color: #fff;border:1px solid #ccc;}
-"""
 
 
 class MovableWindow():
@@ -34,8 +31,8 @@ class StreamManager_UI(MovableWindow, QtWidgets.QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.setStyleSheet(STYLESHEET)
         self.setWindowTitle('Stream Manager')
+        self.load_stylesheet()
         self.setCentralWidget(None)
         self.manager = ManagerStreamThread()
         self.manager.create_services()
@@ -61,6 +58,7 @@ class StreamManager_UI(MovableWindow, QtWidgets.QMainWindow):
         self.webremote.updated.connect(self.updated)
         self.manager.validate.connect(self.update_invalidcategory)
         self.manager.updated.connect(self.updated)
+        self.setAcceptDrops(True)
 
     def start_check(self):
         self.manager.start()
@@ -77,12 +75,28 @@ class StreamManager_UI(MovableWindow, QtWidgets.QMainWindow):
         self.webremote.terminate()
         super().closeEvent(event)
 
+    def load_stylesheet(self):
+        path = os.path.join(os.path.dirname(__file__), '..', 'data', 'theme', 'qtstylesheet.css')
+        with open(path) as f:
+            stylesheet = f.read()
+        self.setStyleSheet(stylesheet)
+
     def dropEvent(self, event):
         for url in event.mimeData().urls():
             self.manager.load_credentials(url.toLocalFile())
 
     def dragEnterEvent(self, event):
         event.acceptProposedAction()
+
+    def start_check(self):
+        self.manager.start()
+
+    def stop_check(self):
+        self.manager.quit()
+
+    def updated(self, infos=None):
+        self.panel_status['webpage'].reload()
+
     def mouseDoubleClickEvent(self, event):
         super().mouseDoubleClickEvent(event)
         pos = self.pos()
@@ -240,9 +254,9 @@ class StreamManager_UI(MovableWindow, QtWidgets.QMainWindow):
 
     def show_assignations(self):
         category = self.gameslayout['category'].text()
+        self.preferences.open()
+        self.preferences.tabs.setCurrentIndex(1)
         if category:
-            self.preferences.open()
-            self.preferences.tabs.setCurrentIndex(1)
             index = self.preferences.tab_assignations.interface['processes'].findText(category)
             self.preferences.tab_assignations.interface['processes'].setCurrentIndex(index)
 
@@ -337,6 +351,7 @@ class StreamManager_UI(MovableWindow, QtWidgets.QMainWindow):
         self.panel_status = {}
         self.panel_status['dock'] = QtWidgets.QDockWidget('Status')
         self.panel_status['webpage'] = QtWebEngineWidgets.QWebEngineView()
+        self.panel_status['webpage'].setAcceptDrops(False)
         self.panel_status['webpage'].page().profile().clearHttpCache()
         self.panel_status['webpage'].load(QtCore.QUrl("http://localhost:8080/"))
         self.panel_status['dock'].setWidget(self.panel_status['webpage'])
@@ -345,12 +360,6 @@ class StreamManager_UI(MovableWindow, QtWidgets.QMainWindow):
 def block_signals(iterable, block):
     for i in iterable:
         i.blockSignals(block)
-
-def set_disabledrowstyle(item, val):
-    if val:
-        item.setForeground(QtGui.QColor(0,0,0))
-    else:
-        item.setForeground(QtGui.QColor(150,150,150))
 
 
 class Preferences(QtWidgets.QDialog):
@@ -377,7 +386,6 @@ class Preferences(QtWidgets.QDialog):
         self.setLayout(self.mainLayout)
         self.setWindowTitle('Preferences')
 
-
     def reset(self):
         self.tab_streams.reset()
         self.tab_pauseservices.reset()
@@ -390,7 +398,6 @@ class Preferences(QtWidgets.QDialog):
         self.tab_pauseprocesses.accept()
         self.tab_assignations.accept()
         super().accept()
-
 
     def open(self):
         self.reset()
@@ -416,7 +423,7 @@ class Preferences_Assignations(QtWidgets.QDialog):
         self.interface['hlayout'].addWidget(self.interface['validate'])
         self.interface['layout'].addLayout(self.interface['hlayout'])
         self.interface['layout'].addWidget(self.interface['table'])
-        self.servicesorder = sorted([i.Main.name for i in common.manager.SERVICES.values()])
+        self.servicesorder = sorted(common.manager.SERVICES)
         self.setLayout(self.interface['layout'])
         self.set_layoutvertical()
 
@@ -430,9 +437,8 @@ class Preferences_Assignations(QtWidgets.QDialog):
             widget = QtWidgets.QLineEdit()
             widget.editingFinished.connect(functools.partial(self.save_assignation, service))
             widget.textEdited.connect(functools.partial(self.edited, widget, service))
-            widget.setStyleSheet('border: none; padding: 0px;')
             self.interface['table'].setCellWidget(rowcount, 0, widget)
-            if not common.manager.SERVICES['services.'+service].Main.features['category']:
+            if not common.manager.SERVICES[service].Main.features['category']:
                 widget.setDisabled(True)
             self.interface['line_' + service] = widget
 
@@ -441,11 +447,13 @@ class Preferences_Assignations(QtWidgets.QDialog):
 
     def edited(self, widget, service, text):
         # Add a QTimer to prevent lag
-        autocompletion = self.manager.services[service].query_category(text)
-        self.interface['completer'] = QtWidgets.QCompleter(list(autocompletion.keys()))
-        self.interface['completer'].setCompletionMode(QtWidgets.QCompleter.UnfilteredPopupCompletion)
-        self.interface['completer'].activated.connect(functools.partial(self.set_validautocomplete, service))
-        widget.setCompleter(self.interface['completer'])  # If activated() then validated automatically
+        service = self.manager.services.get(service)
+        if service:
+            autocompletion = service.query_category(text)
+            self.interface['completer'] = QtWidgets.QCompleter(list(autocompletion.keys()))
+            self.interface['completer'].setCompletionMode(QtWidgets.QCompleter.UnfilteredPopupCompletion)
+            self.interface['completer'].activated.connect(functools.partial(self.set_validautocomplete, service))  # If activated() then validated automatically
+            widget.setCompleter(self.interface['completer'])
 
     def set_validautocomplete(self, service, text):
         """Force validation of the current category and service."""
@@ -466,7 +474,7 @@ class Preferences_Assignations(QtWidgets.QDialog):
         for index, service in enumerate(self.servicesorder):
             text = self.temporary_settings.get(current, {}).get(service, {}).get('name', '')
             valid = self.temporary_settings.get(current, {}).get(service, {}).get('valid', '')
-            disabled = not common.manager.SERVICES['services.' + service].Main.features['category']
+            disabled = not common.manager.SERVICES[service].Main.features['category']
             widget = self.interface['line_' + service]
             widget.setText(text or '')
             if disabled:
@@ -479,12 +487,12 @@ class Preferences_Assignations(QtWidgets.QDialog):
 
     def save_assignation(self, service):
         category = self.interface['processes'].currentText()
-        if category:
-            row = self.servicesorder.index(service)
-            widget = self.interface['line_' + service]
-            text = widget.text()
+        widget = self.interface['line_' + service]
+        current = widget.text()
+        old = self.temporary_settings.get(category, {}).get(service, {}).get('name', '')
+        if category and current != old:
             self.temporary_settings.setdefault(category, {}).setdefault(service, {})
-            self.temporary_settings[category][service] = {'name': text, 'valid': ''}
+            self.temporary_settings[category][service] = {'name': current, 'valid': ''}
             self.validate(category)
 
     def set_layouthorizontal(self):
@@ -537,14 +545,14 @@ class Preferences_Streams(QtWidgets.QWidget):
         self.panel_services['container'] = QtWidgets.QGridLayout()
 
         self.panel_services['list'] = QtWidgets.QTableWidget()
-        self.panel_services['list'].setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        self.panel_services['list'].setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
         self.panel_services['list'].setColumnCount(1)
         self.panel_services['list'].setWordWrap(False)
         self.panel_services['list'].verticalHeader().setVisible(False)
         self.panel_services['list'].horizontalHeader().setVisible(False)
         self.panel_services['list'].horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         self.panel_services['list'].currentCellChanged.connect(self.service_changed)
-        self.elements = ['enabled', 'channel_id', 'client_id', 'client_secret', 'scope', 'redirect_uri', 'authorization_base_url', 'token_url']
+        self.elements = ['enabled', 'client_id', 'client_secret', 'scope', 'redirect_uri', 'authorization_base_url', 'token_url']
         for i, elem in enumerate(self.elements):
             namelabel = 'label_' + elem
             nameline = 'line_' + elem
@@ -552,32 +560,51 @@ class Preferences_Streams(QtWidgets.QWidget):
             self.panel_services[namelabel].setText(elem.capitalize() + ':')
             self.panel_services['container'].addWidget(self.panel_services[namelabel], i, 1)
             if elem == 'enabled':
-                self.panel_services[nameline] = QtWidgets.QCheckBox()
-                self.panel_services[nameline].stateChanged.connect(self.save_servicedata)
+                self.panel_services[namelabel].setObjectName('enable_service')
+                self.panel_services[nameline] = QtWidgets.QPushButton()
+                self.panel_services[nameline].setCheckable(True)
+                self.panel_services[nameline].setFixedWidth(71)
+                self.panel_services[nameline].setObjectName('enable_service')
+                self.panel_services[nameline].clicked.connect(functools.partial(self.save_servicedata, elem))
             else:
-                self.panel_services[nameline] = QtWidgets.QLineEdit()
-                self.panel_services[nameline].editingFinished.connect(self.save_servicedata)
+                if elem in ['client_id', 'client_secret']:
+                    # self.panel_services[namelabel].setText(elem.capitalize() + ': *')
+                    self.panel_services[nameline] = LineditSpoiler()  # TODO: Replace with QFormLayout?
+                    self.panel_services[nameline].setProperty('mandatory', True)
+                else:
+                    self.panel_services[nameline] = QtWidgets.QLineEdit()
+                self.panel_services[nameline].editingFinished.connect(functools.partial(self.save_servicedata, elem))
+
             self.panel_services[nameline].setMinimumHeight(30)
             self.panel_services['container'].addWidget(self.panel_services[nameline], i, 2)
         self.panel_services['container'].setRowStretch(self.panel_services['container'].rowCount(), 10)
-        self.panel_services['list'].setFixedWidth(150)
         self.setLayout(self.panel_services['container'])
         self.panel_services['container'].addWidget(self.panel_services['list'], 0, 0, -1, 1)
         self.panel_services['list'].itemSelectionChanged.connect(self.service_changed)
+
+    def paintEvent(self, paintEvent):
+        item = self.panel_services['list'].currentItem()
+        service = item.text()
+        imgpath = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'theme', 'images', service + '.png'))
+        pixmap = QtGui.QPixmap()
+        pixmap.load(imgpath)
+        widWidth = self.width()
+        widHeight = self.height()
+        pixmap = pixmap.scaled(10, widHeight, QtCore.Qt.KeepAspectRatioByExpanding)
+        paint = QtGui.QPainter(self)
+        paint.setOpacity(0.3)
+        paint.drawPixmap(widWidth-pixmap.width()*0.8, -pixmap.height()*0.2, pixmap)
 
     def create_services(self):
         self.panel_services['list'].blockSignals(True)
         while self.panel_services['list'].rowCount():
             self.panel_services['list'].removeRow(0)
-        for service in common.manager.SERVICES.values():
-            servicename = service.Main.name
-            row = QtWidgets.QTableWidgetItem()
-            row.setText(servicename)
-            row.setFlags(row.flags() & ~QtCore.Qt.ItemIsEditable)
+        for service in common.manager.SERVICES:
+            row = StreamTableWidgetItem(service)
             rowcount = self.panel_services['list'].rowCount()
             self.panel_services['list'].insertRow(rowcount)
             self.panel_services['list'].setItem(rowcount, 0, row)
-            set_disabledrowstyle(row, self.temporary_settings[service.Main.name].get('enabled', False))
+            row.set_disabledrowstyle(self.temporary_settings[service].get('enabled', False))
         self.panel_services['list'].sortItems(QtCore.Qt.AscendingOrder)
         self.panel_services['list'].blockSignals(False)
 
@@ -592,30 +619,79 @@ class Preferences_Streams(QtWidgets.QWidget):
                 self.panel_services['line_' + elem].blockSignals(True)
                 self.panel_services['line_' + elem].setChecked(val)
                 self.panel_services['line_' + elem].blockSignals(False)
-                set_disabledrowstyle(item, val)
+                item.set_disabledrowstyle(val)
             else:
                 self.panel_services['line_' + elem].setText(str(config.get(elem, '')))
+        self.repaint()
         block_signals(self.panel_services.values(), False)
 
-    def save_servicedata(self):
+    def enable_service(self):
         item = self.panel_services['list'].currentItem()
         service = item.text()
-        for elem in self.elements:
-            if elem == 'enabled':
-                result = self.panel_services['line_' + elem].isChecked()
-                set_disabledrowstyle(item, result)
-            else:
-                result = self.panel_services['line_' + elem].text()
-            self.temporary_settings[service][elem] = result
+        state = self.panel_services['line_enabled'].isChecked()
+        if state:
+            service = self.manager.create_service(service, self.temporary_settings[service], force=True)
+            if service:
+                self.temporary_settings[service.name] = service.config  # Save access token
+                return True
+            if not service:
+                self.panel_services['line_enabled'].setChecked(False)
+                QtWidgets.QToolTip().showText(self.panel_services['line_enabled'].mapToGlobal(QtCore.QPoint(0, 20)), "<nobr>Couldn't create the service.</nobr><br><nobr>Check your <b style='color:red'>client id</b> and <b style='color:red'>client secret</b> below.</nobr>")
+                return False
+        else:
+            self.manager.deactivate_service(service)
+            return False
+
+    def save_servicedata(self, element):
+        item = self.panel_services['list'].currentItem()
+        service = item.text()
+        if element == 'enabled':
+            result = self.panel_services['line_enabled'].isChecked()
+        else:
+            result = self.panel_services['line_' + element].text()
+        if self.temporary_settings[service][element] != result:
+            self.temporary_settings[service][element] = result
+            if element != 'enabled':
+                self.temporary_settings[service]['authorization'] = {}  # Reset token
+            if not self.enable_service():
+                self.panel_services['line_enabled'].setChecked(False)
+                self.save_servicedata('enabled')
+            item.set_disabledrowstyle(self.temporary_settings[service]['enabled'])
+
 
     def accept(self):
         for service in self.temporary_settings:
             self.manager.config['streamservices'][service] = self.temporary_settings[service]
+        self.manager.services = {}
+        self.manager.create_services()
 
     def reset(self):
         self.temporary_settings = copy.deepcopy(self.manager.config['streamservices'])
         self.create_services()
         self.panel_services['list'].setCurrentCell(0, 0)
+
+
+class StreamTableWidgetItem(QtWidgets.QTableWidgetItem):
+    def __init__(self, service):
+        super().__init__()
+        self.service = service
+        imgpath = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'theme', 'images', self.service + '.png'))
+        self.setIcon(QtGui.QPixmap(imgpath))
+        self.setText(self.service)
+        self.setFlags(self.flags() & ~QtCore.Qt.ItemIsEditable)
+
+    def set_disabledrowstyle(self, val):
+        if val:
+            color = QtGui.QColor.fromRgbF(0.282, 0.855, 0.255, 1)
+            self.setForeground(QtGui.QColor(0, 0, 0))
+        else:
+            color = QtGui.QColor.fromRgbF(1, 0, 0, 1)
+            self.setForeground(QtGui.QColor(150, 150, 150))
+        gradient = QtGui.QRadialGradient(130, 20, 5, 120, 20)
+        gradient.setColorAt(0, color)
+        gradient.setColorAt(0.8, color)
+        gradient.setColorAt(1, QtGui.QColor.fromRgbF(0, 0, 0, 0))
+        self.setBackground(QtGui.QBrush(gradient))
 
 
 class Preferences_Pause(QtWidgets.QWidget):
@@ -625,7 +701,7 @@ class Preferences_Pause(QtWidgets.QWidget):
         self.config = self.manager.config['base'][name]
         self.panel_pause = {}
         self.panel_pause['container'] = QtWidgets.QGridLayout()
-        self.panel_pause['label'] = QtWidgets.QLabel('When the check is runned any entry on the right side will be paused until the check is stopped.\nUsefull for automatically pausing applications that use bandwith or CPU.\n')
+        self.panel_pause['label'] = QtWidgets.QLabel('When you start the "automatic check" any entry on the right side will be paused until the "automatic check" is stopped.\nUsefull for automatically pausing applications that use bandwith or CPU.\n')
         self.panel_pause['label'].setAlignment(QtCore.Qt.AlignCenter)
 
         for elem in ['list', 'list_pause']:
@@ -717,7 +793,7 @@ class Preferences_Pause(QtWidgets.QWidget):
                 self.currentconfig.remove(item)
 
     def list_processes(self):
-        return []
+        return {}
 
     def accept(self):
         rowdata = []
@@ -890,4 +966,25 @@ class PlainTextEdit(StateButtons, QtWidgets.QPlainTextEdit):
 
 class LineEdit(StateButtons, QtWidgets.QLineEdit):
     pass
+
+
+class LineditSpoiler(QtWidgets.QLineEdit):
+    def __init__(self, blurAmount=10, parent=None):
+        super().__init__(parent=parent)
+        self.blurAmount = blurAmount
+        self.effect = QtWidgets.QGraphicsBlurEffect(self)
+        self.effect.setBlurRadius(blurAmount)
+        self.setGraphicsEffect(self.effect)
+
+    def enterEvent(self, event):
+        self.effect.setBlurRadius(0)
+        super().enterEvent(event)
+
+    def leaveEvent(self, event):
+        self.effect.setBlurRadius(self.blurAmount)
+        super().leaveEvent(event)
+
+
+
+
 

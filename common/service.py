@@ -11,6 +11,7 @@ import webbrowser
 from requests_oauthlib import OAuth2Session
 from oauthlib.oauth2.rfc6749.errors import InvalidGrantError, MissingTokenError, InvalidClientError, InvalidTokenError, InvalidClientIdError
 
+import common.manager
 import common.tools as tools
 logger = logging.getLogger(__name__)
 
@@ -24,10 +25,11 @@ class Timeout(Exception):
 class Service():
     def __init__(self, config):
         self.infos = {'online': '', 'title': '', 'name': '', 'category': '', 'description': ''}
-        if config:
-            self.config = config
-        else:
+        self.manager = common.manager.ManageStream()
+        if not config:
             self.config = self.default_config()
+        else:
+            self.config = config
         self.oauth2 = OAuth2Session(token=self.config['authorization'], client_id=self.config['client_id'], scope=self.config['scope'], redirect_uri=self.config['redirect_uri'])
         self.get_token()
         self.get_channel_id()
@@ -92,12 +94,16 @@ class Service():
             logger.error("Couldn't refresh the token")
             raise
 
+    def query_category(self, category):
+        return {}
+
     def validate_category(self, category):
         return True
 
     def update_channel(self, infos):
+        self.get_token()
         infos['name'] = self.name
-        infos['customtext'] = self.config.get('customtext', '%CUSTOMTEXT%')
+        infos['category'] = self.manager.config.get('assignations', {}).get(infos['category'], {}).get(self.name, {}).get('name', '')
         return tools.parse_strings(infos)
 
     def request(self, action, address, headers=None, data=None, params=None):

@@ -52,7 +52,7 @@ def loadmodules(path, subfolder):
     modules = ['.'.join([subfolder, os.path.basename(i)[:-3]]) for i in modules]
     data = {}
     for module in modules:
-        data[module] = importlib.import_module(module)
+        data[module.split('.')[-1]] = importlib.import_module(module)
     return data
 
 def getForegroundProcess():
