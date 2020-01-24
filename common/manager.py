@@ -54,13 +54,13 @@ class ManageStream(tools.Borg):
                 self.config[key].setdefault(k, v)
 
     def load_config(self):
-        self.config = tools.load_json(self.config_filepath)
+        self.config = tools.load_json(self.config_filepath) or {}
         self.conform_preferences()
 
     def load_credentials(self, path=''):
         if not path:
             path = self.config_filepath.replace('settings.json', 'credentials.json')
-        config = tools.load_json(path)
+        config = tools.load_json(path) or {}
         for service, values in config.items():
             logger.info('Loading credentials for "{}" service'.format(service))
             for k, v in values.items():
