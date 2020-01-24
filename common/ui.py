@@ -623,14 +623,15 @@ class Preferences_Streams(QtWidgets.QWidget):
         item = self.panel_services['list'].currentItem()
         service = item.text()
         imgpath = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'theme', 'images', service + '.png'))
-        pixmap = QtGui.QPixmap()
-        pixmap.load(imgpath)
-        widWidth = self.width()
-        widHeight = self.height()
-        pixmap = pixmap.scaled(10, widHeight, QtCore.Qt.KeepAspectRatioByExpanding)
-        paint = QtGui.QPainter(self)
-        paint.setOpacity(0.3)
-        paint.drawPixmap(widWidth-pixmap.width()*0.8, -pixmap.height()*0.2, pixmap)
+        if os.path.isfile(imgpath):
+            pixmap = QtGui.QPixmap()
+            pixmap.load(imgpath)
+            widWidth = self.width()
+            widHeight = self.height()
+            pixmap = pixmap.scaled(10, widHeight, QtCore.Qt.KeepAspectRatioByExpanding)
+            paint = QtGui.QPainter(self)
+            paint.setOpacity(0.3)
+            paint.drawPixmap(widWidth-pixmap.width()*0.8, -pixmap.height()*0.2, pixmap)
 
     def create_services(self):
         self.panel_services['list'].blockSignals(True)
