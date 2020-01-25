@@ -516,7 +516,7 @@ class Preferences_Assignations(QtWidgets.QDialog):
             autocompletion = service.query_category(text)
             self.interface['completer'] = QtWidgets.QCompleter(list(autocompletion.keys()))
             self.interface['completer'].setCompletionMode(QtWidgets.QCompleter.UnfilteredPopupCompletion)
-            self.interface['completer'].activated.connect(functools.partial(self.set_validautocomplete, service))  # If activated() then validated automatically
+            self.interface['completer'].activated.connect(functools.partial(self.set_validautocomplete, service.name))  # If activated() then validated automatically
             widget.setCompleter(self.interface['completer'])
 
     def set_validautocomplete(self, service, text):
