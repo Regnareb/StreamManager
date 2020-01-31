@@ -88,12 +88,14 @@ def listprocesses():
         try:
             name = proc.name()
             exe = proc.exe()
+            memory = proc.memory_percent()  # Fix an OSX bug returning None
             if name in ignorelist:
                 continue
             if exe in result:
-                result[exe]['memory_percent'] += proc.memory_percent()
+                result[exe]['memory_percent'] += memory
             else:
-                result[exe] = proc.as_dict(attrs=['name', 'exe', 'memory_percent', 'nice', 'num_threads'])
+                result[exe] = proc.as_dict(attrs=['name', 'exe', 'nice', 'num_threads'])
+                result[exe]['memory_percent'] = memory
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
     return result
