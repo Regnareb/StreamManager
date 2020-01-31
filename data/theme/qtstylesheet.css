@@ -13,6 +13,14 @@ QTableView::indicator{background-color:  rgb(253, 237, 91);}
 QTableView::indicator:unchecked{background-color:  rgb(50, 189, 96);}
 QTableView::indicator:checked{background-color:  rgb(240, 140, 126);}
 
+QFrame#stream_line {color: #ccc;height:30;}
+QPushButton#features {padding:5px 20px;border:none;background-color: transparent}
+QPushButton#features[available=true] {background-color: qlineargradient(x1: 0, y1: 1, x2: 0, y2: 0, stop: 0 #76b852, stop: 1 #8DC26F);}
+QPushButton[visibled] {
+    border:none;
+    background-color: qlineargradient(x1: 0, y1: 1, x2: 0, y2: 0, stop: 0.40 rgba(0, 0, 0, 0), stop: 0.45 rgba(0, 0, 0, 50), stop: 0.50 rgba(0, 0, 0, 0));
+}
+
 
 QPushButton#enable_service::checked { background: url('data/theme/images/toggle_on.png'); }
 QPushButton#enable_service::pressed { background: url('data/theme/images/toggle_on.png'); }
