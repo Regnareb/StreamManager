@@ -596,80 +596,69 @@ class Preferences_Streams(QtWidgets.QWidget):
         self.panel_services['llayout'].addWidget(self.panel_services['list'])
         self.elements = ['enabled', 'scope', 'redirect_uri', 'authorization_base_url', 'token_url', 'client_id', 'client_secret']
         self.panel_services['formlayout'] = QtWidgets.QFormLayout()
-        for elem in self.elements:
+        for elem in self.elements[1:]:
             namelabel = 'label_' + elem
             nameline = 'line_' + elem
             self.panel_services[namelabel] = QtWidgets.QLabel(elem.replace('_', ' ').capitalize())
-            if elem == 'enabled':
-                self.panel_services[nameline] = QtWidgets.QPushButton()
-                self.panel_services[nameline].setCheckable(True)
-                self.panel_services[nameline].setFixedWidth(71)
-                self.panel_services[nameline].setObjectName('enable_service')
-                self.panel_services[nameline].clicked.connect(functools.partial(self.save_servicedata, elem))
-                self.panel_services[namelabel].setMinimumHeight(30)
-                self.panel_services[nameline].setMinimumHeight(30)
+            if elem in ['client_id', 'client_secret']:
+                self.panel_services[nameline] = LineditSpoiler()
+                self.panel_services[nameline].setProperty('mandatory', True)
             else:
-                if elem in ['client_id', 'client_secret']:
-                    self.panel_services[nameline] = LineditSpoiler()
-                    self.panel_services[nameline].setProperty('mandatory', True)
-                else:
-                    self.panel_services[nameline] = QtWidgets.QLineEdit()
-                self.panel_services[nameline].editingFinished.connect(functools.partial(self.save_servicedata, elem))
-                self.panel_services['formlayout'].addRow(self.panel_services[namelabel], self.panel_services[nameline])
+                self.panel_services[nameline] = QtWidgets.QLineEdit()
+
+            self.panel_services[namelabel].setFixedHeight(30)
+            self.panel_services[nameline].setFixedHeight(30)
+            self.panel_services[nameline].editingFinished.connect(functools.partial(self.save_servicedata, elem))
+            self.panel_services['formlayout'].addRow(self.panel_services[namelabel], self.panel_services[nameline])
             self.panel_services[namelabel].setObjectName(namelabel)
+
+        self.panel_services['label_enabled'] = QtWidgets.QLabel('Enabled')
+        self.panel_services['line_enabled'] = QtWidgets.QPushButton()
+        self.panel_services['line_enabled'].setCheckable(True)
+        self.panel_services['line_enabled'].setFixedWidth(71)
+        self.panel_services['line_enabled'].setObjectName('enable_service')
+        self.panel_services['line_enabled'].clicked.connect(functools.partial(self.save_servicedata, 'enabled'))
+        self.panel_services['label_enabled'].setMinimumHeight(30)
+        self.panel_services['line_enabled'].setMinimumHeight(30)
 
         self.panel_services['reset_token'] = QtWidgets.QPushButton('Reset Auth')
         self.panel_services['reset_token'].clicked.connect(self.reset_token)
         self.panel_services['reset_token'].setMinimumHeight(30)
         self.panel_services['hlayout'] = QtWidgets.QHBoxLayout()
+        self.panel_services['hlayout'].addWidget(self.panel_services['label_enabled'])
         self.panel_services['hlayout'].addWidget(self.panel_services['line_enabled'])
         self.panel_services['hlayout'].addStretch()
         self.panel_services['hlayout'].addWidget(self.panel_services['reset_token'])
-        self.panel_services['formlayout'].insertRow(0, self.panel_services['label_enabled'], self.panel_services['hlayout'])
 
-        self.panel_services['features_layout'] = QtWidgets.QHBoxLayout()
+        self.panel_services['line'] = QtWidgets.QFrame()
+        # self.panel_services['line'].setMinimumHeight(30)
+        self.panel_services['line'].setObjectName('stream_line')
+        self.panel_services['line'].setFrameShape(QtWidgets.QFrame.HLine)
+
+        self.panel_services['features_layout'] = QtWidgets.QVBoxLayout()
         self.panel_services['features_layout'].setSpacing(0)
         self.panel_services['label_features'] = QtWidgets.QLabel('Features')
         self.panel_services['label_features'].setDisabled(True)
-        features = common.manager.SERVICES['Facebook'].Main.features.keys()
+        features = list(common.manager.SERVICES['Facebook'].Main.features.keys())
         for feat in features:
             name = 'feature_' + feat
-            self.panel_services[name] = QtWidgets.QPushButton(feat)
-            self.panel_services[name].setDisabled(True)
+            self.panel_services[name] = QtWidgets.QLabel(feat)
+            self.panel_services[name].setAlignment(QtCore.Qt.AlignCenter)
             self.panel_services[name].setObjectName('features')
             self.panel_services['features_layout'].addWidget(self.panel_services['feature_' + feat])
-        self.panel_services['formlayout'].insertRow(1, self.panel_services['label_features'], self.panel_services['features_layout'])
+            if feat == features[0]:
+                updateStyle(self.panel_services[name], 'firstv', True)
+            elif feat == features[-1]:
+                updateStyle(self.panel_services[name], 'lastv', True)
 
-        self.panel_services['settings'] = QtWidgets.QPushButton()
-        self.panel_services['settings'].setFixedHeight(20)
-        self.panel_services['settings'].setFlat(True)
-        self.panel_services['settings'].clicked.connect(self.show_parameters)
-        self.panel_services['formlayout'].insertRow(2, self.panel_services['settings'])
-
-        self.panel_services['container'].addLayout(self.panel_services['formlayout'], 1, 2)
-        self.panel_services['container'].setRowStretch(self.panel_services['container'].rowCount(), 10)
-        self.setLayout(self.panel_services['container'])
         self.panel_services['container'].addLayout(self.panel_services['llayout'], 0, 0, -1, 1)
+        self.panel_services['container'].addLayout(self.panel_services['hlayout'], 0, 1, 1, -1)
+        self.panel_services['container'].addWidget(self.panel_services['line'], 1, 1, 1, -1)
+        self.panel_services['container'].addLayout(self.panel_services['features_layout'], 3, 1)
+        self.panel_services['container'].addLayout(self.panel_services['formlayout'], 3, 3, -1, 1)
+        self.panel_services['container'].setRowStretch(self.panel_services['container'].rowCount(), 1)
+        self.setLayout(self.panel_services['container'])
         self.panel_services['list'].itemSelectionChanged.connect(self.service_changed)
-        self.show_parameters(False)
-
-    def show_parameters(self, show=None):
-        if not show:
-            show = True if 'Show' in self.panel_services['settings'].text() else False
-        for elem in self.elements[1:]:
-            namelabel = 'label_' + elem
-            nameline = 'line_' + elem
-            if show:
-                self.panel_services[namelabel].setMinimumHeight(0)
-                self.panel_services[nameline].setMinimumHeight(0)
-                self.panel_services[namelabel].setMaximumHeight(30)
-                self.panel_services[nameline].setMaximumHeight(30)
-                self.panel_services['settings'].setText('Hide Settings')
-            else:
-                self.panel_services[namelabel].setFixedHeight(0)
-                self.panel_services[nameline].setFixedHeight(0)
-                self.panel_services['settings'].setText('Show Settings')
-            updateStyle(self.panel_services['settings'], 'visibled', show)
 
     def paintEvent(self, paintEvent):
         item = self.panel_services['list'].currentItem()
