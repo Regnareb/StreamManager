@@ -10,7 +10,7 @@ class Main(Service):
     token_url = "https://graph.facebook.com/oauth/access_token"
     redirect_uri = "http://localhost:779/"
     apibase = 'https://graph.facebook.com/v5.0'
-    features = {'title': True, 'description': True, 'category': False, 'tags': False, 'clips': False}
+    features = {'title': True, 'category': False, 'description': True, 'tags': False, 'clips': False}
 
     def get_channel_id(self):
         address = '{}/me?fields=id'.format(self.apibase)

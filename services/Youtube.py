@@ -10,7 +10,7 @@ class Main(Service):
     token_url = "https://oauth2.googleapis.com/token"
     redirect_uri = "http://localhost:778/"
     apibase = 'https://www.googleapis.com/youtube/v3'
-    features = {'title': True, 'description': True, 'category': True, 'tags': False, 'clips': False}
+    features = {'title': True, 'category': True, 'description': True, 'tags': False, 'clips': False}
 
     def get_channel_info(self):
         address = '{}/liveBroadcasts?part=snippet&broadcastType=persistent&mine=true'.format(self.apibase)
