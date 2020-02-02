@@ -1,6 +1,7 @@
 import os
 import sys
 import copy
+import socket
 import logging
 import threading
 import functools
@@ -75,6 +76,7 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.webremote = WebRemote()
         self.webremote.start()
         self.preferences = Preferences(self.manager, self)
+        self.preferences.updated.connect(self.preferences_updated)
         self.create_gamelayout()
         self.create_statuslayout()
         self.load_appdata()
@@ -95,6 +97,7 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.manager.validate.connect(self.update_invalidcategory)
         self.manager.updated.connect(self.updated)
         self.setAcceptDrops(True)
+        self.preferences_updated()
         self.set_shortcuts()
         self.read_qsettings()
 
@@ -133,6 +136,15 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.settings.setValue("logslevel", self.log_panel.interface['levels'].currentText())
         if self.manager.save_config():
             super().closeEvent(event)
+
+    def preferences_updated(self):
+        try:
+            self.reloadtimer.stop()
+        except AttributeError:
+            self.reloadtimer = QtCore.QTimer()
+        if int(self.manager.config['base']['reload']):
+            self.reloadtimer.timeout.connect(self.reload)
+            self.reloadtimer.start(int(self.manager.config['base']['reload']) * 60000)
 
     def load_stylesheet(self):
         path = os.path.join(os.path.dirname(__file__), '..', 'data', 'theme', 'qtstylesheet.css')
@@ -432,17 +444,22 @@ def block_signals(iterable, block):
 
 
 class Preferences(QtWidgets.QDialog):
+    updated = QtCore.Signal()
+
     def __init__(self, manager, parent=None):
         super().__init__(parent)
         self.tabs = QtWidgets.QTabWidget()
+        self.tab_general = Preferences_General(manager)
         self.tab_streams = Preferences_Streams(manager)
         self.tab_assignations = Preferences_Assignations(manager)
         self.tab_pauseprocesses = Preferences_Pauseprocesses(manager)
         self.tab_pauseservices = Preferences_Pauseservices(manager)
+        self.tabs.addTab(self.tab_general, "General")
         self.tabs.addTab(self.tab_streams, "Streams")
         self.tabs.addTab(self.tab_assignations, "Game Assignations")
-        self.tabs.addTab(self.tab_pauseprocesses, "Processes")
-        self.tabs.addTab(self.tab_pauseservices, "Services (Windows)")
+        self.tabs.addTab(self.tab_pauseprocesses, "Pause Processes")
+        if sys.platform == 'win32':
+            self.tabs.addTab(self.tab_pauseservices, "Pause Windows Services")
 
         self.buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         self.buttons.accepted.connect(self.accept)
@@ -456,21 +473,80 @@ class Preferences(QtWidgets.QDialog):
 
     def reset(self):
         self.tabs.tabBar().show()
+        self.tab_general.reset()
         self.tab_streams.reset()
         self.tab_pauseservices.reset()
         self.tab_pauseprocesses.reset()
         self.tab_assignations.reset()
 
     def accept(self):
+        self.tab_general.accept()
         self.tab_streams.accept()
         self.tab_pauseservices.accept()
         self.tab_pauseprocesses.accept()
         self.tab_assignations.accept()
+        self.updated.emit()
         super().accept()
 
     def open(self):
         self.reset()
         super().open()
+
+
+class Preferences_General(QtWidgets.QWidget):
+    def __init__(self, manager, parent=None):
+        super().__init__(parent)
+        self.manager = manager
+        self.interface = {}
+        self.interface['layout'] = QtWidgets.QFormLayout()
+        self.interface['autostart'] = QtWidgets.QCheckBox()
+        self.interface['checktimer'] = QtWidgets.QLineEdit()
+        self.interface['reload'] = QtWidgets.QLineEdit()
+        self.interface['timeout'] = QtWidgets.QLineEdit()
+        self.interface['label_autostart'] = QtWidgets.QLabel('Automatically start the check on launch')
+        self.interface['label_checktimer'] = QtWidgets.QLabel('Check the foreground process every (x) seconds')
+        self.interface['label_reload'] = QtWidgets.QLabel('Reload the status webpage every (x) minutes')
+        self.interface['label_timeout'] = QtWidgets.QLabel('Number of seconds before the token creation timeouts')
+        self.interface['label_autostart'].setMinimumHeight(30)
+        self.interface['label_checktimer'].setMinimumHeight(30)
+        self.interface['label_reload'].setMinimumHeight(30)
+        self.interface['label_timeout'].setMinimumHeight(30)
+        self.interface['autostart'].setMinimumHeight(30)
+        self.interface['checktimer'].setMinimumHeight(30)
+        self.interface['reload'].setMinimumHeight(30)
+        self.interface['timeout'].setMinimumHeight(30)
+
+        self.interface['line'] = QtWidgets.QFrame()
+        self.interface['line'].setObjectName('stream_line')
+        self.interface['line'].setFrameShape(QtWidgets.QFrame.HLine)
+
+        self.interface['label_createclip'] = QtWidgets.QLabel('Create Clip')
+        self.interface['shortcut_createclip'] = KeySequenceRecorder('')
+        self.interface['label_createclip'].setMinimumHeight(30)
+        self.interface['shortcut_createclip'].setMinimumHeight(30)
+
+        self.interface['layout'].addRow(self.interface['label_autostart'], self.interface['autostart'])
+        self.interface['layout'].addRow(self.interface['label_checktimer'], self.interface['checktimer'])
+        self.interface['layout'].addRow(self.interface['label_reload'], self.interface['reload'])
+        self.interface['layout'].addRow(self.interface['label_timeout'], self.interface['timeout'])
+        self.interface['layout'].addRow(self.interface['line'])
+        self.interface['layout'].addRow(self.interface['label_createclip'], self.interface['shortcut_createclip'])
+        self.setLayout(self.interface['layout'])
+
+    def accept(self):
+        self.manager.config['base']['checktimer'] = self.interface['checktimer'].text()
+        self.manager.config['base']['autostart'] = self.interface['autostart'].isChecked()
+        self.manager.config['base']['reload'] = self.interface['reload'].text()
+        self.manager.config['base']['timeout'] = self.interface['timeout'].text()
+        self.manager.config['shortcuts']['createclip'] = self.interface['shortcut_createclip'].text()
+        socket.setdefaulttimeout(int(self.manager.config['base']['timeout']))
+
+    def reset(self):
+        self.interface['checktimer'].setText(self.manager.config['base']['checktimer'])
+        self.interface['autostart'].setChecked(self.manager.config['base']['autostart'])
+        self.interface['reload'].setText(self.manager.config['base']['reload'])
+        self.interface['timeout'].setText(self.manager.config['base']['timeout'])
+        self.interface['shortcut_createclip'].setText(self.manager.config['shortcuts']['createclip'])
 
 
 class Preferences_Assignations(QtWidgets.QDialog):
@@ -954,7 +1030,10 @@ class Preferences_Pauseprocesses(Preferences_Pause):
 class WebRemote(common.remote.WebRemote, QtCore.QThread):
     startedcheck = QtCore.Signal()
     stoppedcheck = QtCore.Signal()
-    updated = QtCore.Signal(dict)
+
+    def __init__(self, autostart=True):
+        super().__init__()
+        self.running = autostart
 
     def start_check(self):
         self.startedcheck.emit()
@@ -963,6 +1042,8 @@ class WebRemote(common.remote.WebRemote, QtCore.QThread):
         self.stoppedcheck.emit()
 
     def run(self):
+        if self.running:
+            self.start_check()
         self.server()
         self.exec_()
 
@@ -976,9 +1057,9 @@ class ManagerStreamThread(common.manager.ManageStream, QtCore.QThread):
         with common.tools.pause_processes(self.config['base']['processes']):
             with common.tools.pause_services(self.config['base']['services']):
                 self.create_services()
-                timer = QtCore.QTimer()
-                timer.timeout.connect(self.main)
-                timer.start(1000)
+                self.checktimer = QtCore.QTimer()
+                self.checktimer.timeout.connect(self.main)
+                self.checktimer.start(int(self.config['base']['checktimer']) * 1000)
                 self.exec_()
 
     def main(self):
@@ -1077,6 +1158,40 @@ class LineditSpoiler(QtWidgets.QLineEdit):
         self.effect.setBlurRadius(self.blurAmount)
         super().leaveEvent(event)
 
+
+class KeySequenceRecorder(QtWidgets.QLineEdit):
+    def __init__(self, keySequence, parent=None):
+        super().__init__(parent)
+        self.setKeySequence(keySequence)
+
+    def setKeySequence(self, keySequence):
+        try:
+            self.keySequence = keySequence.toString(QtGui.QKeySequence.NativeText)
+        except AttributeError:
+            self.keySequence = keySequence
+        self.setText(self.keySequence)
+
+    def keyPressEvent(self, e):
+        if e.type() == QtCore.QEvent.KeyPress:
+            key = e.key()
+            if key == QtCore.Qt.Key_unknown:
+                logger.warning('Unknown key for shortcut')
+                return
+            if(key == QtCore.Qt.Key_Control or
+            key == QtCore.Qt.Key_Shift or
+            key == QtCore.Qt.Key_Alt or
+            key == QtCore.Qt.Key_Meta):
+                return
+            modifiers = e.modifiers()
+            if modifiers & QtCore.Qt.ShiftModifier:
+                key += QtCore.Qt.SHIFT
+            if modifiers & QtCore.Qt.ControlModifier:
+                key += QtCore.Qt.CTRL
+            if modifiers & QtCore.Qt.AltModifier:
+                key += QtCore.Qt.ALT
+            if modifiers & QtCore.Qt.MetaModifier:
+                key += QtCore.Qt.META
+            self.setKeySequence(QtGui.QKeySequence(key))
 
 
 def updateStyle(obj, name, value):

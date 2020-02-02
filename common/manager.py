@@ -26,6 +26,7 @@ class ManageStream(tools.Borg):
             self.currentkey = set()
             self.config_filepath = os.path.join(os.path.dirname(__file__), '..', 'data', 'settings.json')
             self.load_config()
+            socket.setdefaulttimeout(int(self.config['base']['timeout']))
 
     def conform_preferences(self):
         template = {
@@ -34,7 +35,10 @@ class ManageStream(tools.Borg):
         "base": {
             "title": "",
             "description": "",
-            "services": [],
+            "autostart": False,
+            "checktimer": "60",
+            "reload": "5",
+            "timeout": "10",
             "processes": [],
             "category": "",
             "tags": [],

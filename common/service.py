@@ -16,8 +16,6 @@ import common.tools as tools
 logger = logging.getLogger(__name__)
 
 
-socket.setdefaulttimeout(10)
-
 class Timeout(Exception):
     pass
 
@@ -78,7 +76,7 @@ class Service():
                 buf = connection.recv(4096)
                 if buf:
                     break
-                if time.time() - currenttime > 10:
+                if time.time() - currenttime > self.manager.config['base']['timeout']:
                     raise Timeout()
             code = re.search('code=(.*?)&', str(buf))
             code = code.group(1)
