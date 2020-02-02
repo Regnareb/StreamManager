@@ -69,6 +69,7 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         super().__init__()
         self.log_panel = LogPanel()
         self.setWindowTitle('Stream Manager')
+        self.setWindowIcon(QtGui.QIcon('icon.png'))
         self.load_stylesheet()
         self.setCentralWidget(None)
         self.manager = ManagerStreamThread()
