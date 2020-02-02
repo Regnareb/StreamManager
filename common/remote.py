@@ -50,9 +50,9 @@ class WebRemote():
         def strip_path():
             bottle.request.environ['PATH_INFO'] = bottle.request.environ['PATH_INFO'].rstrip('/')
 
-        @app.route('/remote.css')
-        def remotecss():
-             return bottle.static_file('remote.css', root='data/theme/')
+        @app.route('/<filename:path>')
+        def staticfiles(filename):
+            return bottle.static_file(filename, root='data/theme/')
 
         @app.route('/')
         def index():

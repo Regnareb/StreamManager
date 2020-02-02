@@ -12,14 +12,16 @@ li {
     vertical-align: middle;
 }
 
-span {float: left}
+span {float: left;margin-left:10px}
 
 .service_name {
-    height:100%;
-    margin: 5px;
-    min-width: 100px;
+    width: 50px;
+    height: 50px;
+    margin: 0px;
     text-align: center;
-    display: inline-block
+    display: inline-block;
+    background-size: cover;
+    background-repeat: no-repeat
 }
 .started .offline {background-color: #faa}
 .stopped li, .started li {background-color: rgba(168, 203, 219, 0.5)}
