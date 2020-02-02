@@ -91,7 +91,7 @@ class Service():
         try:
             self.config['authorization'] = self.oauth2.refresh_token(self.config['token_url'], **{'client_id': self.config['client_id'], 'client_secret': self.config['client_secret']})
         except (InvalidGrantError, MissingTokenError, InvalidClientIdError):
-            logger.error("Couldn't refresh the token")
+            logger.warning("Couldn't refresh the token")
             raise
 
     def query_category(self, category):
@@ -120,4 +120,7 @@ class Service():
         if not response:
             logger.error('{} - {}: {} {}'.format(self.name, action, address, response.json()))
         else:
-            logger.debug(response.json())
+            try:
+                logger.debug(response.json())
+            except:
+                logger.info(response)  # Some reponse return an empty JSON
