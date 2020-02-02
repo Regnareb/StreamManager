@@ -52,7 +52,8 @@ class Main(Service):
             data['status'] = infos['title']
         if infos['category']:
             data['game'] = infos['category']
-        self.update_tags(infos['tags'])
+        if infos['tags']:
+            self.update_tags(infos['tags'])
         if data:
             self.get_token()
             data = {'channel': data}
@@ -75,7 +76,7 @@ class Main(Service):
                 address = '{}/tags/streams?first=100&after={}'.format(self.apibase2, cursor)
                 response = self.request('get', address).json()
                 for i in response['data']:
-                    self._alltags[i['localization_names'][self.config['localisation']]] = i['tag_id']
+                    self._alltags[i['localization_names']['en-us']] = i['tag_id']
                 cursor = response['pagination'].get('cursor')
             return self._alltags
 
