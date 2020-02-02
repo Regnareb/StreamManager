@@ -84,11 +84,13 @@ class ManageStream(tools.Borg):
                     pool.append(executor.submit(self.create_service, service, self.config['streamservices'].get(service), force=force))
             concurrent.futures.wait(pool, timeout=5)
             for service in pool:
-                if service.result() :
+                if service.result():
                     self.services[service.result().name] = service.result()
         else:
             for service in SERVICES:
-                self.services[service] = self.create_service(service, self.config['streamservices'].get(service), force=force)
+                result = self.create_service(service, self.config['streamservices'].get(service), force=force)
+                if result:
+                    self.services[service] = result
 
     def create_service(self, service, config, force=False):
         try:
@@ -108,13 +110,11 @@ class ManageStream(tools.Borg):
 
     def create_clip(self):
         for service in self.services.values():
-            if service.config['enabled']:
-                service.create_clip()
+            service.create_clip()
 
     def update_channel(self, infos):
         for service in self.services.values():
-            if service.config['enabled']:
-                service.update_channel(infos)
+            service.update_channel(infos)
 
     def validate_assignations(self, config, category=None):
         if category:
