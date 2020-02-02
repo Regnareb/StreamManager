@@ -73,7 +73,12 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.setCentralWidget(None)
         self.manager = ManagerStreamThread()
         self.manager.create_services()
-        self.webremote = WebRemote()
+        self.manager.createdservices.connect(self.updated)
+        self.manager.validate.connect(self.update_invalidcategory)
+        self.manager.updated.connect(self.updated)
+        self.webremote = WebRemote(self.manager.config['base']['autostart'])
+        self.webremote.startedcheck.connect(self.start_check)
+        self.webremote.stoppedcheck.connect(self.stop_check)
         self.webremote.start()
         self.preferences = Preferences(self.manager, self)
         self.preferences.updated.connect(self.preferences_updated)
@@ -90,12 +95,6 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.tabifyDockWidget(self.panel_status['dock'], self.gameslayout['dock'])
         self.tabifyDockWidget(self.gameslayout['dock'], self.log_panel)
         self.panel_status['dock'].raise_()
-        self.manager.createdservices.connect(self.updated)
-        self.webremote.startedcheck.connect(self.start_check)
-        self.webremote.stoppedcheck.connect(self.stop_check)
-        self.webremote.updated.connect(self.updated)
-        self.manager.validate.connect(self.update_invalidcategory)
-        self.manager.updated.connect(self.updated)
         self.setAcceptDrops(True)
         self.preferences_updated()
         self.set_shortcuts()
@@ -120,7 +119,7 @@ class StreamManager_UI(QtWidgets.QMainWindow):
 
     def first_launch(self):
         logger.info('First launch.')
-        self.log_panel.set_level('info')
+        self.log_panel.set_level('Info')
         self.preferences.open()
         self.preferences.tabs.tabBar().hide()
         self.set_dockable(False)
@@ -184,8 +183,14 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.menuBar().setVisible(not self.menuBar().isVisible())
 
     def create_menu(self):
-        action = QtWidgets.QAction('Preferences', self, triggered=self.preferences.open)
-        self.menuBar().addAction(action)
+        actionview = self.menuBar().addMenu('View')
+        preferences = QtWidgets.QAction('&Preferences', self, triggered=self.preferences.open)
+        preferences.setMenuRole(QtWidgets.QAction.PreferencesRole)
+        actionview.addAction(preferences)
+        actionview.addSeparator()
+        actionview.addAction(self.panel_status['dock'].toggleViewAction())
+        actionview.addAction(self.gameslayout['dock'].toggleViewAction())
+        actionview.addAction(self.log_panel.toggleViewAction())
 
     def create_gamelayout(self):
         self.gameslayout = {}
@@ -555,7 +560,7 @@ class Preferences_Assignations(QtWidgets.QDialog):
         self.manager = manager
         self.interface = {}
         self.interface['layout'] = QtWidgets.QVBoxLayout()
-        self.interface['label'] = QtWidgets.QLabel('Some services do not use the same name for the same activity. You can match the category for each services.\nFor example Youtube has only "Gaming" and no specific game in its database.')
+        self.interface['label'] = QtWidgets.QLabel('Some stream services do not use the same name for the same activity. You can match the category for each services.\nFor example Youtube has only "Gaming" and no specific game in its database.')
         self.interface['label'].setAlignment(QtCore.Qt.AlignCenter)
         self.interface['hlayout'] = QtWidgets.QHBoxLayout()
         self.interface['processes'] = QtWidgets.QComboBox()
