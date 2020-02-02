@@ -5,6 +5,7 @@ import logging
 import threading
 import functools
 logger = logging.getLogger(__name__)
+import keyboard
 from PySide2 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
 
 import common.manager
@@ -94,7 +95,8 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.manager.validate.connect(self.update_invalidcategory)
         self.manager.updated.connect(self.updated)
         self.setAcceptDrops(True)
-        self.read_settings()
+        self.set_shortcuts()
+        self.read_qsettings()
 
     def set_dockable(self, state):
         self.dockable = state
@@ -102,7 +104,7 @@ class StreamManager_UI(QtWidgets.QMainWindow):
             dummy = None if state else QtWidgets.QWidget()
             i.setTitleBarWidget(dummy)
 
-    def read_settings(self):
+    def read_qsettings(self):
         self.settings = QtCore.QSettings('regnareb', 'Stream Manager')
         if self.settings.value('initialised_once'):
             self.restoreGeometry(self.settings.value('geometry'))
@@ -129,7 +131,8 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.settings.setValue("windowState", self.saveState())
         self.settings.setValue("dockable", True if self.dockable else '')
         self.settings.setValue("logslevel", self.log_panel.interface['levels'].currentText())
-        super().closeEvent(event)
+        if self.manager.save_config():
+            super().closeEvent(event)
 
     def load_stylesheet(self):
         path = os.path.join(os.path.dirname(__file__), '..', 'data', 'theme', 'qtstylesheet.css')
@@ -151,10 +154,12 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.manager.quit()
 
     def updated(self, infos=None):
+        self.reload()
+
+    def reload(self):
         self.panel_status['webpage'].reload()
 
-    def mouseDoubleClickEvent(self, event):
-        super().mouseDoubleClickEvent(event)
+    def mouseDoubleClickEvent(self, *args):
         pos = self.pos()
         geo = self.geometry()
         if self.menuBar().isVisible():
@@ -404,6 +409,11 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.gameslayout['remove_game'].setEnabled(False)
         self.update_invalidcategory(val.get('category'))
         block_signals(self.gameslayout.values(), False)
+
+    def set_shortcuts(self):
+        QtWidgets.QShortcut(QtGui.QKeySequence("F11"), self, self.mouseDoubleClickEvent)
+        QtWidgets.QShortcut(QtGui.QKeySequence("F5"), self, self.reload)
+        keyboard.add_hotkey(self.manager.config['shortcuts']['createclip'], self.manager.create_clip)
 
     def create_statuslayout(self):
         self.panel_status = {}

@@ -5,10 +5,9 @@ import json
 import socket
 import atexit
 import logging
+import traceback
 import subprocess
 import concurrent.futures
-
-import keyboard
 
 import common.tools as tools
 
@@ -27,8 +26,6 @@ class ManageStream(tools.Borg):
             self.currentkey = set()
             self.config_filepath = os.path.join(os.path.dirname(__file__), '..', 'data', 'settings.json')
             self.load_config()
-            self.shortcuts()
-            atexit.register(self.save_config)
 
     def conform_preferences(self):
         template = {
@@ -46,7 +43,10 @@ class ManageStream(tools.Borg):
             "forced_description": False,
             "forced_tags": False
             },
-        "assignations": {}
+        "assignations": {},
+        "shortcuts": {
+            "createclip": "Ctrl+F9"
+            }
         }
         for key, value in template.items():
             self.config.setdefault(key, value)
@@ -69,11 +69,14 @@ class ManageStream(tools.Borg):
     def save_config(self):
         for name, service in self.services.items():
             self.config['streamservices'][name] = service.config
-        with open(self.config_filepath, 'w') as json_file:
-            json.dump(self.config, json_file, indent=4)
-
-    def shortcuts(self):
-        keyboard.add_hotkey('ctrl+F9', self.create_clip)
+        try:
+            with open(self.config_filepath, 'w') as json_file:
+                json.dump(self.config, json_file, indent=4)
+            return True
+        except:
+            logger.critical(traceback.print_exc())
+            logging.error(self.config)
+            return False
 
     def create_services(self, force=False, threading=True):
         if threading:
