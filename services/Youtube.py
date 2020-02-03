@@ -8,8 +8,9 @@ class Main(Service):
     scope = "https://www.googleapis.com/auth/youtubepartner https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.force-ssl"
     authorization_base_url = "https://accounts.google.com/o/oauth2/v2/auth"
     token_url = "https://oauth2.googleapis.com/token"
-    redirect_uri = "http://localhost:778/"
+    redirect_uri = "http://localhost:60775/"
     apibase = 'https://www.googleapis.com/youtube/v3'
+    devurl = 'https://console.developers.google.com/apis/credentials'
     features = {'title': True, 'category': True, 'description': True, 'tags': False, 'clips': False}
 
     def get_channel_info(self):

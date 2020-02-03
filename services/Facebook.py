@@ -8,8 +8,9 @@ class Main(Service):
     scope = "user_videos publish_video"
     authorization_base_url = "https://www.facebook.com/dialog/oauth"
     token_url = "https://graph.facebook.com/oauth/access_token"
-    redirect_uri = "http://localhost:779/"
+    redirect_uri = "http://localhost:60776/"
     apibase = 'https://graph.facebook.com/v5.0'
+    devurl = 'https://developers.facebook.com/apps/'
     features = {'title': True, 'category': False, 'description': True, 'tags': False, 'clips': False}
 
     def get_channel_id(self):

@@ -11,9 +11,10 @@ class Main(Service):
     scope = "user:edit:broadcast channel_editor clips:edit"
     authorization_base_url = "https://id.twitch.tv/oauth2/authorize"
     token_url = "https://id.twitch.tv/oauth2/token"
-    redirect_uri = "http://localhost:776/"
+    redirect_uri = "http://localhost:60779/"
     apibase = 'https://api.twitch.tv/kraken'
     apibase2 = 'https://api.twitch.tv/helix'
+    devurl = 'https://dev.twitch.tv/console/apps'
     features = {'title': True, 'category': True, 'description': False, 'tags': True, 'clips': True}
 
     def set_headers(self):

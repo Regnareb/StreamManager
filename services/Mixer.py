@@ -8,8 +8,9 @@ class Main(Service):
     scope = "channel:update:self channel:clip:create:self"
     authorization_base_url = "https://mixer.com/oauth/authorize"
     token_url = "https://mixer.com/api/v1/oauth/token"
-    redirect_uri = "http://localhost:777/"
+    redirect_uri = "http://localhost:60778/"
     apibase = 'https://mixer.com/api/v1'
+    devurl = 'https://mixer.com/lab/oauth'
     features = {'title': True, 'category': True, 'description': False, 'tags': False, 'clips': True}
 
     def get_channel_info(self):
