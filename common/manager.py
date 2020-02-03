@@ -147,7 +147,7 @@ class ManageStream(tools.Borg):
         existing = self.config['appdata'].get(process, '')
         if existing and process!=self.process:
             infos = self.get_informations(process)
-            logger.debug(f"title: {infos['title']} | description: {infos['description']} | category: {infos['category']} | tags: {infos['tags']}")
+            logger.info(f"title: {infos['title']} | description: {infos['description']} | category: {infos['category']} | tags: {infos['tags']}")
             self.update_channel(infos)
             self.process = process
             return infos
