@@ -1,5 +1,6 @@
 # coding: utf-8
 import re
+import copy
 import time
 import socket
 import urllib
@@ -100,9 +101,11 @@ class Service():
 
     def update_channel(self, infos):
         self.get_token()
+        infos = copy.deepcopy(infos)
         infos['name'] = self.name
+        infos = tools.parse_strings(infos)
         infos['category'] = self.manager.config.get('assignations', {}).get(infos['category'], {}).get(self.name, {}).get('name', '')
-        return tools.parse_strings(infos)
+        return infos
 
     def request(self, action, address, headers=None, data=None, params=None):
         if not headers:
