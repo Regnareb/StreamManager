@@ -138,6 +138,7 @@ class StreamManager_UI(QtWidgets.QMainWindow):
             super().closeEvent(event)
 
     def preferences_updated(self):
+        self.manager.process = ''
         try:
             self.reloadtimer.stop()
         except AttributeError:
