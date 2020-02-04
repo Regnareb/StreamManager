@@ -26,13 +26,9 @@ class Main(Service):
 
     @property
     def video_id(self):
-        try:
-            return self._video_id
-        except AttributeError:
-            address = '{}/{}/live_videos?fields=live_views,status,ingest_streams'.format(self.apibase, self.config['channel_id'])
-            result = self.request('get', address).json()['data'][0]
-            self._video_id = result['id']
-            return self._video_id
+        address = '{}/{}/live_videos?fields=live_views,status,ingest_streams'.format(self.apibase, self.config['channel_id'])
+        result = self.request('get', address).json()['data'][0]
+        return result['id']
 
     def update_channel(self, infos):
         infos = super().update_channel(infos)
