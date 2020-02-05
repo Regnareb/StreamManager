@@ -19,10 +19,12 @@ class Main(Service):
         self.config['channel_id'] = result['id']
 
     def get_channel_info(self):
+        params = {'fields': 'live_views,title,status'}
         address = '{}/{}'.format(self.apibase, self.video_id)
-        result = self.request('get', address).json()
+        result = self.request('get', address, params=params).json()
         online = True if result['status'] == 'LIVE' else False
-        self.infos = {'online': online, 'title': result['title'], 'name': '', 'category': '', 'description': ''}
+        viewers = result['live_views'] if online else None
+        self.infos = {'online': online, 'title': result['title'], 'name': '', 'category': '', 'description': '', 'viewers': viewers}
 
     @property
     def video_id(self):

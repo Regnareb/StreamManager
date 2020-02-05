@@ -16,7 +16,8 @@ class Main(Service):
     def get_channel_info(self):
         address = '{}/channels/{}'.format(self.apibase, self.config['channel_id'])
         result = self.request('get', address).json()
-        self.infos = {'online': result['online'], 'title': result['name'], 'name': result['token'], 'category': result['type']['name'], 'description': result['description']}
+        viewers = result['viewersCurrent'] if result['online'] else None
+        self.infos = {'online': result['online'], 'title': result['name'], 'name': result['token'], 'category': result['type']['name'], 'description': result['description'], 'viewers': viewers, 'viewersTotal': result['viewersTotal']}
         return result
 
     def update_channel(self, infos):

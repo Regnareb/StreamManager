@@ -26,6 +26,7 @@ span {float: left;margin-left:10px}
 .started .offline {background-color: #faa}
 .stopped li, .started li {background-color: rgba(168, 203, 219, 0.5)}
 .started li.online {background-color: #afa}
+.viewers {float:right}
 
 button.action {width:100%; xheight:10%; xmin-height:50px; text-align:center;}
 

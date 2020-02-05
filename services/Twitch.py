@@ -26,7 +26,13 @@ class Main(Service):
         result = self.request('get', address).json()
         address = '{}/streams?user_id={}'.format(self.apibase2, self.config['channel_id'])
         online = self.request('get', address).json()['data']
-        self.infos = {'online': bool(online), 'title': result['status'], 'name': result['display_name'], 'category': result['game'], 'description': result['description']}
+        try:
+            viewers = online[0]['viewer_count']
+            online = True
+        except IndexError:
+            viewers = None
+            online = False
+        self.infos = {'online': False, 'title': result['status'], 'name': result['display_name'], 'category': result['game'], 'description': result['description'], 'viewers': viewers}
         return result
 
     def query_category(self, category):

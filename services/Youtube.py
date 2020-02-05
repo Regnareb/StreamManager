@@ -20,7 +20,12 @@ class Main(Service):
         name = self.request('get', address).json()['items'][0]['snippet']['title']
         address = '{}/liveBroadcasts?part=snippet&broadcastStatus=active&broadcastType=persistent'.format(self.apibase)
         online = bool(self.request('get', address).json()['items'])
-        self.infos = {'online': online, 'title': result['items'][0]['snippet']['title'], 'name': name, 'category': '', 'description': result['items'][0]['snippet']['description']}
+        if online:
+            address = '{}/videos?part=liveStreamingDetails&id={}&fields=items%2FliveStreamingDetails%2FconcurrentViewers'.format(self.apibase, ['items'][0]['id'])
+            viewers = self.request('get', address).json()['items'][0]['liveStreamingDetails']['concurrentViewers']
+        else:
+            viewers = None
+        self.infos = {'online': online, 'title': result['items'][0]['snippet']['title'], 'name': name, 'category': '', 'description': result['items'][0]['snippet']['description'], 'viewers': viewers}
         return result
 
     def query_category(self, category):

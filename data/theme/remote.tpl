@@ -8,7 +8,7 @@
     <ul>
     % for service, stream in services.items():
     % if stream['enabled']:
-        <li class="{{!"online" if stream['infos']['online'] == True else "offline"}}"><span class='service_name' style="background-image:url('/images/{{service}}.png')"></span><span class='category'>{{stream['infos']['category']}}</span><br/><span class='title'>{{stream['infos']['title']}}</span></li>
+        <li class="{{!"online" if stream['infos']['online'] else "offline"}}"><span class='service_name' style="background-image:url('/images/{{service}}.png')"></span><span class='category'>{{stream['infos']['category']}}</span><br/><span class='title'>{{stream['infos']['title']}}</span> <span class='viewers'>{{stream['infos']['viewers']}}</span></li>
     % end
     % end
     </ul>
