@@ -21,8 +21,10 @@ class Main(Service):
         address = '{}/liveBroadcasts?part=snippet&broadcastStatus=active&broadcastType=persistent'.format(self.apibase)
         online = bool(self.request('get', address).json()['items'])
         if online:
-            address = '{}/videos?part=liveStreamingDetails&id={}&fields=items%2FliveStreamingDetails%2FconcurrentViewers'.format(self.apibase, ['items'][0]['id'])
-            viewers = self.request('get', address).json()['items'][0]['liveStreamingDetails']['concurrentViewers']
+            params = {'id': result['items'][0]['id'], 'part': 'liveStreamingDetails'}
+            address = '{}/videos'.format(self.apibase)
+            viewers = self.request('get', address, params=params).json()
+            viewers = viewers['items'][0]['liveStreamingDetails'].get('concurrentViewers', 0)
         else:
             viewers = None
         self.infos = {'online': online, 'title': result['items'][0]['snippet']['title'], 'name': name, 'category': '', 'description': result['items'][0]['snippet']['description'], 'viewers': viewers}

@@ -32,7 +32,7 @@ class Main(Service):
         except IndexError:
             viewers = None
             online = False
-        self.infos = {'online': False, 'title': result['status'], 'name': result['display_name'], 'category': result['game'], 'description': result['description'], 'viewers': viewers}
+        self.infos = {'online': online, 'title': result['status'], 'name': result['display_name'], 'category': result['game'], 'description': result['description'], 'viewers': viewers}
         return result
 
     def query_category(self, category):
