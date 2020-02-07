@@ -19,11 +19,16 @@ logger = logging.getLogger(__name__)
 @contextmanager
 def pause_services(services):
     if sys.platform=='win32':
-        for service in services:
-            subprocess.Popen('net stop "{}"'.format(service), creationflags=subprocess.CREATE_NO_WINDOW)
+        admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+        if admin:
+            for service in services:
+                subprocess.Popen('net stop "{}"'.format(service), creationflags=subprocess.CREATE_NO_WINDOW)
+        elif services:
+            logger.warning("No administrator rights, can't stop Windows Services")
         yield
-        for service in services:
-            subprocess.Popen('net start "{}"'.format(service), creationflags=subprocess.CREATE_NO_WINDOW)
+        if admin:
+            for service in services:
+                subprocess.Popen('net start "{}"'.format(service), creationflags=subprocess.CREATE_NO_WINDOW)
     else:
         yield
 
@@ -100,6 +105,8 @@ def listprocesses():
                 result[exe]['memory_percent'] = memory
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
+        except FileNotFoundError:
+            logger.error('Strange process: {}'.format(proc.name(), proc.pid))
     return result
 
 def parse_strings(infos):

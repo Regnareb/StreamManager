@@ -998,8 +998,11 @@ class Preferences_Pauseservices(Preferences_Pause):
         sizepolicy.setRetainSizeWhenHidden(True)
         self.panel_pause['refresh'].setSizePolicy(sizepolicy)
         self.panel_pause['refresh'].hide()
-        if sys.platform != 'win32':
-            self.disable_all()
+        if sys.platform == 'win32':
+            admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+            if not admin:
+                self.panel_pause['label'].setText(self.panel_pause['label'].text() + '<br><b style="color:red">Requires Admin Rights!</b>')
+                self.disable_all()
 
     def disable_all(self):
         for i in self.panel_pause.values():
