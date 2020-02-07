@@ -100,6 +100,10 @@ class StreamManager_UI(common.systray.Window):
         self.preferences_updated()
         self.set_shortcuts()
         self.read_qsettings()
+        if self.manager.config['base']['starttray']:
+            self.hide()
+        else:
+            self.show()
 
     def set_dockable(self, state):
         self.dockable = state
@@ -523,18 +527,22 @@ class Preferences_General(QtWidgets.QWidget):
         self.interface = {}
         self.interface['layout'] = QtWidgets.QFormLayout()
         self.interface['autostart'] = QtWidgets.QCheckBox()
+        self.interface['starttray'] = QtWidgets.QCheckBox()
         self.interface['checktimer'] = QtWidgets.QLineEdit()
         self.interface['reload'] = QtWidgets.QLineEdit()
         self.interface['timeout'] = QtWidgets.QLineEdit()
         self.interface['label_autostart'] = QtWidgets.QLabel('Automatically start the check on launch')
+        self.interface['label_starttray'] = QtWidgets.QLabel('Automatically start minimised to the tray icon')
         self.interface['label_checktimer'] = QtWidgets.QLabel('Check the foreground process every (x) seconds')
         self.interface['label_reload'] = QtWidgets.QLabel('Reload the status webpage every (x) minutes')
         self.interface['label_timeout'] = QtWidgets.QLabel('Number of seconds before the token creation timeouts')
         self.interface['label_autostart'].setMinimumHeight(30)
+        self.interface['label_starttray'].setMinimumHeight(30)
         self.interface['label_checktimer'].setMinimumHeight(30)
         self.interface['label_reload'].setMinimumHeight(30)
         self.interface['label_timeout'].setMinimumHeight(30)
         self.interface['autostart'].setMinimumHeight(30)
+        self.interface['starttray'].setMinimumHeight(30)
         self.interface['checktimer'].setMinimumHeight(30)
         self.interface['reload'].setMinimumHeight(30)
         self.interface['timeout'].setMinimumHeight(30)
@@ -549,6 +557,7 @@ class Preferences_General(QtWidgets.QWidget):
         self.interface['shortcut_createclip'].setMinimumHeight(30)
 
         self.interface['layout'].addRow(self.interface['label_autostart'], self.interface['autostart'])
+        self.interface['layout'].addRow(self.interface['label_starttray'], self.interface['starttray'])
         self.interface['layout'].addRow(self.interface['label_checktimer'], self.interface['checktimer'])
         self.interface['layout'].addRow(self.interface['label_reload'], self.interface['reload'])
         self.interface['layout'].addRow(self.interface['label_timeout'], self.interface['timeout'])
@@ -559,6 +568,7 @@ class Preferences_General(QtWidgets.QWidget):
     def accept(self):
         self.manager.config['base']['checktimer'] = self.interface['checktimer'].text()
         self.manager.config['base']['autostart'] = self.interface['autostart'].isChecked()
+        self.manager.config['base']['starttray'] = self.interface['starttray'].isChecked()
         self.manager.config['base']['reload'] = self.interface['reload'].text()
         self.manager.config['base']['timeout'] = self.interface['timeout'].text()
         self.manager.config['shortcuts']['createclip'] = self.interface['shortcut_createclip'].text()
@@ -567,6 +577,7 @@ class Preferences_General(QtWidgets.QWidget):
     def reset(self):
         self.interface['checktimer'].setText(self.manager.config['base']['checktimer'])
         self.interface['autostart'].setChecked(self.manager.config['base']['autostart'])
+        self.interface['starttray'].setChecked(self.manager.config['base']['starttray'])
         self.interface['reload'].setText(self.manager.config['base']['reload'])
         self.interface['timeout'].setText(self.manager.config['base']['timeout'])
         self.interface['shortcut_createclip'].setText(self.manager.config['shortcuts']['createclip'])

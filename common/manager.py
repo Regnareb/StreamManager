@@ -37,6 +37,7 @@ class ManageStream(tools.Borg):
             "title": "",
             "description": "",
             "autostart": False,
+            "starttray": False,
             "checktimer": "60",
             "reload": "5",
             "timeout": "10",
