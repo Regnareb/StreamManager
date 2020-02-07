@@ -63,13 +63,12 @@ class LogPanel(QtWidgets.QDockWidget):
         logging.getLogger().setLevel(attr)
 
 
-class StreamManager_UI(QtWidgets.QMainWindow):
-
+class StreamManager_UI(common.systray.Window):
     def __init__(self):
         super().__init__()
         self.log_panel = LogPanel()
         self.setWindowTitle('Stream Manager')
-        self.setWindowIcon(QtGui.QIcon('icon.png'))
+        self.setIcon(QtGui.QIcon('icon.png'))
         self.load_stylesheet()
         self.setCentralWidget(None)
         self.manager = ManagerStreamThread()
@@ -127,6 +126,15 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.settings.setValue('initialised_once', 1)
 
     def closeEvent(self, event):
+        if self.trayIcon.isVisible():
+            if not self.settings.value('showed_quitmessage'):
+                QtWidgets.QMessageBox.information(self, "Minimise to System Tray", "The program will keep running in the system tray. To terminate the program, choose <b>Quit</b> in the context menu of the system tray icon.")
+            self.settings.setValue("showed_quitmessage", True)
+            super().closeEvent(event)
+        else:
+            self.quit()
+
+    def quit(self):
         self.manager.quit()
         self.webremote.quit()
         self.webremote.terminate()
@@ -142,7 +150,7 @@ class StreamManager_UI(QtWidgets.QMainWindow):
             ret = msgBox.exec_()
             if ret==QtWidgets.QMessageBox.Cancel:
                 return
-        super().closeEvent(event)
+        super().quit()
 
     def preferences_updated(self):
         self.manager.process = ''

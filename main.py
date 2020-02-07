@@ -8,6 +8,7 @@ import common.tools
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
+    QtWidgets.QApplication.setQuitOnLastWindowClosed(False)
     win = common.ui.StreamManager_UI()
     win.show()
     sys.exit(app.exec_())
