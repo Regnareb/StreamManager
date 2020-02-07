@@ -118,10 +118,13 @@ class Service():
         return response
 
     def log_requests(self, action, address, response):
-        if not response:
-            logger.error('{} - {}: {} {}'.format(self.name, action, address, response.json()))
-        else:
-            try:
+        try:
+            if response.status_code == 401:
+                logger.warning('Error 401 for service {}, requesting another OAuth token'.format(self.name))
+                self.get_token()
+            elif not response:
+                logger.error('{} - {}: {} {}'.format(self.name, action, address, response.json()))
+            else:
                 logger.debug(response.json())
-            except:
-                logger.info(response)  # Some reponse return an empty JSON
+        except:
+            logger.info(response)  # Some reponse return an empty JSON
