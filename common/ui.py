@@ -134,8 +134,15 @@ class StreamManager_UI(QtWidgets.QMainWindow):
         self.settings.setValue("windowState", self.saveState())
         self.settings.setValue("dockable", True if self.dockable else '')
         self.settings.setValue("logslevel", self.log_panel.interface['levels'].currentText())
-        if self.manager.save_config():
-            super().closeEvent(event)
+        if not self.manager.save_config():
+            msgBox = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Critical, "Can't Save Preferences", "Couldn't save the preferences, you can copy its content in the \"Show Detail\" to try and salvage them, or send it to the developer for debug purposes.")
+            msgBox.setDetailedText(str(self.manager.config))
+            msgBox.setStandardButtons(QtWidgets.QMessageBox.Close | QtWidgets.QMessageBox.Cancel)
+            msgBox.setDefaultButton(QtWidgets.QMessageBox.Close)
+            ret = msgBox.exec_()
+            if ret==QtWidgets.QMessageBox.Cancel:
+                return
+        super().closeEvent(event)
 
     def preferences_updated(self):
         self.manager.process = ''
@@ -1087,10 +1094,15 @@ class ManagerStreamThread(common.manager.ManageStream, QtCore.QThread):
         return result
 
     def load_credentials(self, path=''):
-        try:
-            super().load_credentials(path)
-        except AttributeError:
-            raise  # Show a notification telling the user the json file is not right
+        if super().load_credentials(path) == False:
+            QtWidgets.QMessageBox.warning(None, "Can't Load Credentials File", "The JSON file must be wrong, check your file with text editor or the person who sent it to you.", QtWidgets.QMessageBox.StandardButton.Ok)
+
+    def load_config(self):
+        if super().load_config() == False:
+            msgBox = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Critical, "Can't Load Preference File", "The JSON file must be wrong, the preferences has been reset. The old preferences are still available at this path:\n{}".format(self.config_filepath+'_error'))
+            msgBox.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
+            msgBox.exec_()
+
 
 class StateButtons():
     buttonClicked = QtCore.Signal(bool)

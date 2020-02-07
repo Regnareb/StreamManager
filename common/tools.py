@@ -3,8 +3,10 @@ import os
 import sys
 import glob
 import json
+import shutil
 import ctypes
 import logging
+import tempfile
 import importlib
 import functools
 import threading
@@ -110,19 +112,26 @@ def parse_strings(infos):
             pass
     return infos
 
-def load_json(path):
+def load_json(path, backup=True):
     content = {}
     try:
         with open(path) as json_file:
             content = json.load(json_file)
     except FileNotFoundError:
-        return 0
-    except json.decoder.JSONDecodeError:
-        import shutil
-        shutil.copy(path, path+'_error')
+        return None
+    except (json.decoder.JSONDecodeError, UnicodeDecodeError):
+        if backup:
+            shutil.copy(path, path + '_error')
         logger.error('There was an error in the json file, you can view it at this path: {}'.format(path+'_error'))
-        return 0
+        return False
     return content
+
+def save_json(data, path):
+    with tempfile.NamedTemporaryFile('w', delete=False) as tmp:
+        json.dump(data, tmp, indent=4)
+    shutil.move(tmp.name, path)
+    return True
+
 
 class Borg:
     __shared_state = {}

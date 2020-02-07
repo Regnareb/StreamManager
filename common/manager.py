@@ -26,6 +26,7 @@ class ManageStream(tools.Borg):
             self.currentkey = set()
             self.config_filepath = os.path.join(os.path.dirname(__file__), '..', 'data', 'settings.json')
             self.load_config()
+            self.conform_preferences()
             socket.setdefaulttimeout(int(self.config['base']['timeout']))
 
     def conform_preferences(self):
@@ -58,25 +59,25 @@ class ManageStream(tools.Borg):
                 self.config[key].setdefault(k, v)
 
     def load_config(self):
-        self.config = tools.load_json(self.config_filepath) or {}
-        self.conform_preferences()
+        config = tools.load_json(self.config_filepath)
+        self.config = config or {}
+        return config
 
     def load_credentials(self, path=''):
         if not path:
             path = self.config_filepath.replace('settings.json', 'credentials.json')
-        config = tools.load_json(path) or {}
-        for service, values in config.items():
+        config = tools.load_json(path, backup=False)
+        for service, values in config.items() or {}:
             logger.info('Loading credentials for "{}" service'.format(service))
             for k, v in values.items():
                 self.config['streamservices'][service][k] = v
+        return config
 
     def save_config(self):
         for name, service in self.services.items():
             self.config['streamservices'][name] = service.config
         try:
-            with open(self.config_filepath, 'w') as json_file:
-                json.dump(self.config, json_file, indent=4)
-            return True
+            return tools.save_json(self.config, self.config_filepath)
         except:
             logger.critical(traceback.print_exc())
             logging.error(self.config)
