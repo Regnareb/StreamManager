@@ -13,6 +13,7 @@ from PySide2 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
 import common.manager
 import common.remote
 import common.tools
+import common.systray
 
 
 class QLoggerHandler(common.tools.HtmlStreamHandler):
