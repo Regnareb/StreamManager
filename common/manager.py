@@ -42,6 +42,7 @@ class ManageStream(tools.Borg):
             "timeout": "10",
             "processes": [],
             "category": "",
+            "services": [],
             "tags": [],
             "forced_category": False,
             "forced_title": False,

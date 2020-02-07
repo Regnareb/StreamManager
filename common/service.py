@@ -62,7 +62,7 @@ class Service():
             if self.token_isexpired():
                 self.refresh_token()
         except (KeyError, Warning, InvalidGrantError, MissingTokenError, InvalidClientIdError):
-            logger.info('Asking for an access code for {}'.format(self.name))
+            logger.info('Asking an access code for {}'.format(self.name))
             port = re.search(r':(\d*)/?$', self.config['redirect_uri'])
             port = int(port.group(1))
             authorization_url, _ = self.oauth2.authorization_url(self.config['authorization_base_url'], state=self.config['client_secret'], access_type='offline')

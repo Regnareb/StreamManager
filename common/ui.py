@@ -884,7 +884,7 @@ class Preferences_Pause(QtWidgets.QWidget):
         self.config = self.manager.config['base'][name]
         self.panel_pause = {}
         self.panel_pause['container'] = QtWidgets.QGridLayout()
-        self.panel_pause['label'] = QtWidgets.QLabel('When you start the "automatic check" any entry on the right side will be paused until the "automatic check" is stopped.\nUsefull for automatically pausing applications that use bandwith or CPU.\n')
+        self.panel_pause['label'] = QtWidgets.QLabel('When you start the "automatic check" any entry on the right side will be paused until the "automatic check" is stopped.<br>Usefull for automatically pausing applications that use bandwith or CPU.')
         self.panel_pause['label'].setAlignment(QtCore.Qt.AlignCenter)
 
         for elem in ['list', 'list_pause']:
