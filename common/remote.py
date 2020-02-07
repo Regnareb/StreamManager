@@ -72,4 +72,4 @@ class WebRemote():
                 self.stop_check()
             bottle.redirect('/')
 
-        app.run(quiet=False, server='cherrypy')
+        app.run(host='0.0.0.0', port=8080, quiet=False, server='cherrypy')
