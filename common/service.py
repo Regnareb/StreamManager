@@ -41,7 +41,9 @@ class Service():
             "authorization_base_url": cls.authorization_base_url,
             "token_url": cls.token_url,
             "redirect_uri": cls.redirect_uri,
-            "authorization": {}
+            "authorization": {},
+            "client_id": '',
+            "client_secret": ''
         }
 
     def set_headers(self):
