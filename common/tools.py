@@ -24,7 +24,7 @@ def pause_services(services):
             for service in services:
                 subprocess.Popen('net stop "{}"'.format(service), creationflags=subprocess.CREATE_NO_WINDOW)
         elif services:
-            logger.warning("No administrator rights, can't stop Windows Services")
+            logger.warning("No administrator rights, can't pause Windows Services")
         yield
         if admin:
             for service in services:
@@ -65,7 +65,6 @@ def loadmodules(path, subfolder):
 
 def getForegroundProcess():
     if sys.platform == 'win32':
-        from ctypes import wintypes
         user32 = ctypes.windll.user32
         h_wnd = user32.GetForegroundWindow()
         pid = ctypes.wintypes.DWORD()
@@ -153,7 +152,7 @@ class HtmlStreamHandler(logging.StreamHandler):
     WARNING  = {'color': 'darkorange', 'size': '100%', 'special': '', 'after': ''}
     INFO     = {'color': 'black', 'size': '100%', 'special': '', 'after': ''}
     DEFAULT  = {'color': 'black', 'size': '100%', 'special': '', 'after': ''}
-    DEBUG    = {'color': 'aquamarine', 'size': '100%', 'special': '', 'after': ''}
+    DEBUG    = {'color': 'grey', 'size': '100%', 'special': '', 'after': ''}
 
     def __init__(self, stream=None):
         super().__init__(stream=stream)
