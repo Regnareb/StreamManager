@@ -2,8 +2,8 @@
   <head>
       <title>Form Example</title>
       <link href="/remote.css" rel="stylesheet" />
-% if refresh:
-    <meta http-equiv="refresh" content="{{refresh}}">
+% if refresh and action=="STOP":
+    <meta http-equiv="refresh" content="{{refresh*60}}">
 % end
   </head>
   <body class="{{!"started" if action == "STOP" else "stopped"}}">
