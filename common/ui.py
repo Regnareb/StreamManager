@@ -27,6 +27,8 @@ class QLoggerHandler(common.tools.HtmlStreamHandler):
 
 
 class LogPanel(QtWidgets.QDockWidget):
+    changed_loglevel = QtCore.Signal(str)
+
     def __init__(self, parent=None):
         super().__init__(parent=parent)
         self.setWindowTitle('Logs')
@@ -39,7 +41,7 @@ class LogPanel(QtWidgets.QDockWidget):
         self.interface['label'] = QtWidgets.QLabel('Logs Level:')
         self.interface['levels'] = QtWidgets.QComboBox()
         self.interface['levels'].insertItems(0, self.levels)
-        self.interface['levels'].currentIndexChanged.connect(self.set_level)
+        self.interface['levels'].currentIndexChanged.connect(self.changed_loglevel.emit)
         self.interface['textedit'] = QtWidgets.QTextBrowser()
         self.interface['textedit'].setOpenLinks(False)
         self.interface['layouth'].addStretch()
@@ -58,21 +60,16 @@ class LogPanel(QtWidgets.QDockWidget):
         self.handler.setFormatter(formatter)
         logging.getLogger().addHandler(self.handler)
 
-    def set_level(self, level=''):
-        if level not in self.levels:
-            level = self.interface['levels'].currentText()
-        attr = getattr(logging, level.upper())
-        logging.getLogger().setLevel(attr)
-
 
 class StreamManager_UI(common.systray.Window):
     def __init__(self):
         super().__init__()
-        self.log_panel = LogPanel()
         self.setWindowTitle('Stream Manager')
         self.setIcon(QtGui.QIcon('icon.png'))
         self.load_stylesheet()
         self.setCentralWidget(None)
+        self.log_panel = LogPanel()
+        self.log_panel.changed_loglevel.connect(self.set_loglevel)
         self.manager = ManagerStreamThread()
         self.manager.create_services()
         self.manager.createdservices.connect(self.updated)
@@ -118,6 +115,7 @@ class StreamManager_UI(common.systray.Window):
             self.restoreGeometry(self.settings.value('geometry'))
             self.restoreState(self.settings.value('windowState'))
             self.log_panel.interface['levels'].setCurrentIndex(self.log_panel.interface['levels'].findText(self.settings.value('logslevel')))
+            self.set_loglevel(self.settings.value('logslevel'))
             logger.info('Loaded settings from last session.')
             self.set_dockable(self.settings.value('dockable'))
         else:
@@ -125,7 +123,7 @@ class StreamManager_UI(common.systray.Window):
 
     def first_launch(self):
         logger.info('First launch.')
-        self.log_panel.set_level('Info')
+        self.set_loglevel('Info')
         self.preferences.open()
         self.preferences.tabs.tabBar().hide()
         self.set_dockable(False)
@@ -191,6 +189,14 @@ class StreamManager_UI(common.systray.Window):
 
     def reload(self):
         self.panel_status['webpage'].reload()
+
+    def set_loglevel(self, level=''):
+        block_signals(self.log_panel.interface.values(), True)
+        if level not in self.log_panel.levels:
+            level = self.log_panel.interface['levels'].currentText()
+        self.manager.set_loglevel(level)
+        self.log_panel.interface['levels'].setCurrentIndex(self.log_panel.interface['levels'].findText(level))
+        block_signals(self.log_panel.interface.values(), False)
 
     def mouseDoubleClickEvent(self, *args):
         pos = self.pos()

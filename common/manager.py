@@ -86,6 +86,14 @@ class ManageStream(tools.Borg):
             logging.error(self.config)
             return False
 
+    def set_loglevel(self, level=''):
+        level = logging.getLevelName(level.upper())
+        for key in logging.Logger.manager.loggerDict:
+            if any(word in key for word in ['common.', 'services.']):
+                logging.getLogger(key).setLevel(level)
+            else:
+                logging.getLogger(key).setLevel(logging.WARNING)
+
     def create_services(self, force=False, threading=False):
         if force:
             self.services = {}
