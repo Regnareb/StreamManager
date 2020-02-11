@@ -85,34 +85,38 @@ class ManageStream(tools.Borg):
             logging.error(self.config)
             return False
 
-    def create_services(self, force=False, threading=True):
+    def create_services(self, force=False, threading=False):
+        if force:
+            self.services = {}
         if threading:
             nb = len(SERVICES) or 1
             pool = []
             with concurrent.futures.ThreadPoolExecutor(max_workers=nb) as executor:
                 for service in SERVICES:
-                    pool.append(executor.submit(self.create_service, service, self.config['streamservices'].get(service), force=force))
+                    if service not in self.services:
+                        pool.append(executor.submit(self.create_service, service, self.config['streamservices'].get(service), force=force))
             concurrent.futures.wait(pool, timeout=5)
             for service in pool:
                 if service.result():
                     self.services[service.result().name] = service.result()
         else:
             for service in SERVICES:
-                result = self.create_service(service, self.config['streamservices'].get(service), force=force)
-                if result:
-                    self.services[service] = result
+                if service not in self.services:
+                    result = self.create_service(service, self.config['streamservices'].get(service), force=force)
+                    if result:
+                        self.services[service] = result
 
     def create_service(self, service, config, force=False):
         try:
-            if force:
-                self.services.pop(service, None)
-            if force or config.get('enabled', False) and service not in self.services:
+            if force or config['enabled']:
                 service = SERVICES[service].Main(config)
                 logger.info('Created service "{}"'.format(service.name))
                 return service
         except (socket.timeout, SERVICES[service].Timeout):
             logger.error('Timeout when creating service {}'.format(service))
             self.config['streamservices'][service]['authorization'] = {}
+            return False
+        except:
             return False
 
     def deactivate_service(self, service):

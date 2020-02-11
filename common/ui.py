@@ -797,7 +797,7 @@ class Preferences_Streams(QtWidgets.QWidget):
             paint.setOpacity(0.3)
             paint.drawPixmap(widWidth-pixmap.width()*0.8, -pixmap.height()*0.2, pixmap)
 
-    def create_services(self):
+    def create_servicesrows(self):
         self.panel_services['list'].blockSignals(True)
         while self.panel_services['list'].rowCount():
             self.panel_services['list'].removeRow(0)
@@ -807,6 +807,11 @@ class Preferences_Streams(QtWidgets.QWidget):
             self.panel_services['list'].insertRow(rowcount)
             self.panel_services['list'].setItem(rowcount, 0, row)
             row.set_disabledrowstyle(self.temporary_settings[service].get('enabled', False))
+            self.panel_services['list'].setCurrentCell(rowcount, 0)
+            if self.temporary_settings[service].get('enabled', False):
+                self.service_changed()
+                if not self.check_service():
+                    logger.error("The service {} is activated in the settings but it couldn't be created".format(service))
         self.panel_services['list'].sortItems(QtCore.Qt.AscendingOrder)
         self.panel_services['list'].blockSignals(False)
 
@@ -840,11 +845,8 @@ class Preferences_Streams(QtWidgets.QWidget):
             if not service:
                 self.panel_services['line_enabled'].setChecked(False)
                 self.save_servicedata('enabled')
-                QtWidgets.QToolTip().showText(self.panel_services['line_enabled'].mapToGlobal(QtCore.QPoint(0, 20)), "<nobr>Couldn't create the service.</nobr><br><nobr>Check your <b style='color:red'>client id</b> and <b style='color:red'>client secret</b> below.</nobr>")
+                QtWidgets.QToolTip().showText(self.panel_services['line_enabled'].mapToGlobal(QtCore.QPoint(0, 20)), "<nobr>Couldn't create the service.</nobr><br><nobr>Check your <b style='color:red'>client id</b> and <b style='color:red'>client secret</b> below.</nobr> <br><br>The quota API for this service may have been reached and can't be used anymore for some time.", msecDisplayTime=10000)
                 return False
-        else:
-            self.manager.deactivate_service(service)
-            return False
 
     def save_servicedata(self, element):
         item = self.panel_services['list'].currentItem()
@@ -873,7 +875,7 @@ class Preferences_Streams(QtWidgets.QWidget):
 
     def reset(self):
         self.temporary_settings = copy.deepcopy(self.manager.config['streamservices'])
-        self.create_services()
+        self.create_servicesrows()
         self.panel_services['list'].setCurrentCell(0, 0)
 
 
