@@ -749,6 +749,8 @@ class Preferences_Streams(QtWidgets.QWidget):
             self.panel_services[nameline].editingFinished.connect(functools.partial(self.save_servicedata, elem))
             self.panel_services['formlayout'].addRow(self.panel_services[namelabel], self.panel_services[nameline])
             self.panel_services[namelabel].setObjectName(namelabel)
+        self.panel_services['label_client_id'].setTextFormat(QtCore.Qt.RichText)
+        self.panel_services['label_client_id'].setOpenExternalLinks(True)
 
         self.panel_services['label_enabled'] = QtWidgets.QLabel('Enabled')
         self.panel_services['line_enabled'] = QtWidgets.QPushButton()
@@ -842,6 +844,7 @@ class Preferences_Streams(QtWidgets.QWidget):
                 item.set_disabledrowstyle(val)
             else:
                 self.panel_services['line_' + elem].setText(str(config.get(elem, '')))
+        self.panel_services['label_client_id'].setText('Client id (<a href="{}">?</a>)'.format(common.manager.SERVICES[service].Main.devurl))
         features = common.manager.SERVICES[service].Main.features
         for feat, state in features.items():
             updateStyle(self.panel_services['feature_' + feat], 'available', state)
