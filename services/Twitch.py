@@ -1,6 +1,7 @@
 # coding: utf-8
 import time
 import logging
+import functools
 import common.tools as tools
 from common.service import *
 logger = logging.getLogger(__name__)
@@ -35,6 +36,7 @@ class Main(Service):
         self.infos = {'online': online, 'title': result['status'], 'name': result['display_name'], 'category': result['game'], 'description': result['description'], 'viewers': viewers}
         return result
 
+    @functools.lru_cache(maxsize=128)
     def query_category(self, category):
         result = {}
         if category:
@@ -45,6 +47,7 @@ class Main(Service):
                 result[i['name']] = i['_id']
         return result
 
+    @functools.lru_cache(maxsize=128)
     def validate_category(self, category):
         if category:
             params = {'name': category}

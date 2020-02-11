@@ -1,5 +1,6 @@
 # coding: utf-8
 import logging
+import functools
 from common.service import *
 logger = logging.getLogger(__name__)
 
@@ -35,6 +36,7 @@ class Main(Service):
         address = '{}/users/current'.format(self.apibase)
         self.config['channel_id'] = self.request('get', address).json()['channel']['id']
 
+    @functools.lru_cache(maxsize=128)
     def query_category(self, category):
         params = {'query': 'eq:'+category}
         address = '{}/types'.format(self.apibase)
