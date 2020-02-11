@@ -9,10 +9,13 @@ class Window(QtWidgets.QMainWindow):
         self.setWindowIcon(icon)
         self.trayIcon.setIcon(icon)
 
+    def restore(self):
+        self.show()
+        self.activateWindow()
+
     def iconActivated(self, reason):
         if reason in (QtWidgets.QSystemTrayIcon.Trigger, QtWidgets.QSystemTrayIcon.DoubleClick):
-            self.showNormal()
-            self.activateWindow()
+            self.restore()
 
     def createTrayIcon(self):
         self.quitAction = QtWidgets.QAction("&Quit", self, triggered=self.quit)

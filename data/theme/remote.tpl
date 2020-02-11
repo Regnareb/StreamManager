@@ -2,6 +2,9 @@
   <head>
       <title>Form Example</title>
       <link href="/remote.css" rel="stylesheet" />
+% if refresh:
+    <meta http-equiv="refresh" content="{{refresh}}">
+% end
   </head>
   <body class="{{!"started" if action == "STOP" else "stopped"}}">
   <!--<input class="refresh" type="button" value="🔃" onclick="history.go(0)" /> -->

@@ -59,7 +59,7 @@ class WebRemote():
             self.manager.update_servicesinfos()
             action = 'STOP' if self.running else 'START'
             services = {s.name: {'enabled': s.config['enabled'], 'infos': s.infos} for s in self.manager.services.values()}
-            return bottle.template('data/theme/remote.tpl', action=action, services=services)
+            return bottle.template('data/theme/remote.tpl', action=action, services=services, refresh=int(self.manager.config['base']['reload']))
 
         @app.route('/', method="POST")
         def formhandler():

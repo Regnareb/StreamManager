@@ -136,9 +136,15 @@ class StreamManager_UI(common.systray.Window):
             if not self.settings.value('showed_quitmessage'):
                 QtWidgets.QMessageBox.information(self, "Minimise to System Tray", "The program will keep running in the system tray. To terminate the program, choose <b>Quit</b> in the context menu of the system tray icon.")
             self.settings.setValue("showed_quitmessage", True)
+            self.panel_status['webpage'].load(QtCore.QUrl(""))
             super().closeEvent(event)
         else:
             self.quit()
+
+    def restore(self):
+        if self.isHidden():
+            self.panel_status['webpage'].load(QtCore.QUrl("http://localhost:8080/"))
+        super().restore()
 
     def quit(self):
         self.manager.quit()
@@ -160,13 +166,6 @@ class StreamManager_UI(common.systray.Window):
 
     def preferences_updated(self):
         self.manager.process = ''
-        try:
-            self.reloadtimer.stop()
-        except AttributeError:
-            self.reloadtimer = QtCore.QTimer()
-        if int(self.manager.config['base']['reload']):
-            self.reloadtimer.timeout.connect(self.reload)
-            self.reloadtimer.start(int(self.manager.config['base']['reload']) * 60000)
 
     def load_stylesheet(self):
         path = os.path.join(os.path.dirname(__file__), '..', 'data', 'theme', 'qtstylesheet.css')
