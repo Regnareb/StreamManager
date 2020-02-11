@@ -143,7 +143,7 @@ class StreamManager_UI(common.systray.Window):
 
     def restore(self):
         if self.isHidden():
-            self.panel_status['webpage'].load(QtCore.QUrl("http://localhost:8080/"))
+            self.panel_status['webpage'].load(QtCore.QUrl("http://localhost:{}/".format(self.webremote.port)))
         super().restore()
 
     def quit(self):
@@ -461,7 +461,7 @@ class StreamManager_UI(common.systray.Window):
         self.panel_status['webpage'] = QtWebEngineWidgets.QWebEngineView()
         self.panel_status['webpage'].setAcceptDrops(False)
         self.panel_status['webpage'].page().profile().clearHttpCache()
-        self.panel_status['webpage'].load(QtCore.QUrl("http://localhost:8080/"))
+        self.panel_status['webpage'].load(QtCore.QUrl("http://localhost:{}/".format(self.webremote.port)))
         self.panel_status['dock'].setWidget(self.panel_status['webpage'])
 
 
@@ -531,24 +531,30 @@ class Preferences_General(QtWidgets.QWidget):
         self.interface['checktimer'] = QtWidgets.QSpinBox()
         self.interface['reload'] = QtWidgets.QSpinBox()
         self.interface['timeout'] = QtWidgets.QSpinBox()
+        self.interface['port'] = QtWidgets.QSpinBox()
         self.interface['label_autostart'] = QtWidgets.QLabel('Automatically start the check on launch')
         self.interface['label_starttray'] = QtWidgets.QLabel('Automatically start minimised to the tray icon')
         self.interface['label_checktimer'] = QtWidgets.QLabel('Check the foreground process every (x) seconds')
         self.interface['label_reload'] = QtWidgets.QLabel('Reload the status webpage every (x) minutes')
         self.interface['label_timeout'] = QtWidgets.QLabel('Number of seconds before the token creation timeouts')
+        self.interface['label_port'] = QtWidgets.QLabel('Port to use for the webremote (need a restart)')
         self.interface['checktimer'].setMinimum(1)
         self.interface['reload'].setMinimum(5)
         self.interface['timeout'].setMinimum(1)
+        self.interface['port'].setMinimum(1025)
+        self.interface['port'].setMaximum(65535)
         self.interface['label_autostart'].setMinimumHeight(30)
         self.interface['label_starttray'].setMinimumHeight(30)
         self.interface['label_checktimer'].setMinimumHeight(30)
         self.interface['label_reload'].setMinimumHeight(30)
         self.interface['label_timeout'].setMinimumHeight(30)
+        self.interface['label_port'].setMinimumHeight(30)
         self.interface['autostart'].setMinimumHeight(30)
         self.interface['starttray'].setMinimumHeight(30)
         self.interface['checktimer'].setMinimumHeight(30)
         self.interface['reload'].setMinimumHeight(30)
         self.interface['timeout'].setMinimumHeight(30)
+        self.interface['port'].setMinimumHeight(30)
 
         self.interface['line'] = QtWidgets.QFrame()
         self.interface['line'].setObjectName('stream_line')
@@ -564,6 +570,7 @@ class Preferences_General(QtWidgets.QWidget):
         self.interface['layout'].addRow(self.interface['label_checktimer'], self.interface['checktimer'])
         self.interface['layout'].addRow(self.interface['label_reload'], self.interface['reload'])
         self.interface['layout'].addRow(self.interface['label_timeout'], self.interface['timeout'])
+        self.interface['layout'].addRow(self.interface['label_port'], self.interface['port'])
         self.interface['layout'].addRow(self.interface['line'])
         self.interface['layout'].addRow(self.interface['label_createclip'], self.interface['shortcut_createclip'])
         self.setLayout(self.interface['layout'])
@@ -574,6 +581,7 @@ class Preferences_General(QtWidgets.QWidget):
         self.manager.config['base']['starttray'] = self.interface['starttray'].isChecked()
         self.manager.config['base']['reload'] = self.interface['reload'].text()
         self.manager.config['base']['timeout'] = self.interface['timeout'].text()
+        self.manager.config['base']['port'] = self.interface['port'].text()
         self.manager.config['shortcuts']['createclip'] = self.interface['shortcut_createclip'].text()
         socket.setdefaulttimeout(int(self.manager.config['base']['timeout']))
 
@@ -583,6 +591,7 @@ class Preferences_General(QtWidgets.QWidget):
         self.interface['starttray'].setChecked(self.manager.config['base']['starttray'])
         self.interface['reload'].setValue(int(self.manager.config['base']['reload']))
         self.interface['timeout'].setValue(int(self.manager.config['base']['timeout']))
+        self.interface['port'].setValue(int(self.manager.config['base']['port']))
         self.interface['shortcut_createclip'].setText(self.manager.config['shortcuts']['createclip'])
 
 

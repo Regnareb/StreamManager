@@ -16,6 +16,7 @@ class WebRemote():
         self.timer = 1
         self.manager = common.manager.ManageStream()
         self.manager.update_servicesinfos()
+        self.port = self.manager.config['base']['port']
 
     def update_infos(self, infos):
         print('Updated to:', infos)
@@ -72,4 +73,4 @@ class WebRemote():
                 self.stop_check()
             bottle.redirect('/')
 
-        app.run(host='0.0.0.0', port=8080, quiet=False, server='cherrypy')
+        app.run(host='0.0.0.0', port=self.port, quiet=False, server='cherrypy')

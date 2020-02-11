@@ -36,6 +36,7 @@ class ManageStream(tools.Borg):
         "base": {
             "title": "",
             "description": "",
+            "port": 8080,
             "autostart": False,
             "starttray": False,
             "checktimer": "60",
