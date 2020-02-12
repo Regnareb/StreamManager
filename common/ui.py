@@ -129,7 +129,7 @@ class StreamManager_UI(common.systray.Window):
         self.set_loglevel('Info')
         self.preferences.open()
         self.preferences.tabs.tabBar().hide()
-        self.set_dockable(True)
+        self.set_dockable(False)
         self.settings.setValue('initialised_once', 1)
 
     def closeEvent(self, event):
