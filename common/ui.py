@@ -103,11 +103,14 @@ class StreamManager_UI(common.systray.Window):
         else:
             self.show()
 
-    def set_dockable(self, state):
-        self.dockable = state
+    def set_dockable(self, state=None):
+        if state==None:
+            state = self.dockable.isChecked()
+        print(state)
         for i in [self.log_panel, self.gameslayout['dock'], self.panel_status['dock']]:
             dummy = None if state else QtWidgets.QWidget()
             i.setTitleBarWidget(dummy)
+        self.dockable.setChecked(state)
 
     def read_qsettings(self):
         self.settings = QtCore.QSettings('regnareb', 'Stream Manager')
@@ -117,7 +120,7 @@ class StreamManager_UI(common.systray.Window):
             self.log_panel.interface['levels'].setCurrentIndex(self.log_panel.interface['levels'].findText(self.settings.value('logslevel')))
             self.set_loglevel(self.settings.value('logslevel'))
             logger.info('Loaded settings from last session.')
-            self.set_dockable(self.settings.value('dockable'))
+            self.set_dockable(bool(self.settings.value('dockable')))
         else:
             self.first_launch()
 
@@ -126,7 +129,7 @@ class StreamManager_UI(common.systray.Window):
         self.set_loglevel('Info')
         self.preferences.open()
         self.preferences.tabs.tabBar().hide()
-        self.set_dockable(False)
+        self.set_dockable(True)
         self.settings.setValue('initialised_once', 1)
 
     def closeEvent(self, event):
@@ -150,7 +153,7 @@ class StreamManager_UI(common.systray.Window):
         self.webremote.terminate()
         self.settings.setValue("geometry", self.saveGeometry())
         self.settings.setValue("windowState", self.saveState())
-        self.settings.setValue("dockable", True if self.dockable else '')
+        self.settings.setValue("dockable", self.dockable.isChecked() or '')
         self.settings.setValue("logslevel", self.log_panel.interface['levels'].currentText())
         if not self.manager.save_config():
             msgBox = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Critical, "Can't Save Preferences", "Couldn't save the preferences, you can copy its content in the \"Show Detail\" to try and salvage them, or send it to the developer for debug purposes.")
@@ -214,11 +217,15 @@ class StreamManager_UI(common.systray.Window):
         actionview = self.menuBar().addMenu('View')
         preferences = QtWidgets.QAction('&Preferences', self, triggered=self.preferences.open)
         preferences.setMenuRole(QtWidgets.QAction.PreferencesRole)
+        self.dockable = QtWidgets.QAction('Dockable', self, triggered=self.set_dockable)
+        self.dockable.setCheckable(True)
         actionview.addAction(preferences)
         actionview.addSeparator()
         actionview.addAction(self.panel_status['dock'].toggleViewAction())
         actionview.addAction(self.gameslayout['dock'].toggleViewAction())
         actionview.addAction(self.log_panel.toggleViewAction())
+        actionview.addSeparator()
+        actionview.addAction(self.dockable)
 
     def create_gamelayout(self):
         self.gameslayout = {}
