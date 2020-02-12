@@ -40,7 +40,7 @@ class ManageStream(tools.Borg):
             "autostart": False,
             "starttray": False,
             "checktimer": "60",
-            "reload": "5",
+            "reload": "20",
             "timeout": "10",
             "processes": [],
             "category": "",
