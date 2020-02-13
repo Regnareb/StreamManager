@@ -94,6 +94,17 @@ class ManageStream(tools.Borg):
             else:
                 logging.getLogger(key).setLevel(logging.WARNING)
 
+    def add_process(self, process):
+        self.config['appdata'][process] = {
+            "category": "",
+            "tags": [],
+            "title": "",
+            "description": ""
+        }
+
+    def remove_process(self, process):
+        self.config['appdata'].pop(process)
+
     def create_services(self, force=False, threading=False):
         if force:
             self.services = {}

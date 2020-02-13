@@ -244,17 +244,17 @@ class StreamManager_UI(common.systray.Window):
         header.sectionClicked.connect(self.load_generalsettings)
         self.gameslayout['table'].setHorizontalHeaderLabels(['GENERAL'])
 
-        self.gameslayout['add_game'] = QtWidgets.QPushButton('+')
-        self.gameslayout['add_game'].setFlat(True)
-        self.gameslayout['add_game'].setFixedSize(30, 27)
-        self.gameslayout['add_game'].clicked.connect(self.add_game)
-        self.gameslayout['remove_game'] = QtWidgets.QPushButton('-')
-        self.gameslayout['remove_game'].setFlat(True)
-        self.gameslayout['remove_game'].setFixedSize(30, 27)
-        self.gameslayout['remove_game'].clicked.connect(self.remove_game)
+        self.gameslayout['add_process'] = QtWidgets.QPushButton('+')
+        self.gameslayout['add_process'].setFlat(True)
+        self.gameslayout['add_process'].setFixedSize(30, 27)
+        self.gameslayout['add_process'].clicked.connect(self.add_process)
+        self.gameslayout['remove_process'] = QtWidgets.QPushButton('-')
+        self.gameslayout['remove_process'].setFlat(True)
+        self.gameslayout['remove_process'].setFixedSize(30, 27)
+        self.gameslayout['remove_process'].clicked.connect(self.remove_process)
         self.gameslayout['addremove_layout'] = QtWidgets.QHBoxLayout()
-        self.gameslayout['addremove_layout'].addWidget(self.gameslayout['add_game'])
-        self.gameslayout['addremove_layout'].addWidget(self.gameslayout['remove_game'])
+        self.gameslayout['addremove_layout'].addWidget(self.gameslayout['add_process'])
+        self.gameslayout['addremove_layout'].addWidget(self.gameslayout['remove_process'])
         self.gameslayout['addremove_layout'].addStretch()
         self.gameslayout['llayout'].addWidget(self.gameslayout['table'])
         self.gameslayout['llayout'].addLayout(self.gameslayout['addremove_layout'])
@@ -327,23 +327,24 @@ class StreamManager_UI(common.systray.Window):
         self.filedialog = QtWidgets.QFileDialog()
         result = self.filedialog.exec_()
         if result:
-            return self.filedialog.selectedFiles()[0]
-
-    def add_game(self):
-        path = self.create_filedialog()
-        if path:
+            path = self.filedialog.selectedFiles()[0]
             process = os.path.basename(path)
+            return process
+
+    def add_process(self):
+        process = self.create_filedialog()
+        if process:
             if self.manager.config['appdata'].get(process):
                 logger.warning('The same process is already registered: {}'.format(self.manager.config['appdata'].get(process)))
             else:
-                self.manager.config['appdata'][process] = {}
+                self.manager.add_process(process)
                 self.create_gamerow(process)
                 self.gameslayout['table'].sortByColumn(0, QtCore.Qt.AscendingOrder)
 
-    def remove_game(self):
+    def remove_process(self):
         current = self.gameslayout['table'].currentItem()
         if current:
-            self.manager.config['appdata'].pop(current._process)
+            self.manager.remove_process(current._process)
             self.gameslayout['table'].removeRow(self.gameslayout['table'].currentRow())
 
     def save_appdata(self, validate=False):
@@ -433,7 +434,7 @@ class StreamManager_UI(common.systray.Window):
             self.gameslayout['category'].setButtonVisibility(False)
             self.gameslayout['description'].setButtonVisibility(False)
             self.gameslayout['tags'].setButtonVisibility(False)
-            self.gameslayout['remove_game'].setEnabled(True)
+            self.gameslayout['remove_process'].setEnabled(True)
             self.update_invalidcategory(val.get('category'))
         block_signals(self.gameslayout.values(), False)
 
@@ -458,7 +459,7 @@ class StreamManager_UI(common.systray.Window):
         self.gameslayout['category'].changeButtonState(val.get('forced_category', ''))
         self.gameslayout['description'].changeButtonState(val.get('forced_description', ''))
         self.gameslayout['tags'].changeButtonState(val.get('forced_tags', []))
-        self.gameslayout['remove_game'].setEnabled(False)
+        self.gameslayout['remove_process'].setEnabled(False)
         self.update_invalidcategory(val.get('category'))
         block_signals(self.gameslayout.values(), False)
 
