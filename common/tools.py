@@ -42,10 +42,10 @@ def pause_processes(processes):
             subprocess.Popen('lib/pssuspend.exe -r "{}"'.format(process), creationflags=subprocess.CREATE_NO_WINDOW, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
     else:
         for process in processes:
-           subprocess.Popen('pkill -STOP -c "{}$"'.format(process), creationflags=subprocess.CREATE_NO_WINDOW)
+           subprocess.Popen('pkill -TSTP "{}$"'.format(process), shell=True)
         yield
         for process in processes:
-            subprocess.Popen('pkill -CONT -c "{}$"'.format(process), creationflags=subprocess.CREATE_NO_WINDOW)
+            subprocess.Popen('pkill -CONT "{}$"'.format(process), shell=True)
 
 def threaded(func):
     @functools.wraps(func)
@@ -71,8 +71,8 @@ def getForegroundProcess():
         user32.GetWindowThreadProcessId(h_wnd, ctypes.byref(pid))
         process = psutil.Process(pid.value).name()
     elif sys.platform=='darwin':
-        # import AppKit
-        process = ''
+        import AppKit
+        process = os.path.basename(str(AppKit.NSWorkspace.sharedWorkspace().activeApplication()['NSApplicationPath']))
     else:
         process = ''
     return process
