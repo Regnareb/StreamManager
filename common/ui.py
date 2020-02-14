@@ -1050,6 +1050,8 @@ class Preferences_Pauseservices(Preferences_Pause):
         self.panel_pause['refresh'].setSizePolicy(sizepolicy)
         self.panel_pause['refresh'].hide()
         if sys.platform == 'win32':
+            if not os.path.isfile('lib/pssuspend.exe'):
+                self.show_overlay()
             admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
             if not admin:
                 self.panel_pause['label'].setText(self.panel_pause['label'].text() + '<br><b style="color:red">Requires Admin Rights!</b>')
@@ -1074,6 +1076,63 @@ class Preferences_Pauseservices(Preferences_Pause):
                 item = self.panel_pause['list_pause'].findItems(service['name'], QtCore.Qt.MatchExactly)[0]
             tooltip = '{} ({})\n\n{}'.format(service['display_name'], service['status'].upper(), service['description'].replace('. ', '.\n'))
             item.setToolTip(tooltip.strip())
+
+    def resizeEvent(self, event):
+        if self._popflag:
+            self.overlay.move(0, 0)
+            self.overlay.resize(self.width(), self.height())
+
+    def show_overlay(self):
+        self.overlay = OverlayWidget(text='This requires the external tool pssuspend.exe from Microsoft. Due to licences limitation it must be downloaded separately.\nEverything is automated and the file weight only 3Mo.\nDo you want to download it now?', buttontext='Download', parent=self)
+        self.overlay.move(0, 0)
+        self.overlay.resize(self.width(), self.height())
+        self.overlay.clicked.connect(self.download_pssuspend)
+        self._popflag = True
+        self.overlay.show()
+
+    def download_pssuspend(self):
+        if common.tools.download_pssuspend('lib'):
+            self.close_overlay()
+        else:
+            self.overlay.label.setText(self.overlay.text + '\nThere was a problem during the download of the file')
+
+    def close_overlay(self):
+        self.overlay.close()
+        self._popflag = False
+
+
+class OverlayWidget(QtWidgets.QWidget):
+    clicked = QtCore.Signal()
+
+    def __init__(self, text, buttontext, parent=None):
+        super().__init__(parent)
+        self.setWindowFlags(QtCore.Qt.FramelessWindowHint)
+        self.setAttribute(QtCore.Qt.WA_TranslucentBackground)
+        self.text = text
+        self.fillColor = QtGui.QColor(30, 30, 30, 200)
+        self.fillColor = QtWidgets.QWidget().palette().color(QtWidgets.QWidget().backgroundRole())
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.label = QtWidgets.QLabel(self)
+        self.label.setAlignment(QtCore.Qt.AlignCenter)
+        self.label.setText(self.text)
+        self.button = QtWidgets.QPushButton(self)
+        self.button.setText(buttontext)
+        self.button.clicked.connect(self._clicked)
+        self.layout.addStretch()
+        self.layout.addWidget(self.label)
+        self.layout.addWidget(self.button)
+        self.layout.addStretch()
+
+    def paintEvent(self, event):
+        s = self.size()
+        qp = QtGui.QPainter()
+        qp.begin(self)
+        qp.setRenderHint(QtGui.QPainter.Antialiasing, True)
+        qp.setBrush(self.fillColor)
+        qp.drawRect(0, 0, s.width(), s.height())
+
+    def _clicked(self):
+        self.clicked.emit()
 
 
 class Preferences_Pauseprocesses(Preferences_Pause):

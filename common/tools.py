@@ -11,8 +11,11 @@ import importlib
 import functools
 import threading
 import subprocess
+from io import BytesIO
+from zipfile import ZipFile
 
 import psutil
+import requests
 from contextlib import contextmanager
 logger = logging.getLogger(__name__)
 
@@ -46,6 +49,14 @@ def pause_processes(processes):
         yield
         for process in processes:
             subprocess.Popen('pkill -CONT "{}$"'.format(process), shell=True)
+
+def download_pssuspend(path):
+    url = 'https://download.sysinternals.com/files/PSTools.zip'
+    response = requests.get(url)
+    zipfile = ZipFile(BytesIO(response.content))
+    pssuspend = zipfile.extract('pssuspend.exe', path)
+    pssuspend = zipfile.extract('pssuspend64.exe', path)
+    return pssuspend
 
 def threaded(func):
     @functools.wraps(func)
