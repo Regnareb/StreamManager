@@ -1049,6 +1049,7 @@ class Preferences_Pauseservices(Preferences_Pause):
         sizepolicy.setRetainSizeWhenHidden(True)
         self.panel_pause['refresh'].setSizePolicy(sizepolicy)
         self.panel_pause['refresh'].hide()
+        self.hasoverlay = False
         if sys.platform == 'win32':
             if not os.path.isfile('lib/pssuspend.exe'):
                 self.show_overlay()
@@ -1078,7 +1079,7 @@ class Preferences_Pauseservices(Preferences_Pause):
             item.setToolTip(tooltip.strip())
 
     def resizeEvent(self, event):
-        if self._popflag:
+        if self.hasoverlay:
             self.overlay.move(0, 0)
             self.overlay.resize(self.width(), self.height())
 
@@ -1087,7 +1088,7 @@ class Preferences_Pauseservices(Preferences_Pause):
         self.overlay.move(0, 0)
         self.overlay.resize(self.width(), self.height())
         self.overlay.clicked.connect(self.download_pssuspend)
-        self._popflag = True
+        self.hasoverlay = True
         self.overlay.show()
 
     def download_pssuspend(self):
@@ -1098,7 +1099,7 @@ class Preferences_Pauseservices(Preferences_Pause):
 
     def close_overlay(self):
         self.overlay.close()
-        self._popflag = False
+        self.hasoverlay = False
 
 
 class OverlayWidget(QtWidgets.QWidget):
