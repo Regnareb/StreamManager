@@ -45,7 +45,7 @@
             "tags": [
                 "Digital Art"
             ],
-            "title": "",
+            "title": "Building ecosystems in Houdini",
             "description": ""
         },
         "sublime_text.exe": {
@@ -61,6 +61,18 @@
             "title": "",
             "description": "",
             "tags": []
+        },
+        "Void Bastards.exe": {
+            "category": "Void Bastard",
+            "title": "Exploring the Void and alien Vessels",
+            "description": "",
+            "tags": []
+        },
+        "deadcells.exe": {
+            "category": "Dead Cells",
+            "tags": [],
+            "title": "Exploring castles with my fellow chicken in Dead cells",
+            "description": ""
         }
     },
     "base": {
@@ -72,15 +84,19 @@
             "Duplicati",
             "Synergy"
         ],
-        "processes": [
-            "mpc-hc64.exe"
-        ],
+        "processes": [],
         "category": "",
         "tags": [],
         "forced_category": false,
         "forced_title": false,
         "forced_description": false,
-        "forced_tags": false
+        "forced_tags": false,
+        "autostart": false,
+        "reload": "20",
+        "timeout": "10",
+        "checktimer": "60",
+        "starttray": false,
+        "port": "8080"
     },
     "assignations": {
         "Overwatch": {
@@ -154,6 +170,41 @@
                 "name": "Gaming",
                 "valid": true
             }
+        },
+        "Void Bastards": {
+            "Facebook": {
+                "name": "",
+                "valid": true
+            },
+            "Mixer": {
+                "name": "Void Bastards",
+                "valid": true
+            },
+            "Twitch": {
+                "name": "Void Bastards",
+                "valid": true
+            },
+            "Youtube": {
+                "name": "Gaming",
+                "valid": true
+            }
+        },
+        "Dead Cells": {
+            "Mixer": {
+                "name": "Dead Cells",
+                "valid": true
+            },
+            "Twitch": {
+                "name": "Dead Cells",
+                "valid": true
+            },
+            "Youtube": {
+                "name": "Gaming",
+                "valid": true
+            }
         }
+    },
+    "shortcuts": {
+        "createclip": "Ctrl+F9"
     }
 }
