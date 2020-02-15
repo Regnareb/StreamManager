@@ -78,9 +78,15 @@ class Service():
                 connection, _ = serversocket.accept()
                 buf = connection.recv(4096)
                 if buf:
+                    connection.sendall(str.encode('HTTP/1.0 200 OK\n', 'iso-8859-1'))
+                    connection.sendall(str.encode('Content-Type: text/html\n\n', 'iso-8859-1'))
+                    connection.sendall(str.encode('<html><body><h1>Done</h1> <p>You may close this window now.</p> <p style="color:transparent">{}</p></body></html>\n'.format(str(buf)), 'iso-8859-1'))
+                    connection.close()
                     break
                 if time.time() - currenttime > self.manager.config['base']['timeout']:
+                    connection.close()
                     raise Timeout()
+                connection.close()
             code = re.search('code=(.*?)&', str(buf))
             code = code.group(1)
             code = urllib.parse.unquote(code)
