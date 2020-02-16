@@ -67,3 +67,9 @@ class Main(Service):
             return response
         else:
             logger.warning("Can't create clips when not streaming")
+
+    def request(self, action, address, headers=None, data=None, params=None):
+        response = super().request(action, address, headers, data, params)
+        if response.status_code == '469':
+            logger.error("Daily Limits for API calls reached, you won't be able to use that service until midnight Pacific Time.")
+        return response

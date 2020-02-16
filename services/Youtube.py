@@ -70,3 +70,9 @@ class Main(Service):
 
     def create_clip(self):
         pass  # Not supported yet
+
+    def request(self, action, address, headers=None, data=None, params=None):
+        response = super().request(action, address, headers, data, params)
+        if response.status_code == '403':
+            logger.error("Daily Limits for API calls reached, you won't be able to use that service until midnight Pacific Time.")
+        return response
