@@ -1,5 +1,6 @@
 # coding: utf-8
 import logging
+import functools
 from common.service import *
 logger = logging.getLogger(__name__)
 
@@ -12,6 +13,18 @@ class Main(Service):
     apibase = 'https://graph.facebook.com/v5.0'
     devurl = 'https://developers.facebook.com/apps/'
     features = {'title': True, 'category': False, 'description': True, 'tags': False, 'clips': False}
+
+    @functools.lru_cache(maxsize=128)
+    def query_category(self, category):
+        address = '{}/search?type=adinterest&q={}'.format(self.apibase, category)
+        response = self.request('get', address)
+        result = {}
+        for i in response.json()['data']:
+            result[i['name']] = i['id']
+        return result
+
+    def validate_category(self, category):
+        return bool(self.query_category(category).get(category, False))
 
     def get_channel_id(self):
         address = '{}/me?fields=id'.format(self.apibase)
@@ -39,6 +52,10 @@ class Main(Service):
             data['title'] = infos['title']
         if infos['description']:
             data['description'] = infos['description']
+        if infos['category']:
+            idtag = self.query_category(infos['category']).get(infos['category'])
+            if idtag:
+                data['content_tags'] = idtag
         if data:
             self.get_token()
             address = '{}/{}'.format(self.apibase, self.video_id)
