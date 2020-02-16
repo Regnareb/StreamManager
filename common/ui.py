@@ -128,6 +128,7 @@ class StreamManager_UI(common.systray.Window):
         logger.info('First launch.')
         self.set_loglevel('Info')
         self.preferences.open()
+        self.preferences.tabs.setCurrentIndex(1)
         self.preferences.tabs.tabBar().hide()
         self.set_dockable(False)
         self.settings.setValue('initialised_once', 1)
@@ -370,7 +371,7 @@ class StreamManager_UI(common.systray.Window):
     def show_assignations(self):
         category = self.gameslayout['category'].text()
         self.preferences.open()
-        self.preferences.tabs.setCurrentIndex(1)
+        self.preferences.tabs.setCurrentIndex(2)
         self.preferences.tabs.tabBar().hide()
         if category:
             index = self.preferences.tab_assignations.interface['processes'].findText(category)
@@ -935,7 +936,7 @@ class Preferences_Pause(QtWidgets.QWidget):
         self.config = self.manager.config['base'][name]
         self.panel_pause = {}
         self.panel_pause['container'] = QtWidgets.QGridLayout()
-        self.panel_pause['label'] = QtWidgets.QLabel('When you start the "automatic check" any entry on the right side will be paused until the "automatic check" is stopped.<br>Usefull for automatically pausing applications that use bandwith or CPU.')
+        self.panel_pause['label'] = QtWidgets.QLabel('When you click "START" any entry on the right side will be paused until the button "STOP" is pressed again.<br/>Usefull for automatically pausing applications that use bandwith or CPU.')
         self.panel_pause['label'].setAlignment(QtCore.Qt.AlignCenter)
 
         for elem in ['list', 'list_pause']:
@@ -1055,8 +1056,7 @@ class Preferences_Pauseservices(Preferences_Pause):
                 self.show_overlay()
             admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
             if not admin:
-                self.panel_pause['label'].setText(self.panel_pause['label'].text() + '<br><b style="color:red">Requires Admin Rights!</b>')
-                self.disable_all()
+                self.panel_pause['label'].setText(self.panel_pause['label'].text() + '<br><b>Requires Admin Rights!</b> Unless you gave access to services management to your account (<a href="https://www.coretechnologies.com/products/ServiceSecurityEditor/">?</a>)')
 
     def disable_all(self):
         for i in self.panel_pause.values():
@@ -1084,7 +1084,7 @@ class Preferences_Pauseservices(Preferences_Pause):
             self.overlay.resize(self.width(), self.height())
 
     def show_overlay(self):
-        self.overlay = OverlayWidget(text='This requires the external tool pssuspend.exe from Microsoft. Due to licences limitation it must be downloaded separately.\nEverything is automated and the file weight only 3Mo.\nDo you want to download it now?', buttontext='Download', parent=self)
+        self.overlay = OverlayWidget(text='This requires admin rights and the external tool pssuspend.exe from Microsoft. Due to licences limitation it must be downloaded separately.\nEverything is automated and the file weight only 3Mo.\nDo you want to download it now?', buttontext='Download', parent=self)
         self.overlay.move(0, 0)
         self.overlay.resize(self.width(), self.height())
         self.overlay.clicked.connect(self.download_pssuspend)
