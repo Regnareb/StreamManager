@@ -1,5 +1,6 @@
 # coding: utf-8
 import os
+import sys
 import time
 import json
 import socket
@@ -96,14 +97,28 @@ class ManageStream(tools.Borg):
 
     def add_process(self, process):
         self.config['appdata'][process] = {
+            "path": {
+                "win32": "",
+                "darwin": "",
+                "linux": ""
+                },
             "category": "",
             "tags": [],
             "title": "",
             "description": ""
         }
 
+    def rename_process(self, oldprocess, newprocess):
+        try:
+            self.config['appdata'][newprocess] = self.config['appdata'].pop(oldprocess)
+        except KeyError:
+            self.add_process(newprocess)
+
     def remove_process(self, process):
-        self.config['appdata'].pop(process)
+        try:
+            self.config['appdata'].pop(process)
+        except KeyError:
+            pass
 
     def create_services(self, force=False, threading=False):
         if force:
@@ -157,20 +172,29 @@ class ManageStream(tools.Borg):
             if category and cat != category:
                 continue
             for service in self.services.values():
-                if not service.features['category']:
-                    config.setdefault(cat, {}).setdefault(service.name, {})
-                    config[cat][service.name] = {'name': '', 'valid': True}
-                    continue
-                assigned_category = config.get(cat, {}).get(service.name, {}).get('name', '') or cat
-                isvalid = config.get(cat, {}).get(service.name, {}).get('valid', False)
-                if assigned_category and not isvalid:
-                    valid = service.validate_category(assigned_category)
-                    config.setdefault(cat, {}).setdefault(service.name, {})
-                    config[cat][service.name] = {'name': assigned_category, 'valid': valid}
+                if service.features['category']:
+                    assigned_category = config.get(cat, {}).get(service.name, {}).get('name', '') or cat
+                    isvalid = config.get(cat, {}).get(service.name, {}).get('valid', None)
+                    if assigned_category and not isvalid:
+                        valid = service.validate_category(assigned_category)
+                        config[cat][service.name] = {'name': assigned_category, 'valid': valid}
         return config
 
+    def is_validcategories(self, category):
+        isvalid = [i['valid'] for i in self.config['assignations'].get(category, {}).values()]
+        return all(isvalid)
+
+    def get_processfrompath(self, path, platform=None):
+        if not platform:
+            platform = sys.platform
+        for process, values in self.config['appdata'].items():
+            if values['path'][platform].lower() in path.lower():
+                return process
+        return ''
+
     def check_application(self):
-        process = tools.getForegroundProcess()
+        processpath = tools.getForegroundProcess()
+        process = self.get_processfrompath(processpath)
         existing = self.config['appdata'].get(process, '')
         if existing and process!=self.process:
             infos = self.get_informations(process)

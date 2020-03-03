@@ -83,7 +83,7 @@ class StreamManager_UI(common.systray.Window):
         self.preferences.updated.connect(self.preferences_updated)
         self.create_gamelayout()
         self.create_statuslayout()
-        self.load_appdata()
+        self.populate_appdata()
         self.load_generalsettings()
         self.create_menu()
         self.setTabPosition(QtCore.Qt.AllDockWidgetAreas, QtWidgets.QTabWidget.North)
@@ -106,7 +106,6 @@ class StreamManager_UI(common.systray.Window):
     def set_dockable(self, state=None):
         if state==None:
             state = self.dockable.isChecked()
-        print(state)
         for i in [self.log_panel, self.gameslayout['dock'], self.panel_status['dock']]:
             dummy = None if state else QtWidgets.QWidget()
             i.setTitleBarWidget(dummy)
@@ -234,6 +233,8 @@ class StreamManager_UI(common.systray.Window):
         self.gameslayout['table'] = QtWidgets.QTableWidget()
         self.gameslayout['table'].setObjectName('table_games')
         self.gameslayout['table'].currentCellChanged.connect(self.load_appsettings)
+        self.gameslayout['table'].itemChanged.connect(self.rename_process)
+        self.gameslayout['table'].setEditTriggers(QtWidgets.QTableWidget.DoubleClicked)
         self.gameslayout['table'].setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.gameslayout['table'].setColumnCount(1)
         self.gameslayout['table'].setWordWrap(False)
@@ -263,13 +264,14 @@ class StreamManager_UI(common.systray.Window):
         self.gameslayout['rlayout'] = QtWidgets.QVBoxLayout()
         self.gameslayout['stacked'] = QtWidgets.QStackedWidget()
         self.gameslayout['stacked'].setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed))
-        self.gameslayout['stacked_process'] = QtWidgets.QLineEdit()
-        self.gameslayout['stacked_process'].setMinimumHeight(30)
-        self.gameslayout['stacked_process'].setEnabled(False)
+        self.gameslayout['stacked_processpath'] = LineEdit({True: QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_DirIcon)})
+        self.gameslayout['stacked_processpath'].changeButtonState(True)
+        self.gameslayout['stacked_processpath'].editingFinished.connect(self.save_appdata)
+        self.gameslayout['stacked_processpath'].buttonClicked.connect(self.get_processpath)
         self.gameslayout['stacked_label'] = QtWidgets.QLabel()
         self.gameslayout['stacked_label'].setText('Applied by default for all games if there is no data\nLocks will force this setting no matter what')
         self.gameslayout['stacked_label'].setAlignment(QtCore.Qt.AlignCenter)
-        self.gameslayout['stacked'].addWidget(self.gameslayout['stacked_process'])
+        self.gameslayout['stacked'].addWidget(self.gameslayout['stacked_processpath'])
         self.gameslayout['stacked'].addWidget(self.gameslayout['stacked_label'])
 
         self.gameslayout['rlayout'].addWidget(self.gameslayout['stacked'])
@@ -329,23 +331,52 @@ class StreamManager_UI(common.systray.Window):
         result = self.filedialog.exec_()
         if result:
             path = self.filedialog.selectedFiles()[0]
-            process = os.path.basename(path)
-            return process
+            return path
+
+    def get_processpath(self):
+        path = self.create_filedialog()
+        if path:
+            self.gameslayout['stacked_processpath'].setText(path)
 
     def add_process(self):
-        process = self.create_filedialog()
-        if process:
-            if self.manager.config['appdata'].get(process):
-                logger.warning('The same process is already registered: {}'.format(self.manager.config['appdata'].get(process)))
+        row = self.create_gamerow()
+        index = self.gameslayout['table'].indexFromItem(row)
+        self.gameslayout['table'].setCurrentIndex(index)
+        self.load_appsettings()
+        self.gameslayout['table'].edit(index)
+
+    def rename_process(self):
+        current = self.gameslayout['table'].currentItem()
+        new = current.text()
+        old = current._process
+        if not new:
+            current.setText(old)
+            return None
+        if self.manager.config['appdata'].get(new, ''):
+            msgBox = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Warning, "That Process Already Exists", 'The process "{}" already exists, are you sure you want to do that?\nIt will replace the old settings with the current ones.'.format(new))
+            msgBox.setStandardButtons(QtWidgets.QMessageBox.Ok | QtWidgets.QMessageBox.Cancel)
+            logger.warning('The same process is already registered: {}'.format(new))
+            ret = msgBox.exec_()
+            if ret == QtWidgets.QMessageBox.Ok:
+                # Delete the old data and replace with current
+                item = [i for i in self.gameslayout['table'].findItems(new, QtCore.Qt.MatchExactly) if i is not current][0]
+                index = self.gameslayout['table'].indexFromItem(item)
+                self.gameslayout['table'].removeRow(index.row())
+                currentindex = self.gameslayout['table'].indexFromItem(current)
+                self.gameslayout['table'].setCurrentIndex(currentindex)
             else:
-                self.manager.add_process(process)
-                self.create_gamerow(process)
-                self.gameslayout['table'].sortByColumn(0, QtCore.Qt.AscendingOrder)
+                # Return to the previous name
+                current.setText(old)
+                return None
+
+        self.manager.rename_process(old, new)
+        current._process = new
+        self.gameslayout['table'].sortByColumn(0, QtCore.Qt.AscendingOrder)
 
     def remove_process(self):
         current = self.gameslayout['table'].currentItem()
         if current:
-            self.manager.remove_process(current._process)
+            self.manager.remove_process(current.text())
             self.gameslayout['table'].removeRow(self.gameslayout['table'].currentRow())
 
     def save_appdata(self, validate=False):
@@ -358,10 +389,11 @@ class StreamManager_UI(common.systray.Window):
         data = {'category': cat, 'title': title, 'description': desc, 'tags': tags}
         if validate:
             self.manager.config['assignations'] = self.manager.validate_assignations(self.manager.config['assignations'], cat)
-        if current:
-            self.manager.config['appdata'][current._process].update(data)
+        if current and current.text():
+            self.manager.config['appdata'][current.text()].update(data)
+            self.manager.config['appdata'][current.text()]['path'][sys.platform] = self.gameslayout['stacked_processpath'].text()
             self.update_gamerow(current)
-        else:
+        elif not current:
             for key in data.copy():
                 data['forced_' + key] = self.gameslayout[key].button.state
                 self.manager.config['base'].update(data)
@@ -378,8 +410,7 @@ class StreamManager_UI(common.systray.Window):
             self.preferences.tab_assignations.interface['processes'].setCurrentIndex(index)
 
     def update_invalidcategory(self, category):
-        isvalid = [i['valid'] for i in self.manager.config['assignations'].get(category, {}).values()]
-        if all(isvalid):
+        if self.manager.is_validcategories(category):
             self.gameslayout['category_conflicts'].setStyleSheet('background: rgba(0, 0, 0, 15)')
         elif category == self.gameslayout['category'].text():
             self.gameslayout['category_conflicts'].setStyleSheet('background: rgba(255, 0, 0, 255)')
@@ -388,25 +419,30 @@ class StreamManager_UI(common.systray.Window):
             self.update_gamerow(current)
 
     def update_gamerow(self, row):
-        category = self.manager.config['appdata'][row._process].get('category', '')
-        row.setText('{} ({})'.format(category, row._process))
-        isvalid = [i['valid'] for i in self.manager.config['assignations'].get(category, {}).values()]
-        if all(isvalid):
-            row.setBackground(QtGui.QBrush())
-        else:
-            row.setBackground(QtGui.QColor(255,0,0))
+        if row.text():
+            category = self.manager.config['appdata'][row.text()].get('category', '')
+            self.gameslayout['table'].blockSignals(True)
+            if self.manager.is_validcategories(category):
+                row.setBackground(QtGui.QBrush())
+            else:
+                row.setBackground(QtGui.QColor(255,0,0))
+            self.gameslayout['table'].blockSignals(False)
 
-    def create_gamerow(self, process):
+    def create_gamerow(self, process=''):
+        self.gameslayout['table'].blockSignals(True)
+        self.gameslayout['table'].itemChanged.disconnect(self.rename_process)  # QtBug workaround because the signal itemChanged is not blocked
         row = QtWidgets.QTableWidgetItem()
+        row.setText(process)
         row._process = process
         self.update_gamerow(row)
-        row.setFlags(row.flags() & ~QtCore.Qt.ItemIsEditable)
         rowcount = self.gameslayout['table'].rowCount()
         self.gameslayout['table'].insertRow(rowcount)
         self.gameslayout['table'].setItem(rowcount, 0, row)
+        self.gameslayout['table'].itemChanged.connect(self.rename_process)
+        self.gameslayout['table'].blockSignals(False)
         return row
 
-    def load_appdata(self):
+    def populate_appdata(self):
         for process in self.manager.config['appdata']:
             self.create_gamerow(process)
         self.gameslayout['table'].sortByColumn(0, QtCore.Qt.AscendingOrder)
@@ -415,14 +451,15 @@ class StreamManager_UI(common.systray.Window):
         block_signals(self.gameslayout.values(), True)
         current = self.gameslayout['table'].currentItem()
         if current:
+            process = current.text()
             elements = ['category', 'title', 'tags']
             for key in elements:
                 for action in self.gameslayout[key].actions():
                     self.gameslayout[key].removeAction(action)
-            self.gameslayout['stacked'].setCurrentWidget(self.gameslayout['stacked_process'])
-            val = self.manager.config['appdata'][current._process]
-            finalvals = self.manager.get_informations(current._process)
-            self.gameslayout['stacked_process'].setText(current._process)
+            self.gameslayout['stacked'].setCurrentWidget(self.gameslayout['stacked_processpath'])
+            val = self.manager.config['appdata'].get(process, {})
+            finalvals = self.manager.get_informations(process)
+            self.gameslayout['stacked_processpath'].setText(val.get('path', {}).get(sys.platform, ''))
             self.gameslayout['category'].setText(val.get('category'))
             self.gameslayout['title'].setText(val.get('title'))
             self.gameslayout['description'].setPlainText(val.get('description'))
@@ -684,12 +721,14 @@ class Preferences_Assignations(QtWidgets.QDialog):
         current = self.interface['processes'].currentText()
         for index, service in enumerate(self.servicesorder):
             text = self.temporary_settings.get(current, {}).get(service, {}).get('name', '')
-            valid = self.temporary_settings.get(current, {}).get(service, {}).get('valid', '')
+            valid = self.temporary_settings.get(current, {}).get(service, {}).get('valid', None)
             disabled = not common.manager.SERVICES[service].Main.features['category']
             widget = self.interface['line_' + service]
-            widget.setText(text or '')
+            widget.setText(text if not disabled else '')
             if disabled:
                 widget.setStyleSheet('background-color:#efefef;border: transparent')
+            elif valid is None:
+                widget.setStyleSheet('background-color:#bbdefb;border: transparent')
             elif not valid:
                 widget.setStyleSheet('background-color:#faa;border: transparent')
             else:
@@ -715,7 +754,7 @@ class Preferences_Assignations(QtWidgets.QDialog):
         self.temporary_settings = copy.deepcopy(self.manager.config['assignations'])
         self.interface['processes'].clear()
         categories = [i['category'] for i in self.manager.config['appdata'].values()]
-        self.interface['processes'].insertItems(0, categories)
+        self.interface['processes'].insertItems(0, sorted(categories))
         self.populate()
         block_signals(self.interface.values(), False)
 
@@ -1330,7 +1369,3 @@ class KeySequenceRecorder(QtWidgets.QLineEdit):
 def updateStyle(obj, name, value):
     obj.setProperty(name, value)
     obj.setStyle(obj.style())
-
-
-
-

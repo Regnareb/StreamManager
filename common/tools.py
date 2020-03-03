@@ -37,7 +37,7 @@ def pause_services(services):
 
 @contextmanager
 def pause_processes(processes):
-    if sys.platform=='win32':
+    if sys.platform in ['Windows', 'win32', 'cygwin']:
         for process in processes:
             subprocess.Popen('lib/pssuspend.exe "{}"'.format(process), creationflags=subprocess.CREATE_NO_WINDOW, stderr=subprocess.DEVNULL, stdout=subprocess.DEVNULL)
         yield
@@ -75,14 +75,15 @@ def loadmodules(path, subfolder):
     return data
 
 def getForegroundProcess():
-    if sys.platform == 'win32':
+    if sys.platform in ['Windows', 'win32', 'cygwin']:
         user32 = ctypes.windll.user32
         h_wnd = user32.GetForegroundWindow()
         pid = ctypes.wintypes.DWORD()
         user32.GetWindowThreadProcessId(h_wnd, ctypes.byref(pid))
-        process = psutil.Process(pid.value).name()
-    elif sys.platform=='darwin':
+        return psutil.Process(pid.value).exe().replace('\\', '/')
+    elif sys.platform in ['Mac', 'darwin', 'os2', 'os2emx']:
         import AppKit
+        return str(AppKit.NSWorkspace.sharedWorkspace().activeApplication()['NSApplicationPath'])
         process = os.path.basename(str(AppKit.NSWorkspace.sharedWorkspace().activeApplication()['NSApplicationPath']))
     else:
         process = ''
