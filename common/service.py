@@ -23,7 +23,7 @@ class Timeout(Exception):
 
 class Service():
     def __init__(self, config):
-        self.infos = {'online': '', 'title': '', 'name': '', 'category': '', 'description': ''}
+        self.infos = {'online': '', 'title': '', 'name': '', 'category': '', 'description': '', 'viewers': ''}
         self.manager = common.manager.ManageStream()
         if not config:
             self.config = self.default_config()
@@ -105,7 +105,10 @@ class Service():
         return {}
 
     def validate_category(self, category):
-        return True
+        return None
+
+    def create_clip(self):
+        return None
 
     def update_channel(self, infos):
         self.get_token()

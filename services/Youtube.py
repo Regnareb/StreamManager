@@ -68,9 +68,6 @@ class Main(Service):
                 self._gamesid[i['snippet']['title']] = i['id']
             return self._gamesid
 
-    def create_clip(self):
-        pass  # Not supported yet
-
     def request(self, action, address, headers=None, data=None, params=None):
         response = super().request(action, address, headers, data, params)
         if response.status_code == '403':
