@@ -221,11 +221,3 @@ class ManageStream(tools.Borg):
             for service in self.services.values():
                 pool.append(executor.submit(service.get_channel_info))
         concurrent.futures.wait(pool, timeout=5)
-
-    def main(self):
-        with tools.pause_services(self.config['base']['services']):
-            with tools.pause_processes(self.config['base']['processes']):
-                obs = subprocess.Popen('obs64.exe --startreplaybuffer', shell=True, cwd="C:\\Program Files (x86)\\obs-studio\\bin\\64bit\\")
-                while obs.poll() is None:
-                    time.sleep(4)
-                    self.check_application()
