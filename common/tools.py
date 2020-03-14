@@ -165,13 +165,15 @@ class HtmlStreamHandler(logging.StreamHandler):
     INFO     = {'color': 'black', 'size': '100%', 'special': '', 'after': ''}
     DEFAULT  = {'color': 'black', 'size': '100%', 'special': '', 'after': ''}
     DEBUG    = {'color': 'grey', 'size': '100%', 'special': '', 'after': ''}
+    SUCCESS  = {'color': 'green', 'size': '100%', 'special': '', 'after': ''}
 
     def __init__(self, stream=None):
         super().__init__(stream=stream)
 
     @classmethod
     def _get_params(cls, level):
-        if level >= logging.CRITICAL:return cls.CRITICAL
+        if level == 777:               return cls.SUCCESS  # logger.log(777, 'Message')
+        elif level >= logging.CRITICAL:return cls.CRITICAL
         elif level >= logging.ERROR:   return cls.ERROR
         elif level >= logging.WARNING: return cls.WARNING
         elif level >= logging.INFO:    return cls.INFO
