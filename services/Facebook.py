@@ -38,6 +38,7 @@ class Main(Service):
         online = True if result['status'] == 'LIVE' else False
         viewers = result['live_views'] if online else None
         self.infos = {'online': online, 'title': result['title'], 'name': '', 'category': '', 'description': '', 'viewers': viewers}
+        return self.infos
 
     @property
     def video_id(self):
@@ -48,11 +49,11 @@ class Main(Service):
     def update_channel(self, infos):
         infos = super().update_channel(infos)
         data = {}
-        if infos['title']:
+        if infos.get('title'):
             data['title'] = infos['title']
-        if infos['description']:
+        if infos.get('description'):
             data['description'] = infos['description']
-        if infos['category']:
+        if infos.get('category'):
             idtag = self.query_category(infos['category']).get(infos['category'])
             if idtag:
                 data['content_tags'] = idtag

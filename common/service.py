@@ -119,7 +119,8 @@ class Service():
         infos = copy.deepcopy(infos)
         infos['name'] = self.name
         infos = tools.parse_strings(infos)
-        infos['category'] = self.manager.config.get('assignations', {}).get(infos['category'], {}).get(self.name, {}).get('name', '')
+        if infos.get('category'):
+            infos['category'] = self.manager.config.get('assignations', {}).get(infos['category'], {}).get(self.name, {}).get('name', '')
         return infos
 
     def request(self, action, address, headers=None, data=None, params=None):

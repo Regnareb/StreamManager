@@ -73,4 +73,29 @@ class WebRemote():
                 self.stop_check()
             bottle.redirect('/')
 
+        @app.route('/update_title', method='POST')
+        def update_title():
+            infos = {'title': bottle.request.forms.title, 'category': bottle.request.forms.category}
+            servicename = bottle.request.forms.service
+            if servicename:
+                service = self.manager.services[servicename]
+                service.update_channel(infos)
+                infos = service.get_channel_info()
+                infos = {servicename: infos}
+            else:
+                self.manager.update_channel(infos)
+                self.manager.update_servicesinfos()
+                infos = {s.name: s.infos for s in self.manager.services.values()}
+            return infos
+
+
+        @app.route('/query_category', method='POST')
+        def query_category():
+            category = bottle.request.forms.category
+            servicename = bottle.request.forms.service
+            service = self.manager.services[servicename]
+            categories = service.query_category(category)
+            categories = {k: k for k, v in categories.items()}
+            return categories
+
         app.run(host='0.0.0.0', port=self.port, quiet=False, server='cherrypy')

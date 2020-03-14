@@ -34,7 +34,7 @@ class Main(Service):
             viewers = None
             online = False
         self.infos = {'online': online, 'title': result['status'], 'name': result['display_name'], 'category': result['game'], 'description': result['description'], 'viewers': viewers}
-        return result
+        return self.infos
 
     @functools.lru_cache(maxsize=128)
     def query_category(self, category):
@@ -58,11 +58,11 @@ class Main(Service):
     def update_channel(self, infos):
         infos = super().update_channel(infos)
         data = {}
-        if infos['title']:
+        if infos.get('title'):
             data['status'] = infos['title']
-        if infos['category']:
+        if infos.get('category'):
             data['game'] = infos['category']
-        if infos['tags']:
+        if infos.get('tags'):
             self.update_tags(infos['tags'])
         if data:
             self.get_token()

@@ -20,14 +20,14 @@ class Main(Service):
         result = self.request('get', address).json()
         viewers = result['viewersCurrent'] if result['online'] else None
         self.infos = {'online': result['online'], 'title': result['name'], 'name': result['token'], 'category': result['type']['name'], 'description': result['description'], 'viewers': viewers, 'viewersTotal': result['viewersTotal']}
-        return result
+        return self.infos
 
     def update_channel(self, infos):
         infos = super().update_channel(infos)
         data = {}
-        if infos['title']:
+        if infos.get('title'):
             data['name'] = infos['title']
-        if infos['category']:
+        if infos.get('category'):
             data['typeId'] = self.get_game_id(infos['category'])
         if data:
             address = '{}/channels/{}'.format(self.apibase, self.config['channel_id'])
@@ -51,7 +51,7 @@ class Main(Service):
         if category:
             categories = self.query_category(category)
             for k, v in categories.items():
-                if k == category:
+                if k.lower() == category.lower():
                     return v
 
     def validate_category(self, category):

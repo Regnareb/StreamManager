@@ -14,10 +14,13 @@ class Main(Service):
     features = {'title': True, 'category': True, 'description': True, 'tags': False, 'clips': False}
 
     def get_channel_info(self):
-        address = '{}/liveBroadcasts?part=snippet&broadcastType=persistent&mine=true'.format(self.apibase)
+        address = '{}/liveBroadcasts?part=snippet,topicDetails&broadcastType=persistent&mine=true'.format(self.apibase)
         result = self.request('get', address).json()
-        address = '{}/channels?part=snippet&mine=true'.format(self.apibase)
-        name = self.request('get', address).json()['items'][0]['snippet']['title']
+        address = '{}/videos?part=snippet&id={}'.format(self.apibase, result['items'][0]['id'])
+        result2 = self.request('get', address).json()
+        name = result2['items'][0]['snippet']['channelTitle']
+        categoryId = result2['items'][0]['snippet']['categoryId']
+        category = next((cat for cat, catid in self.gamesid.items() if catid == categoryId), '')
         address = '{}/liveBroadcasts?part=snippet&broadcastStatus=active&broadcastType=persistent'.format(self.apibase)
         online = bool(self.request('get', address).json()['items'])
         if online:
@@ -27,8 +30,8 @@ class Main(Service):
             viewers = viewers['items'][0]['liveStreamingDetails'].get('concurrentViewers', 0)
         else:
             viewers = None
-        self.infos = {'online': online, 'title': result['items'][0]['snippet']['title'], 'name': name, 'category': '', 'description': result['items'][0]['snippet']['description'], 'viewers': viewers}
-        return result
+        self.infos = {'online': online, 'title': result['items'][0]['snippet']['title'], 'name': name, 'category': category, 'description': result['items'][0]['snippet']['description'], 'viewers': viewers, 'channel_id': result['items'][0]['id']}
+        return self.infos
 
     def query_category(self, category):
         return self.gamesid
@@ -39,22 +42,24 @@ class Main(Service):
     def update_channel(self, infos):
         infos = super().update_channel(infos)
         data = {'id': self.config['channel_id'], 'snippet': {}}
-        if infos['title']:
+        if infos.get('title'):
             data['snippet']['title'] = infos['title']
-        if infos['description']:
+        if infos.get('description'):
             data['snippet']['description'] = infos['description']
-        if infos['category']:
+        if infos.get('category'):
             gameid = self.gamesid.get(infos['category'], '')
             if gameid:
                 data['snippet']['categoryId'] = gameid
-        if data['snippet']:
+        else:
+            data['snippet']['categoryId'] = self.gamesid[self.infos['category']]
+        if data.get('snippet'):
             self.get_token()
             address = '{}/videos?part=snippet'.format(self.apibase)
             return self.request('put', address, data=data)
 
     def get_channel_id(self):
         result = self.get_channel_info()
-        self.config['channel_id'] = result['items'][0]['id']
+        self.config['channel_id'] = result['channel_id']
 
     @property
     def gamesid(self):
