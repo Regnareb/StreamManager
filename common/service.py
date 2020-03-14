@@ -23,15 +23,18 @@ class Timeout(Exception):
 
 class Service():
     def __init__(self, config):
+        self.config = config
+        self.conform_config()
         self.infos = {'online': '', 'title': '', 'name': '', 'category': '', 'description': '', 'viewers': ''}
         self.manager = common.manager.ManageStream()
-        if not config:
-            self.config = self.default_config()
-        else:
-            self.config = config
         self.oauth2 = OAuth2Session(token=self.config['authorization'], client_id=self.config['client_id'], scope=self.config['scope'], redirect_uri=self.config['redirect_uri'])
         self.get_token()
         self.get_channel_id()
+
+    def conform_config(self):
+        template = self.default_config()
+        for key, value in template.items():
+            self.config.setdefault(key, value)
 
     @classmethod
     def default_config(cls):
