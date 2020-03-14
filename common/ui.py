@@ -268,6 +268,7 @@ class StreamManager_UI(common.systray.Window):
         self.gameslayout['stacked_processpath'].changeButtonState(True)
         self.gameslayout['stacked_processpath'].editingFinished.connect(self.save_appdata)
         self.gameslayout['stacked_processpath'].buttonClicked.connect(self.get_processpath)
+        self.gameslayout['stacked_processpath'].setToolTip('Process Name/Path')
         self.gameslayout['stacked_label'] = QtWidgets.QLabel()
         self.gameslayout['stacked_label'].setText('Applied by default for all games if there is no data\nLocks will force this setting no matter what')
         self.gameslayout['stacked_label'].setAlignment(QtCore.Qt.AlignCenter)
@@ -293,6 +294,7 @@ class StreamManager_UI(common.systray.Window):
             self.gameslayout[key].setSizePolicy(s)
             self.gameslayout[key].setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed))
             self.gameslayout['rlayout'].addWidget(self.gameslayout[key])
+            self.gameslayout[key].setToolTip(key.title())
 
         self.gameslayout['category_layout'] = QtWidgets.QHBoxLayout()
         self.gameslayout['category_layout'].setSpacing(0)
@@ -301,11 +303,11 @@ class StreamManager_UI(common.systray.Window):
         self.gameslayout['category_conflicts'].setFixedWidth(self.gameslayout['category_conflicts'].sizeHint().height())
         self.gameslayout['category_conflicts'].clicked.connect(self.show_assignations)
         self.gameslayout['category'] = LineEdit(icons)
+        self.gameslayout['category'].setToolTip('Category')
         self.gameslayout['category'].editingFinished.connect(functools.partial(self.save_appdata, validate=True))
         self.gameslayout['category_layout'].addWidget(self.gameslayout['category_conflicts'])
         self.gameslayout['category_layout'].addWidget(self.gameslayout['category'])
-        self.gameslayout['rlayout'].insertLayout(2, self.gameslayout['category_layout'])
-
+        self.gameslayout['rlayout'].insertLayout(1, self.gameslayout['category_layout'])
         self.gameslayout['description'].setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
         self.gameslayout['rlayout'].addStretch()
 
@@ -452,10 +454,6 @@ class StreamManager_UI(common.systray.Window):
         current = self.gameslayout['table'].currentItem()
         if current:
             process = current.text()
-            elements = ['category', 'title', 'tags']
-            for key in elements:
-                for action in self.gameslayout[key].actions():
-                    self.gameslayout[key].removeAction(action)
             self.gameslayout['stacked'].setCurrentWidget(self.gameslayout['stacked_processpath'])
             val = self.manager.config['appdata'].get(process, {})
             finalvals = self.manager.get_informations(process)
@@ -464,10 +462,10 @@ class StreamManager_UI(common.systray.Window):
             self.gameslayout['title'].setText(val.get('title'))
             self.gameslayout['description'].setPlainText(val.get('description'))
             self.gameslayout['tags'].setText(', '.join(val.get('tags', [])))
-            self.gameslayout['title'].setPlaceholderText(finalvals.get('title'))
-            self.gameslayout['category'].setPlaceholderText(finalvals.get('category'))
-            self.gameslayout['description'].setPlaceholderText(finalvals.get('description'))
-            self.gameslayout['tags'].setPlaceholderText(', '.join(finalvals.get('tags', [])))
+            self.gameslayout['title'].setPlaceholderText(finalvals.get('title') or 'title')
+            self.gameslayout['category'].setPlaceholderText(finalvals.get('category') or 'category')
+            self.gameslayout['description'].setPlaceholderText(finalvals.get('description') or 'description')
+            self.gameslayout['tags'].setPlaceholderText(', '.join(finalvals.get('tags')) or 'tags')
             self.gameslayout['title'].setButtonVisibility(False)
             self.gameslayout['category'].setButtonVisibility(False)
             self.gameslayout['description'].setButtonVisibility(False)
@@ -482,7 +480,7 @@ class StreamManager_UI(common.systray.Window):
         self.gameslayout['table'].setCurrentCell(-1, -1)
         self.gameslayout['stacked'].setCurrentWidget(self.gameslayout['stacked_label'])
         val = self.manager.config['base']
-        elements = ['category', 'title', 'tags']
+        elements = ['category', 'title', 'tags', 'description']
         for key in elements:
             self.gameslayout[key].setPlaceholderText(key)
         self.gameslayout['category'].setText(val.get('category'))
@@ -589,7 +587,7 @@ class Preferences_General(QtWidgets.QWidget):
         self.interface['label_checktimer'] = QtWidgets.QLabel('Check the foreground process every (x) seconds')
         self.interface['label_reload'] = QtWidgets.QLabel('Reload the status webpage every (x) minutes')
         self.interface['label_timeout'] = QtWidgets.QLabel('Number of seconds before the token creation timeouts')
-        self.interface['label_port'] = QtWidgets.QLabel('Port to use for the webremote (need a restart)')
+        self.interface['label_port'] = QtWidgets.QLabel('Port to use for the webremote (needs a restart)')
         self.interface['checktimer'].setMinimum(1)
         self.interface['reload'].setMinimum(5)
         self.interface['timeout'].setMinimum(1)
