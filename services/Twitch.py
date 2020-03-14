@@ -108,20 +108,22 @@ class Main(Service):
 
     @tools.threaded
     def create_clip(self):
+        start = time.time()
         self.get_token()
         address = '{}/streams?user_id={}'.format(self.apibase2, self.config['channel_id'])
         response = self.request('get', address)
         online = response.json()['data']
         if online:
+            if self.config['delay']:
+                elapsed = time.time() - start
+                time.sleep(int(self.config['delay']) - elapsed)
             address = '{}/clips?broadcaster_id={}'.format(self.apibase2, self.config['channel_id'])
             response = self.request('post', address, headers=self.headers2)
-            for _ in range(15):  # Check if the clip has been created
-                address = '{}/clips?id={}'.format(self.apibase2, response.json()['data'][0]['id'])
-                response2 = self.request('get', address)
-                if response2.json()['data']:
-                    logger.info(response2.json()['data'][0]['url'])
-                    break
-                time.sleep(1)
+            time.sleep(15)
+            address = '{}/clips?id={}'.format(self.apibase2, response.json()['data'][0]['id'])
+            response2 = self.request('get', address)
+            if response2.json()['data']:
+                logger.log(777, 'Your Twitch Clip has been created at this URL: {}'.format(response2.json()['data'][0]['url']))
             else:
                 logger.error("Couldn't seem to create the clip.")
             return response

@@ -37,6 +37,7 @@ class Service():
     def default_config(cls):
         return {
             "enabled": False,
+            "delay": 0,
             "scope": cls.scope,
             "authorization_base_url": cls.authorization_base_url,
             "token_url": cls.token_url,

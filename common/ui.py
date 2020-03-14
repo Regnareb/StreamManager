@@ -780,8 +780,20 @@ class Preferences_Streams(QtWidgets.QWidget):
         self.panel_services['list'].currentCellChanged.connect(self.service_changed)
         self.panel_services['list'].setFixedWidth(150)
         self.panel_services['llayout'].addWidget(self.panel_services['list'])
+
+        self.panel_services['settings_formlayout'] = QtWidgets.QFormLayout()
+        self.panel_services['label_delay'] = QtWidgets.QLabel('Delay before Clip Creation')
+        self.panel_services['label_delay'].setToolTip('Useful when you stream with a delay timer, the clip will then be synced accordingly.')
+        self.panel_services['label_delay'].setMinimumHeight(30)
+        self.panel_services['line_delay'] = QtWidgets.QSpinBox()
+        self.panel_services['line_delay'].setToolTip('Useful when you stream with a delay timer, the clip will then be synced accordingly.')
+        self.panel_services['line_delay'].setMinimum(0)
+        self.panel_services['line_delay'].editingFinished.connect(functools.partial(self.save_servicedata, 'delay'))
+        self.panel_services['line_delay'].setMinimumHeight(30)
+        self.panel_services['settings_formlayout'].addRow(self.panel_services['label_delay'], self.panel_services['line_delay'])
+
         self.elements = ['enabled', 'scope', 'redirect_uri', 'authorization_base_url', 'token_url', 'client_id', 'client_secret']
-        self.panel_services['formlayout'] = QtWidgets.QFormLayout()
+        self.panel_services['advanced_settings_formlayout'] = QtWidgets.QFormLayout()
         for elem in self.elements[1:]:
             namelabel = 'label_' + elem
             nameline = 'line_' + elem
@@ -792,13 +804,19 @@ class Preferences_Streams(QtWidgets.QWidget):
             else:
                 self.panel_services[nameline] = QtWidgets.QLineEdit()
 
-            self.panel_services[namelabel].setFixedHeight(30)
-            self.panel_services[nameline].setFixedHeight(30)
             self.panel_services[nameline].editingFinished.connect(functools.partial(self.save_servicedata, elem))
-            self.panel_services['formlayout'].addRow(self.panel_services[namelabel], self.panel_services[nameline])
+            self.panel_services['advanced_settings_formlayout'].addRow(self.panel_services[namelabel], self.panel_services[nameline])
             self.panel_services[namelabel].setObjectName(namelabel)
         self.panel_services['label_client_id'].setTextFormat(QtCore.Qt.RichText)
         self.panel_services['label_client_id'].setOpenExternalLinks(True)
+        self.panel_services['collapsible'] = CollapsibleBox("Advanced Settings")
+        self.panel_services['collapsible'].setContentLayout(self.panel_services['advanced_settings_formlayout'])
+        self.panel_services['collapsible_layout'] = QtWidgets.QVBoxLayout()
+        self.panel_services['collapsible_layout'].addWidget(self.panel_services['collapsible'])
+        self.panel_services['collapsible_layout'].addStretch()
+        self.panel_services['settings'] = QtWidgets.QVBoxLayout()
+        self.panel_services['settings'].addLayout(self.panel_services['settings_formlayout'])
+        self.panel_services['settings'].addLayout(self.panel_services['collapsible_layout'])
 
         self.panel_services['label_enabled'] = QtWidgets.QLabel('Enabled')
         self.panel_services['line_enabled'] = QtWidgets.QPushButton()
@@ -843,7 +861,7 @@ class Preferences_Streams(QtWidgets.QWidget):
         self.panel_services['container'].addLayout(self.panel_services['hlayout'], 0, 1, 1, -1)
         self.panel_services['container'].addWidget(self.panel_services['line'], 1, 1, 1, -1)
         self.panel_services['container'].addLayout(self.panel_services['features_layout'], 3, 1)
-        self.panel_services['container'].addLayout(self.panel_services['formlayout'], 3, 3, -1, 1)
+        self.panel_services['container'].addLayout(self.panel_services['settings'], 3, 3, -1, 1)
         self.panel_services['container'].setRowStretch(self.panel_services['container'].rowCount(), 1)
         self.setLayout(self.panel_services['container'])
         self.panel_services['list'].itemSelectionChanged.connect(self.service_changed)
@@ -896,6 +914,13 @@ class Preferences_Streams(QtWidgets.QWidget):
         features = common.manager.SERVICES[service].Main.features
         for feat, state in features.items():
             updateStyle(self.panel_services['feature_' + feat], 'available', state)
+        if not features['clips']:
+            self.panel_services['label_delay'].hide()
+            self.panel_services['line_delay'].hide()
+        else:
+            self.panel_services['label_delay'].show()
+            self.panel_services['line_delay'].show()
+            self.panel_services['line_delay'].setValue(int(config.get('delay', 0)))
         self.repaint()
         block_signals(self.panel_services.values(), False)
 
@@ -917,6 +942,9 @@ class Preferences_Streams(QtWidgets.QWidget):
     def save_servicedata(self, element):
         item = self.panel_services['list'].currentItem()
         service = item.text()
+        if element == 'delay':
+            self.temporary_settings[service][element] = self.panel_services['line_delay'].text()
+            return
         if element == 'enabled':
             result = self.panel_services['line_enabled'].isChecked()
         else:
@@ -1302,6 +1330,59 @@ class StateButtons():
         self.button.move(self.rect().right() - frameWidth - buttonSize.width(),
                         (self.rect().bottom() - buttonSize.height() + 1)/2)
         super().resizeEvent(event)
+
+
+class CollapsibleBox(QtWidgets.QWidget):
+    def __init__(self, title="", parent=None):
+        super().__init__(parent)
+
+        self.toggle_button = QtWidgets.QToolButton(text=title, checkable=True, checked=False)
+        self.toggle_button.setMinimumHeight(30)
+        self.toggle_button.setStyleSheet("QToolButton { border: none; }")
+        self.toggle_button.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
+        self.toggle_button.setCheckable(True)
+        self.toggle_button.setArrowType(QtCore.Qt.RightArrow)
+        self.toggle_button.pressed.connect(self.on_pressed)
+
+        self.content_area = QtWidgets.QScrollArea(maximumHeight=0, minimumHeight=0)
+        # self.content_area.setFrameShape(QtWidgets.QFrame.NoFrame)
+
+        lay = QtWidgets.QVBoxLayout(self)
+        lay.setSpacing(0)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.addWidget(self.toggle_button)
+        lay.addWidget(self.content_area)
+
+        self.toggle_animation = QtCore.QParallelAnimationGroup(self)
+        self.toggle_animation.addAnimation(QtCore.QPropertyAnimation(self, b"minimumHeight"))
+        self.toggle_animation.addAnimation(QtCore.QPropertyAnimation(self, b"maximumHeight"))
+        self.toggle_animation.addAnimation(QtCore.QPropertyAnimation(self.content_area, b"maximumHeight"))
+
+    @QtCore.Slot()
+    def on_pressed(self):
+        checked = self.toggle_button.isChecked()
+        self.toggle_button.setArrowType(QtCore.Qt.DownArrow if not checked else QtCore.Qt.RightArrow)
+        self.toggle_animation.setDirection(QtCore.QAbstractAnimation.Backward if not checked else QtCore.QAbstractAnimation.Forward)
+        self.toggle_animation.start()
+
+    def setContentLayout(self, layout):
+        lay = self.content_area.layout()
+        del lay
+        self.content_area.setLayout(layout)
+        collapsed_height = (self.sizeHint().height() - self.content_area.maximumHeight())
+        content_height = layout.sizeHint().height()
+        for i in range(self.toggle_animation.animationCount()):
+            animation = self.toggle_animation.animationAt(i)
+            animation.setDuration(0)
+            animation.setStartValue(collapsed_height + content_height)
+            animation.setEndValue(collapsed_height)
+        content_animation = self.toggle_animation.animationAt(self.toggle_animation.animationCount() - 1)
+        content_animation.setDuration(0)
+        content_animation.setStartValue(content_height)
+        content_animation.setEndValue(0)
+        self.toggle_animation.start()
+
+
 
 class PlainTextEdit(StateButtons, QtWidgets.QPlainTextEdit):
     editingFinished = QtCore.Signal()

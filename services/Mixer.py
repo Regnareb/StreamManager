@@ -1,4 +1,5 @@
 # coding: utf-8
+import time
 import logging
 import functools
 from common.service import *
@@ -57,16 +58,25 @@ class Main(Service):
         return bool(self.get_game_id(category))
 
     def create_clip(self):
+        start = time.time()
         self.get_token()
         if self.get_channel_info()['online']:
+            address = '{}/broadcasts/current'.format(self.apibase)
+            response = self.request('get', address, headers=self.headers2)
+            broadcastId = response.json()['id']
+            if self.config['delay']:
+                elapsed = time.time() - start
+                time.sleep(int(self.config['delay']) - elapsed)
             address = '{}/clips/create'.format(self.apibase)
-            data = {'broadcastId': self.config['channel_id'], 'highlightTitle': 'Auto Clip', 'clipDurationInSeconds': 60}
+            data = {'broadcastId': broadcastId, 'highlightTitle': 'Auto Clip', 'clipDurationInSeconds': 60}
             response = self.request('post', address, headers=self.headers2, data=data)
             if response:
-                logger.info(response.json()['contentLocators']['uri'])
+                logger.log(777, 'Your Twitch Clip has been created at this URL: {}'.format(response.json()['contentLocators']['uri']))
+            elif response.json().get('errorCode', None) == 25206:
+                logger.error('You need to be a Verified channel or Mixer Partner to be able to create clips: https://mixer.com/dashboard/onboarding/verified')
             return response
         else:
-            logger.warning("Can't create clips when not streaming")
+            logger.error("Can't create clips when not streaming")
 
     def request(self, action, address, headers=None, data=None, params=None):
         response = super().request(action, address, headers, data, params)
