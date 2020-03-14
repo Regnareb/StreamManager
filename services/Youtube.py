@@ -44,6 +44,8 @@ class Main(Service):
         data = {'id': self.config['channel_id'], 'snippet': {}}
         if infos.get('title'):
             data['snippet']['title'] = infos['title']
+        else:
+            data['snippet']['title'] = self.infos['title']
         if infos.get('description'):
             data['snippet']['description'] = infos['description']
         if infos.get('category'):

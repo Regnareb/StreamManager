@@ -21,10 +21,6 @@
                         data: {'service': $this.attr('data-service'), 'category': request.term},
                         success: function(data) {response(data)}
                     });
-                },
-                select: function (event, ui) {
-                    $(this).val(ui.item.value);
-                    $(this).closest("form").submit();
                 }
             });
 
@@ -47,6 +43,7 @@
                             $('.' +  service + '_title').val(response[service]['title']);
                             $('.' +  service + '_category').val(response[service]['category']);
                         }
+                        $('#footer')[0].reset();
                     }
                 });
                 e.preventDefault();
