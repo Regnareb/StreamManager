@@ -226,6 +226,9 @@ class StreamManager_UI(common.systray.Window):
         actionview.addAction(self.log_panel.toggleViewAction())
         actionview.addSeparator()
         actionview.addAction(self.dockable)
+        if sys.platform == 'darwin':
+            menuquit = QtWidgets.QAction('Exit', self, triggered=self.quit)
+            actionview.addAction(menuquit)
 
     def create_gamelayout(self):
         self.gameslayout = {}
