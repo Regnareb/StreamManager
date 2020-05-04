@@ -117,8 +117,6 @@ class StreamManager_UI(common.systray.Window):
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.log_panel)
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.panel_status['dock'])
         self.addDockWidget(QtCore.Qt.RightDockWidgetArea, self.gameslayout['dock'])
-        self.tabifyDockWidget(self.panel_status['dock'], self.gameslayout['dock'])
-        self.tabifyDockWidget(self.gameslayout['dock'], self.log_panel)
         self.panel_status['dock'].raise_()
         self.setAcceptDrops(True)
         self.set_shortcuts(init=True)
@@ -151,6 +149,8 @@ class StreamManager_UI(common.systray.Window):
     def first_launch(self):
         logger.info('First launch.')
         self.set_loglevel('Info')
+        self.tabifyDockWidget(self.panel_status['dock'], self.gameslayout['dock'])
+        self.tabifyDockWidget(self.gameslayout['dock'], self.log_panel)
         self.preferences.open()
         self.preferences.tabs.setCurrentIndex(1)
         self.preferences.tabs.tabBar().hide()
@@ -404,7 +404,6 @@ class StreamManager_UI(common.systray.Window):
                 # Return to the previous name
                 current.setText(old)
                 return None
-
         self.manager.rename_process(old, new)
         current._process = new
         self.gameslayout['table'].sortByColumn(0, QtCore.Qt.AscendingOrder)
@@ -456,7 +455,7 @@ class StreamManager_UI(common.systray.Window):
 
     def update_gamerow(self, row):
         if row.text():
-            category = self.manager.config['appdata'][row.text()].get('category', '')
+            category = self.manager.config['appdata'].get(row.text(), {}).get('category', '')
             self.gameslayout['table'].blockSignals(True)
             if self.manager.is_validcategories(category):
                 row.setBackground(QtGui.QBrush())
@@ -628,7 +627,7 @@ class Preferences_General(QtWidgets.QWidget):
         self.interface['reload'] = QtWidgets.QSpinBox()
         self.interface['timeout'] = QtWidgets.QSpinBox()
         self.interface['port'] = QtWidgets.QSpinBox()
-        self.interface['label_autostart'] = QtWidgets.QLabel('Automatically start the check on launch')
+        self.interface['label_autostart'] = QtWidgets.QLabel('Automatically start the check')
         self.interface['label_starttray'] = QtWidgets.QLabel('Automatically start minimised to the tray icon')
         self.interface['label_checktimer'] = QtWidgets.QLabel('Check the foreground process every (x) seconds')
         self.interface['label_reload'] = QtWidgets.QLabel('Reload the status webpage every (x) minutes')

@@ -15,7 +15,6 @@ class WebRemote():
         self.running = False
         self.timer = 1
         self.manager = common.manager.ManageStream()
-        self.manager.update_servicesinfos()
         self.port = self.manager.config['base']['port']
 
     def update_infos(self, infos):
