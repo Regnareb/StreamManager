@@ -61,6 +61,31 @@ class LogPanel(QtWidgets.QDockWidget):
         logging.getLogger().addHandler(self.handler)
 
 
+class DialogAddProcess(QtWidgets.QDialog):
+    def __init__(self, database, parent=None):
+        super().__init__(parent)
+        self.completer = QtWidgets.QCompleter(list(database.keys()))
+        self.linedit = QtWidgets.QLineEdit()
+        self.linedit.setMinimumWidth(200)
+        self.linedit.setCompleter(self.completer)
+        self.buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        self.layout = QtWidgets.QVBoxLayout()
+        self.layout.addWidget(self.linedit)
+        self.layout.addWidget(self.buttons)
+        self.setLayout(self.layout)
+        self.setWindowTitle('Add Game')
+        self.buttons.accepted.connect(self.close)
+        self.buttons.rejected.connect(self.cancel)
+
+    def cancel(self):
+        self.linedit.setText('')
+        self.close()
+
+    def closeEvent(self, event):
+        self.cancel()
+        super().closeEvent(event)
+
+
 class StreamManager_UI(common.systray.Window):
     def __init__(self):
         super().__init__()
@@ -344,11 +369,16 @@ class StreamManager_UI(common.systray.Window):
             self.gameslayout['stacked_processpath'].setText(path)
 
     def add_process(self):
-        row = self.create_gamerow()
-        index = self.gameslayout['table'].indexFromItem(row)
-        self.gameslayout['table'].setCurrentIndex(index)
-        self.load_appsettings()
-        self.gameslayout['table'].edit(index)
+        self.nodal = DialogAddProcess(self.manager.database)
+        self.nodal.exec_()
+        name = self.nodal.linedit.text()
+        if name:
+            row = self.create_gamerow(name)
+            index = self.gameslayout['table'].indexFromItem(row)
+            self.gameslayout['table'].setCurrentIndex(index)
+            if not self.rename_process():
+                self.gameslayout['table'].removeRow(index.row())
+            self.load_appsettings()
 
     def rename_process(self):
         current = self.gameslayout['table'].currentItem()

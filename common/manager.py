@@ -28,6 +28,7 @@ class ManageStream(tools.Borg):
             self.config_filepath = os.path.join(os.path.dirname(__file__), '..', 'data', 'settings.json')
             self.load_config()
             self.conform_preferences()
+            self.load_database()
             socket.setdefaulttimeout(int(self.config['base']['timeout']))
 
     def conform_preferences(self):
@@ -77,6 +78,11 @@ class ManageStream(tools.Borg):
                 self.config['streamservices'][service][k] = v
         return config
 
+    def load_database(self):
+        path = self.config_filepath.replace('settings.json', 'database.json')
+        self.database = tools.load_json(path) or {}
+        return self.database
+
     def save_config(self):
         for name, service in self.services.items():
             self.config['streamservices'][name] = service.config
@@ -96,7 +102,7 @@ class ManageStream(tools.Borg):
                 logging.getLogger(key).setLevel(logging.WARNING)
 
     def add_process(self, process):
-        self.config['appdata'][process] = {
+        template = {
             "path": {
                 "win32": "",
                 "darwin": "",
@@ -107,6 +113,11 @@ class ManageStream(tools.Borg):
             "title": "",
             "description": ""
         }
+        if self.database.get(process):
+            self.config['appdata'][process] = {**template, **self.database[process].get('appdata', {})}
+            self.config['assignations'][process] = self.database[process].get('assignations', {})
+        else:
+            self.config['appdata'][process] = template
 
     def rename_process(self, oldprocess, newprocess):
         try:
