@@ -24,9 +24,9 @@ class Main(Service):
 
     def get_channel_info(self):
         address = '{}/channels/{}'.format(self.apibase, self.config['channel_id'])
-        result = self.request('get', address).json()
+        result = self.request('get', address, headers=self.headers).json()
         address = '{}/streams?user_id={}'.format(self.apibase2, self.config['channel_id'])
-        online = self.request('get', address).json()['data']
+        online = self.request('get', address, headers=self.headers2).json()['data']
         try:
             viewers = online[0]['viewer_count']
             online = True
@@ -42,7 +42,7 @@ class Main(Service):
         if category:
             params = {'query': category}
             address = '{}/search/games'.format(self.apibase)
-            response = self.request('get', address, params=params)
+            response = self.request('get', address, headers=self.headers,  params=params)
             for i in response.json()['games'] or []:
                 result[i['name']] = i['_id']
         return result
@@ -52,7 +52,7 @@ class Main(Service):
         if category:
             params = {'name': category}
             address = '{}/games'.format(self.apibase2)
-            result = self.request('get', address, params=params).json()['data']
+            result = self.request('get', address, headers=self.headers2, params=params).json()['data']
             return bool(result)
 
     def update_channel(self, infos):
@@ -68,7 +68,7 @@ class Main(Service):
             self.get_token()
             data = {'channel': data}
             address = '{}/channels/{}'.format(self.apibase, self.config['channel_id'])
-            return self.request('put', address, data=data)
+            return self.request('put', address, headers=self.headers, data=data)
 
     def get_channel_id(self):
         address = '{}/users'.format(self.apibase2)
@@ -84,7 +84,7 @@ class Main(Service):
             cursor = ''
             while cursor is not None:
                 address = '{}/tags/streams?first=100&after={}'.format(self.apibase2, cursor)
-                response = self.request('get', address).json()
+                response = self.request('get', address, headers=self.headers2).json()
                 for i in response['data']:
                     self._alltags[i['localization_names']['en-us']] = i['tag_id']
                 cursor = response['pagination'].get('cursor')
@@ -111,7 +111,7 @@ class Main(Service):
         start = time.time()
         self.get_token()
         address = '{}/streams?user_id={}'.format(self.apibase2, self.config['channel_id'])
-        response = self.request('get', address)
+        response = self.request('get', address, headers=self.headers2)
         online = response.json()['data']
         if online:
             if self.config['delay']:
@@ -121,7 +121,7 @@ class Main(Service):
             response = self.request('post', address, headers=self.headers2)
             time.sleep(15)
             address = '{}/clips?id={}'.format(self.apibase2, response.json()['data'][0]['id'])
-            response2 = self.request('get', address)
+            response2 = self.request('get', address, headers=self.headers2)
             if response2.json()['data']:
                 logger.log(777, 'Your Twitch Clip has been created at this URL: {}'.format(response2.json()['data'][0]['url']))
             else:
