@@ -55,7 +55,8 @@ class ManageStream(tools.Borg):
             },
         "assignations": {},
         "shortcuts": {
-            "createclip": "Ctrl+F9"
+            "create_clip": "Ctrl+F9",
+            "create_marker": "Ctrl+F10"
             }
         }
         for key, value in template.items():
@@ -171,6 +172,10 @@ class ManageStream(tools.Borg):
     def create_clip(self):
         for service in self.services.values():
             service.create_clip()
+
+    def create_marker(self):
+        for service in self.services.values():
+            service.create_marker()
 
     def update_channel(self, infos):
         for service in self.services.values():

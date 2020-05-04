@@ -114,6 +114,9 @@ class Service():
     def create_clip(self):
         return None
 
+    def create_marker(self):
+        return None
+
     def update_channel(self, infos):
         self.get_token()
         infos = copy.deepcopy(infos)

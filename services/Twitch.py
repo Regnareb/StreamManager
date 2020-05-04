@@ -129,3 +129,24 @@ class Main(Service):
             return response
         else:
             logger.error("Can't create a clip if you are not streaming.")
+
+    @tools.threaded
+    def create_marker(self):
+        start = time.time()
+        self.get_token()
+        address = '{}/streams?user_id={}'.format(self.apibase2, self.config['channel_id'])
+        response = self.request('get', address, headers=self.headers2)
+        online = response.json()['data']
+        if online:
+            if self.config['delay']:
+                elapsed = time.time() - start
+                time.sleep(int(self.config['delay']) - elapsed)
+            address = '{}/streams/markers?user_id={}'.format(self.apibase2, self.config['channel_id'])
+            response = self.request('post', address, headers=self.headers2)
+            if response.json()['data']:
+                logger.log(777, 'Your Twitch Marker has been created: {} - {}'.format(response.json()['data'][0]['id'], response.json()['data'][0]['created_at']))
+            else:
+                logger.error("Couldn't seem to create the marker.")
+            return response
+        else:
+            logger.error("Can't create a marker if you are not streaming.")

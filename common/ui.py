@@ -660,6 +660,10 @@ class Preferences_General(QtWidgets.QWidget):
         self.interface['shortcut_createclip'] = KeySequenceRecorder('')
         self.interface['label_createclip'].setMinimumHeight(30)
         self.interface['shortcut_createclip'].setMinimumHeight(30)
+        self.interface['label_createmarker'] = QtWidgets.QLabel('Create Marker')
+        self.interface['shortcut_createmarker'] = KeySequenceRecorder('')
+        self.interface['label_createmarker'].setMinimumHeight(30)
+        self.interface['shortcut_createmarker'].setMinimumHeight(30)
 
         self.interface['layout'].addRow(self.interface['label_autostart'], self.interface['autostart'])
         self.interface['layout'].addRow(self.interface['label_starttray'], self.interface['starttray'])
@@ -669,6 +673,7 @@ class Preferences_General(QtWidgets.QWidget):
         self.interface['layout'].addRow(self.interface['label_port'], self.interface['port'])
         self.interface['layout'].addRow(self.interface['line'])
         self.interface['layout'].addRow(self.interface['label_createclip'], self.interface['shortcut_createclip'])
+        self.interface['layout'].addRow(self.interface['label_createmarker'], self.interface['shortcut_createmarker'])
         self.setLayout(self.interface['layout'])
 
     def accept(self):
@@ -678,7 +683,8 @@ class Preferences_General(QtWidgets.QWidget):
         self.manager.config['base']['reload'] = self.interface['reload'].text()
         self.manager.config['base']['timeout'] = self.interface['timeout'].text()
         self.manager.config['base']['port'] = self.interface['port'].text()
-        self.manager.config['shortcuts']['createclip'] = self.interface['shortcut_createclip'].text()
+        self.manager.config['shortcuts']['create_clip'] = self.interface['shortcut_createclip'].text()
+        self.manager.config['shortcuts']['create_marker'] = self.interface['shortcut_createmarker'].text()
         socket.setdefaulttimeout(int(self.manager.config['base']['timeout']))
 
     def reset(self):
@@ -688,7 +694,8 @@ class Preferences_General(QtWidgets.QWidget):
         self.interface['reload'].setValue(int(self.manager.config['base']['reload']))
         self.interface['timeout'].setValue(int(self.manager.config['base']['timeout']))
         self.interface['port'].setValue(int(self.manager.config['base']['port']))
-        self.interface['shortcut_createclip'].setText(self.manager.config['shortcuts']['createclip'])
+        self.interface['shortcut_createclip'].setText(self.manager.config['shortcuts']['create_clip'])
+        self.interface['shortcut_createmarker'].setText(self.manager.config['shortcuts']['create_marker'])
 
 
 class Preferences_Assignations(QtWidgets.QDialog):
