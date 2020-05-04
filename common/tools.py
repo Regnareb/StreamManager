@@ -76,18 +76,31 @@ def loadmodules(path, subfolder):
 
 def getForegroundProcess():
     if sys.platform in ['Windows', 'win32', 'cygwin']:
-        user32 = ctypes.windll.user32
-        h_wnd = user32.GetForegroundWindow()
-        pid = ctypes.wintypes.DWORD()
-        user32.GetWindowThreadProcessId(h_wnd, ctypes.byref(pid))
-        return psutil.Process(pid.value).exe().replace('\\', '/')
+        try:
+            user32 = ctypes.windll.user32
+            h_wnd = user32.GetForegroundWindow()
+            pid = ctypes.wintypes.DWORD()
+            user32.GetWindowThreadProcessId(h_wnd, ctypes.byref(pid))
+            return psutil.Process(pid.value).exe().replace('\\', '/')
+        except psutil.AccessDenied:
+            return ''
     elif sys.platform in ['Mac', 'darwin', 'os2', 'os2emx']:
         import AppKit
         return str(AppKit.NSWorkspace.sharedWorkspace().activeApplication()['NSApplicationPath'])
-        process = os.path.basename(str(AppKit.NSWorkspace.sharedWorkspace().activeApplication()['NSApplicationPath']))
-    else:
-        process = ''
-    return process
+    elif sys.platform in ['linux', 'linux2']:
+        root = subprocess.Popen(['xprop', '-root', '_NET_ACTIVE_WINDOW'], stdout=subprocess.PIPE)
+        stdout, stderr = root.communicate()
+        m = re.search(b'^_NET_ACTIVE_WINDOW.* ([\w]+)$', stdout)
+        if m != None:
+            window_id = m.group(1)
+            window = subprocess.Popen(['xprop', '-id', window_id, 'WM_NAME'], stdout=subprocess.PIPE)
+            stdout, stderr = window.communicate()
+        else:
+            return ''
+        match = re.match(b"WM_NAME\(\w+\) = (?P<name>.+)$", stdout)
+        if match != None:
+            return match.group("name").strip(b'"')
+    return ''
 
 def listservices(namefilter='', status=''):
     if sys.platform != 'win32':
