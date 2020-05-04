@@ -106,6 +106,7 @@ class StreamManager_UI(common.systray.Window):
         self.webremote.start()
         self.preferences = Preferences(self.manager, self)
         self.preferences.updated.connect(self.preferences_updated)
+        self.preferences.finished.connect(self.set_shortcuts)
         self.create_gamelayout()
         self.create_statuslayout()
         self.populate_appdata()
@@ -120,8 +121,7 @@ class StreamManager_UI(common.systray.Window):
         self.tabifyDockWidget(self.gameslayout['dock'], self.log_panel)
         self.panel_status['dock'].raise_()
         self.setAcceptDrops(True)
-        self.preferences_updated()
-        self.set_shortcuts()
+        self.set_shortcuts(init=True)
         self.read_qsettings()
         if self.manager.config['base']['starttray']:
             self.hide()
@@ -191,6 +191,7 @@ class StreamManager_UI(common.systray.Window):
         super().quit()
 
     def preferences_updated(self):
+        self.set_shortcuts()
         self.manager.process = ''
 
     def load_stylesheet(self):
@@ -532,10 +533,12 @@ class StreamManager_UI(common.systray.Window):
         self.update_invalidcategory(val.get('category'))
         block_signals(self.gameslayout.values(), False)
 
-    def set_shortcuts(self):
-        QtWidgets.QShortcut(QtGui.QKeySequence("F11"), self, self.mouseDoubleClickEvent)
-        QtWidgets.QShortcut(QtGui.QKeySequence("F5"), self, self.reload)
-        keyboard.add_hotkey(self.manager.config['shortcuts']['createclip'], self.manager.create_clip)
+    def set_shortcuts(self, init=False):
+        if init:
+            QtWidgets.QShortcut(QtGui.QKeySequence("F11"), self, self.mouseDoubleClickEvent)
+            QtWidgets.QShortcut(QtGui.QKeySequence("F5"), self, self.reload)
+        keyboard.add_hotkey(self.manager.config['shortcuts']['create_clip'], self.manager.create_clip)
+        keyboard.add_hotkey(self.manager.config['shortcuts']['create_marker'], self.manager.create_marker)
 
     def create_statuslayout(self):
         self.panel_status = {}
@@ -555,6 +558,7 @@ def block_signals(iterable, block):
 
 class Preferences(QtWidgets.QDialog):
     updated = QtCore.Signal()
+    finished = QtCore.Signal()
 
     def __init__(self, manager, parent=None):
         super().__init__(parent)
@@ -573,7 +577,7 @@ class Preferences(QtWidgets.QDialog):
 
         self.buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
         self.buttons.accepted.connect(self.accept)
-        self.buttons.rejected.connect(self.reject)
+        self.buttons.rejected.connect(self.cancel)
 
         self.mainLayout = QtWidgets.QVBoxLayout()
         self.mainLayout.addWidget(self.tabs)
@@ -598,7 +602,16 @@ class Preferences(QtWidgets.QDialog):
         self.updated.emit()
         super().accept()
 
+    def cancel(self):
+        self.finished.emit()
+        self.reject()
+
+    def closeEvent(self, event):
+        self.cancel()
+        super().closeEvent(event)
+
     def open(self):
+        keyboard.unhook_all()
         self.reset()
         super().open()
 
