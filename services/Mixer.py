@@ -66,7 +66,8 @@ class Main(Service):
             broadcastId = response.json()['id']
             if self.config['delay']:
                 elapsed = time.time() - start
-                time.sleep(int(self.config['delay']) - elapsed)
+                delay = int(self.config['delay']) - elapsed
+                time.sleep(max(0, delay))
             address = '{}/clips/create'.format(self.apibase)
             data = {'broadcastId': broadcastId, 'highlightTitle': 'Auto Clip', 'clipDurationInSeconds': 60}
             response = self.request('post', address, headers=self.headers2, data=data)

@@ -42,7 +42,7 @@ class Main(Service):
         if category:
             params = {'query': category}
             address = '{}/search/games'.format(self.apibase)
-            response = self.request('get', address, headers=self.headers,  params=params)
+            response = self.request('get', address, headers=self.headers, params=params)
             for i in response.json()['games'] or []:
                 result[i['name']] = i['_id']
         return result
@@ -116,7 +116,8 @@ class Main(Service):
         if online:
             if self.config['delay']:
                 elapsed = time.time() - start
-                time.sleep(int(self.config['delay']) - elapsed)
+                delay = int(self.config['delay']) - elapsed
+                time.sleep(max(0, delay))
             address = '{}/clips?broadcaster_id={}'.format(self.apibase2, self.config['channel_id'])
             response = self.request('post', address, headers=self.headers2)
             time.sleep(15)
@@ -140,9 +141,11 @@ class Main(Service):
         if online:
             if self.config['delay']:
                 elapsed = time.time() - start
-                time.sleep(int(self.config['delay']) - elapsed)
-            address = '{}/streams/markers?user_id={}'.format(self.apibase2, self.config['channel_id'])
-            response = self.request('post', address, headers=self.headers2)
+                delay = int(self.config['delay']) - elapsed
+                time.sleep(max(0, delay))
+            params = {'user_id': self.config['channel_id'], 'description': 'Created automatically with StreamManager'}
+            address = '{}/streams/markers'.format(self.apibase2)
+            response = self.request('post', address, headers=self.headers2, params=params)
             if response.json()['data']:
                 logger.log(777, 'Your Twitch Marker has been created: {} - {}'.format(response.json()['data'][0]['id'], response.json()['data'][0]['created_at']))
             else:
