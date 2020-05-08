@@ -12,7 +12,7 @@ class Main(Service):
     redirect_uri = "http://localhost:60776/"
     apibase = 'https://graph.facebook.com/v5.0'
     devurl = 'https://developers.facebook.com/apps/'
-    features = {'title': True, 'category': False, 'description': True, 'tags': False, 'clips': False}
+    features = {'title': True, 'category': False, 'description': True, 'tags': False, 'clips': False, 'markers': False}
 
     @functools.lru_cache(maxsize=128)
     def query_category(self, category):

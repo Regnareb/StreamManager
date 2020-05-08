@@ -13,7 +13,7 @@ class Main(Service):
     redirect_uri = "http://localhost:60778/"
     apibase = 'https://mixer.com/api/v1'
     devurl = 'https://mixer.com/lab/oauth'
-    features = {'title': True, 'category': True, 'description': False, 'tags': False, 'clips': True}
+    features = {'title': True, 'category': True, 'description': False, 'tags': False, 'clips': True, 'markers': False}
 
     def get_channel_info(self):
         address = '{}/channels/{}'.format(self.apibase, self.config['channel_id'])

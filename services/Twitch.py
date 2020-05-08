@@ -16,7 +16,7 @@ class Main(Service):
     apibase = 'https://api.twitch.tv/kraken'
     apibase2 = 'https://api.twitch.tv/helix'
     devurl = 'https://dev.twitch.tv/console/apps'
-    features = {'title': True, 'category': True, 'description': False, 'tags': True, 'clips': True}
+    features = {'title': True, 'category': True, 'description': False, 'tags': True, 'clips': True, 'markers': True}
 
     def set_headers(self):
         super().set_headers()
