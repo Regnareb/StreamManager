@@ -10,6 +10,27 @@ logger = logging.getLogger(__name__)
 import keyboard
 from PySide2 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
 
+# TODO
+# Be able to import a text file in the description/title
+# Add About and Help menu entries
+# websocket plugin: start automatically when the streaming start https://github.com/Elektordi/obs-websocket-py
+# Show Scene selector, MIC and DEFAULT volume,  RECORD and STREAMING status and STATS
+# Automatically switch scenes in OBS depending of the game played
+# Add an XML/EDL file and add each marker created for import into premiere/resolve/FCP
+# Add a linefield for each game to execute a cmd if the process change
+
+# Create a predefined database with tons of softwares/games assignations, the user can create a new software or pick in those
+# Change color tray icon to green if update channel with new process or red + toast message if error
+# Add trayicons for dropped frames and stream/record states
+
+# Do a notification if the user has not used a streaming process for X minutes if any service is online (to prevent streaming unnoticed)
+# Faire un streamdeck customisable qui change automatiquement les touches selon le programme utilisé https://interactjs.io/
+# Being able to put it in portrait without changing icons layout
+# Add Multi Actions with pause timers
+# Create an independant server that scan the foreground process and send it to the receiver, this way multi computer streaming is possible
+
+
+
 import common.manager
 import common.remote
 import common.tools
@@ -832,7 +853,7 @@ class Preferences_Streams(QtWidgets.QWidget):
         self.panel_services['llayout'].addWidget(self.panel_services['list'])
 
         self.panel_services['settings_formlayout'] = QtWidgets.QFormLayout()
-        self.panel_services['label_delay'] = QtWidgets.QLabel('Delay before Clip Creation')
+        self.panel_services['label_delay'] = QtWidgets.QLabel('Delay before Clip/Marker Creation')
         self.panel_services['label_delay'].setToolTip('Useful when you stream with a delay timer, the clip will then be synced accordingly.')
         self.panel_services['label_delay'].setMinimumHeight(30)
         self.panel_services['line_delay'] = QtWidgets.QSpinBox()
