@@ -204,7 +204,8 @@ class ManageStream(tools.Borg):
         if not platform:
             platform = sys.platform
         for process, values in self.config['appdata'].items():
-            if values['path'][platform].lower() in path.lower():
+            pathlist = values['path'][platform].lower().split(',')
+            if any(proc in path.lower() for proc in pathlist):
                 return process
         return ''
 
