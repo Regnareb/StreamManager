@@ -42,8 +42,13 @@ class Main(Service):
 
     @property
     def video_id(self):
-        address = '{}/{}/live_videos?fields=live_views,status,ingest_streams'.format(self.apibase, self.config['channel_id'])
-        result = self.request('get', address).json()['data'][0]
+        try:
+            address = '{}/{}/live_videos?fields=live_views,status,ingest_streams'.format(self.apibase, self.config['channel_id'])
+            result = self.request('get', address).json()['data'][0]
+        except:
+            logger.warning('There are no live video created. Creating one')
+            address = '{}/{}/live_videos?status=LIVE_NOW'.format(self.apibase, self.config['channel_id'])
+            result = self.request('post', address).json()
         return result['id']
 
     def update_channel(self, infos):
