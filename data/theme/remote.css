@@ -1,10 +1,13 @@
-/* .refresh {float:right;margin-top:-4px} */
+ * {
+  font-size:calc(12px + 1vh) !important;
+}
 
-@media screen and (max-width: 400px) {
+
+/* @media screen and (max-width: 400px) {
   html {
     font-size: 120%;
   }
-}
+} */
 
 body {
   text-align: center;
@@ -24,6 +27,7 @@ body {
 }
 #footer legend {font-size: 2vh;}
 
+p {text-align:left;padding:0px 20px}
 
 ul.streams {padding: 0px; margin: 0px;}
 
