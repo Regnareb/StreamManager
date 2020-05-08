@@ -1,0 +1,106 @@
+{
+    "Overwatch": {
+        "assignations" : {
+            "Twitch": {
+                "name": "Overwatch"
+            },
+            "Mixer": {
+                "name": "Overwatch"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Development": {
+        "assignations" : {
+            "Twitch": {
+                "name": "Science & Technology"
+            },
+            "Mixer": {
+                "name": "Development"
+            },
+            "Youtube": {
+                "name": "Science & Technology"
+            }
+        }
+    },
+    "Art": {
+        "assignations" : {
+            "Twitch": {
+                "name": "Art"
+            },
+            "Mixer": {
+                "name": "Creative"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Apex Legends": {
+        "assignations" : {
+            "Twitch": {
+                "name": "Apex Legends"
+            },
+            "Mixer": {
+                "name": "Apex Legends"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Void Bastards": {
+        "assignations" : {
+            "Mixer": {
+                "name": "Void Bastards"
+            },
+            "Twitch": {
+                "name": "Void Bastards"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Dead Cells": {
+        "assignations" : {
+            "Mixer": {
+                "name": "Dead Cells"
+            },
+            "Twitch": {
+                "name": "Dead Cells"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Void Bastard": {
+        "assignations" : {
+            "Mixer": {
+                "name": "Void Bastard"
+            },
+            "Twitch": {
+                "name": "Void Bastard"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Stardew Valley": {
+        "assignations" : {
+            "Mixer": {
+                "name": "Stardew Valley"
+            },
+            "Twitch": {
+                "name": "Stardew Valley"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    }
+}
