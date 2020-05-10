@@ -183,8 +183,8 @@ class HtmlStreamHandler(logging.StreamHandler):
     CRITICAL = {'color': 'brown', 'size': '120%', 'special': 'font-weight:bold', 'after': '' }
     ERROR    = {'color': 'red', 'size': '100%', 'special': '', 'after': ''}
     WARNING  = {'color': 'darkorange', 'size': '100%', 'special': '', 'after': ''}
-    INFO     = {'color': 'black', 'size': '100%', 'special': '', 'after': ''}
-    DEFAULT  = {'color': 'black', 'size': '100%', 'special': '', 'after': ''}
+    INFO     = {'size': '100%', 'special': '', 'after': ''}
+    DEFAULT  = {'size': '100%', 'special': '', 'after': ''}
     DEBUG    = {'color': 'grey', 'size': '100%', 'special': '', 'after': ''}
     SUCCESS  = {'color': 'green', 'size': '100%', 'special': '', 'after': ''}
 
@@ -207,4 +207,7 @@ class HtmlStreamHandler(logging.StreamHandler):
         text = logging.StreamHandler.format(self, record)
         text = re.sub(regex, r'<a href="file:///\g<1>">\g<1></a>', text)
         params = self._get_params(record.levelno)
-        return '<span class="{1}" style="color:{color};font-size:{size};{special}">{0}</span>{after}'.format(text, record.levelname.lower(), **params)
+        result = '<span class="{1}" style="font-size:{size};{special}">{0}</span>{after}'.format(text, record.levelname.lower(), **params)
+        if params.get('color'):
+            result = result.replace('style="', 'style="color:{color};').format(**params)
+        return result
