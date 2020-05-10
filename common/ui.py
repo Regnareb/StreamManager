@@ -262,19 +262,24 @@ class StreamManager_UI(common.systray.Window):
         self.menuBar().setVisible(not self.menuBar().isVisible())
 
     def create_menu(self):
+        def clipboard():
+            url = "http://localhost:{}/".format(self.webremote.port)
+            cb = QtWidgets.QApplication.clipboard()
+            cb.setText(url, mode=cb.Clipboard)
         actionfile = self.menuBar().addMenu('File')
+        preferences = QtWidgets.QAction('&Preferences', self, triggered=self.preferences.open)
+        preferences.setMenuRole(QtWidgets.QAction.PreferencesRole)
+        actionfile.addAction(preferences)
+        actionfile.addAction(QtWidgets.QAction('&Copy Remote URL', self, triggered=clipboard))
+        actionfile.addSeparator()
         actionfile.addAction(QtWidgets.QAction('&Import Preferences', self, triggered=self.import_settings))
         actionfile.addAction(QtWidgets.QAction('&Export Preferences', self, triggered=self.export_settings))
         actionfile.addAction(QtWidgets.QAction('&Export Game Database', self, triggered=self.export_database))
         actionfile.addSeparator()
         actionfile.addAction(QtWidgets.QAction('&Quit', self, triggered=self.quit))
-
         actionview = self.menuBar().addMenu('View')
-        preferences = QtWidgets.QAction('&Preferences', self, triggered=self.preferences.open)
-        preferences.setMenuRole(QtWidgets.QAction.PreferencesRole)
         self.dockable = QtWidgets.QAction('Dockable', self, triggered=self.set_dockable)
         self.dockable.setCheckable(True)
-        actionview.addAction(preferences)
         actionview.addSeparator()
         actionview.addAction(self.panel_status['dock'].toggleViewAction())
         actionview.addAction(self.gameslayout['dock'].toggleViewAction())
