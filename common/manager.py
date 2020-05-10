@@ -72,6 +72,17 @@ class ManageStream(tools.Borg):
             return config
         return config
 
+    def save_config(self, path=''):
+        path = path or self.config_filepath
+        for name, service in self.services.items():
+            self.config['streamservices'][name] = service.config
+        try:
+            return tools.save_json(self.config, path)
+        except:
+            logger.critical(traceback.print_exc())
+            logging.error(self.config)
+            return False
+
     def load_credentials(self, path=''):
         path = path or self.config_filepath.replace('settings.json', 'credentials.json')
         config = tools.load_json(path, backup=False)
@@ -86,24 +97,18 @@ class ManageStream(tools.Borg):
         self.database = tools.load_json(path) or {}
         return self.database
 
-    def save_config(self, path=''):
-        path = path or self.config_filepath
-        for name, service in self.services.items():
-            self.config['streamservices'][name] = service.config
-        try:
-            return tools.save_json(self.config, path)
-        except:
-            logger.critical(traceback.print_exc())
-            logging.error(self.config)
-            return False
-
     def export_database(self, path=''):
-        database = self.config['assignations'].copy()
-        for k, v in database.items():
-            for y, z in v.items():
-                z.pop('valid', None)
-        database_paths = {outer_k: {inner_k: inner_v for inner_k, inner_v in outer_v.items() if inner_k == 'path'} for outer_k, outer_v in self.config['appdata'].items()}
-        tools.merge_dict(database, database_paths)
+        keys = list(set(list(self.config['assignations'].keys()) + list(self.config['appdata'].keys())))
+        database = {}
+        for process in keys:
+            database[process] = {}
+            appdata = self.config['appdata'].get(process)
+            assignations = self.config['assignations'].get(process)
+            if appdata:
+                database[process]['appdata'] = {'path': appdata['path'], 'category': appdata['category']}
+            if assignations:
+                [assignations[i].pop('valid', None) for i in assignations]
+                database[process]['assignations'] = assignations
         tools.save_json(database, path)
 
     def set_loglevel(self, level=''):
