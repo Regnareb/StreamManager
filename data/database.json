@@ -1,6 +1,77 @@
 {
+    "Stick Fight": {
+        "appdata": {
+            "path": {
+                "win32": "StickFight.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Stick Fight"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Stick Fight: The Game"
+            },
+            "Twitch": {
+                "name": "Stick Fight: The Game"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "The Gardens Between": {
+        "appdata": {
+            "path": {
+                "win32": "TheGardensBetween.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "The Gardens Between"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "The Gardens Between"
+            },
+            "Twitch": {
+                "name": "The Gardens Between"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Kill The Bad Guy": {
+        "appdata": {
+            "path": {
+                "win32": "KillTheBadGuy.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Kill The Bad Guy"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Kill The Bad Guy"
+            },
+            "Twitch": {
+                "name": "Kill The Bad Guy"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
     "Overwatch": {
-        "assignations" : {
+        "appdata": {
+            "path": {
+                "win32": "Overwatch.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Overwatch"
+        },
+        "assignations": {
             "Twitch": {
                 "name": "Overwatch"
             },
@@ -12,8 +83,625 @@
             }
         }
     },
+    "ABZU": {
+        "appdata": {
+            "path": {
+                "win32": "AbzuGame.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "ABZU"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Abz\u00fb"
+            },
+            "Twitch": {
+                "name": "ABZU"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Tower of Guns": {
+        "appdata": {
+            "path": {
+                "win32": "TowerofGuns/Binaries/Win32/UDK.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Tower of Guns"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Tower of Guns"
+            },
+            "Twitch": {
+                "name": "Tower of Guns"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "SpeedRunners": {
+        "appdata": {
+            "path": {
+                "win32": "SpeedRunners.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "SpeedRunners"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "SpeedRunners"
+            },
+            "Twitch": {
+                "name": "SpeedRunners"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Mark Of The Ninja": {
+        "appdata": {
+            "path": {
+                "win32": "mark_of_the_ninja\\bin\\game.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Mark Of The Ninja"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Mark Of The Ninja"
+            },
+            "Twitch": {
+                "name": "Mark Of The Ninja"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Limbo": {
+        "appdata": {
+            "path": {
+                "win32": "limbo.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Limbo"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Limbo"
+            },
+            "Twitch": {
+                "name": "Limbo"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Shadowrun Chronicles": {
+        "appdata": {
+            "path": {
+                "win32": "Shadowrun.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Shadowrun Chronicles"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Shadowrun: Dragonfall - Director's Cut"
+            },
+            "Twitch": {
+                "name": "Shadowrun: Dragonfall - Director's Cut"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Killing Floor 2": {
+        "appdata": {
+            "path": {
+                "win32": "KFGame.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Killing Floor 2"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Killing Floor 2"
+            },
+            "Twitch": {
+                "name": "Killing Floor 2"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Shadowrun Dragonfall": {
+        "appdata": {
+            "path": {
+                "win32": "Dragonfall.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Shadowrun Dragonfall"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Shadowrun: Dragonfall"
+            },
+            "Twitch": {
+                "name": "Shadowrun: Dragonfall - Director's Cut"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Dead Cells": {
+        "appdata": {
+            "path": {
+                "win32": "deadcells.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Dead Cells"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Dead Cells"
+            },
+            "Twitch": {
+                "name": "Dead Cells"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Hotline Miami": {
+        "appdata": {
+            "path": {
+                "win32": "HotlineMiami.exe,HotlineGL.exe,HotlineMiami_Original.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Hotline Miami"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Hotline Miami"
+            },
+            "Twitch": {
+                "name": "Hotline Miami"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Jotun": {
+        "appdata": {
+            "path": {
+                "win32": "Jotun.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Jotun"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Jotun"
+            },
+            "Twitch": {
+                "name": "Jotun"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Minit": {
+        "appdata": {
+            "path": {
+                "win32": "minit.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Minit"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Minit"
+            },
+            "Twitch": {
+                "name": "Minit"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Furi": {
+        "appdata": {
+            "path": {
+                "win32": "Furi.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Furi"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Furi"
+            },
+            "Twitch": {
+                "name": "Furi"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Void Bastards": {
+        "appdata": {
+            "path": {
+                "win32": "",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Void Bastards"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Void Bastards"
+            },
+            "Twitch": {
+                "name": "Void Bastards"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Everything": {
+        "appdata": {
+            "path": {
+                "win32": "Everything.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Everything"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Everything"
+            },
+            "Twitch": {
+                "name": "Everything"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "The Adventure Pals": {
+        "appdata": {
+            "path": {
+                "win32": "Adventure Pals.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "The Adventure Pals"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "The Adventure Pals"
+            },
+            "Twitch": {
+                "name": "The Adventure Pals"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Legend of Grimrock 2": {
+        "appdata": {
+            "path": {
+                "win32": "grimrock2.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Legend of Grimrock 2"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Legend of Grimrock 2"
+            },
+            "Twitch": {
+                "name": "Legend of Grimrock 2"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Titan Souls": {
+        "appdata": {
+            "path": {
+                "win32": "TITAN.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Titan Souls"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Titan Souls"
+            },
+            "Twitch": {
+                "name": "Titan Souls"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "RiME": {
+        "appdata": {
+            "path": {
+                "win32": "RiME.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "RiME"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "RiME"
+            },
+            "Twitch": {
+                "name": "RiME"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Tricky Towers": {
+        "appdata": {
+            "path": {
+                "win32": "TrickyTowers.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Tricky Towers"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Tricky Towers"
+            },
+            "Twitch": {
+                "name": "Tricky Towers"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Kingdom New Lands": {
+        "appdata": {
+            "path": {
+                "win32": "Kingdom.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Kingdom New Lands"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Kingdom: New Lands"
+            },
+            "Twitch": {
+                "name": "Kingdom: New Lands"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "The Binding of Isaac: Rebirth": {
+        "appdata": {
+            "path": {
+                "win32": "isaac-ng.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "The Binding of Isaac: Rebirth"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "The Binding of Isaac: Rebirth"
+            },
+            "Twitch": {
+                "name": "The Binding of Isaac: Rebirth"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Gunpoint": {
+        "appdata": {
+            "path": {
+                "win32": "Gunpoint.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Gunpoint"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Gunpoint"
+            },
+            "Twitch": {
+                "name": "Gunpoint"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Feather": {
+        "appdata": {
+            "path": {
+                "win32": "Feather.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Feather"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Feather"
+            },
+            "Twitch": {
+                "name": "Feather"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Stardew Valley": {
+        "appdata": {
+            "path": {
+                "win32": "Stardew Valley.exe,StardewModdingAPI.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Stardew Valley"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Stardew Valley"
+            },
+            "Twitch": {
+                "name": "Stardew Valley"
+            },
+            "Youtube": {
+                "name": "Stardew Valley"
+            }
+        }
+    },
+    "Quest Of Dungeons": {
+        "appdata": {
+            "path": {
+                "win32": "QuestofDungeons.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Quest Of Dungeons"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Quest Of Dungeons"
+            },
+            "Twitch": {
+                "name": "Quest Of Dungeons"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Duck Game": {
+        "appdata": {
+            "path": {
+                "win32": "DuckGame.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Duck Game"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Duck Game"
+            },
+            "Twitch": {
+                "name": "Duck Game"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Hyper Light Drifter": {
+        "appdata": {
+            "path": {
+                "win32": "HyperLightDrifter.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Hyper Light Drifter"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Hyper Light Drifter"
+            },
+            "Twitch": {
+                "name": "Hyper Light Drifter"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Apex Legends": {
+        "appdata": {
+            "path": {
+                "win32": "r5apex.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Apex Legends"
+        },
+        "assignations": {
+            "Twitch": {
+                "name": "Apex Legends"
+            },
+            "Mixer": {
+                "name": "Apex Legends"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
     "Development": {
-        "assignations" : {
+        "appdata": {
+            "path": {
+                "win32": "sublime.exe,vscode.exe,vscodium.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Development"
+        },
+        "assignations": {
             "Twitch": {
                 "name": "Science & Technology"
             },
@@ -25,8 +713,121 @@
             }
         }
     },
+    "Age Of Wonders III": {
+        "appdata": {
+            "path": {
+                "win32": "AoW3.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Age Of Wonders III"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Age Of Wonders III"
+            },
+            "Twitch": {
+                "name": "Age Of Wonders III"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Party Hard": {
+        "appdata": {
+            "path": {
+                "win32": "PartyHardGame.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Party Hard"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Party Hard"
+            },
+            "Twitch": {
+                "name": "Party Hard"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Hand of Fate 2": {
+        "appdata": {
+            "path": {
+                "win32": "Hand of Fate 2.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Hand of Fate 2"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Hand of Fate 2"
+            },
+            "Twitch": {
+                "name": "Hand of Fate 2"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "Outcast": {
+        "appdata": {
+            "path": {
+                "win32": "Outcast 1.1.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Outcast"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "Outcast"
+            },
+            "Twitch": {
+                "name": "Outcast"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
+    "NeuroVoider": {
+        "appdata": {
+            "path": {
+                "win32": "NeuroVoider.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "NeuroVoider"
+        },
+        "assignations": {
+            "Mixer": {
+                "name": "NeuroVoider"
+            },
+            "Twitch": {
+                "name": "NeuroVoider"
+            },
+            "Youtube": {
+                "name": "Gaming"
+            }
+        }
+    },
     "Art": {
-        "assignations" : {
+        "appdata": {
+            "path": {
+                "win32": "houdini.exe,blender.exe,photoshop.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Art"
+        },
+        "assignations": {
             "Twitch": {
                 "name": "Art"
             },
@@ -34,69 +835,67 @@
                 "name": "Creative"
             },
             "Youtube": {
-                "name": "Gaming"
+                "name": "Film & Animation"
             }
         }
     },
-    "Apex Legends": {
-        "assignations" : {
-            "Twitch": {
-                "name": "Apex Legends"
+    "Deadlight": {
+        "appdata": {
+            "path": {
+                "win32": "Deadlight/Binaries/Win32/LOTDGame.exe",
+                "darwin": "",
+                "linux": ""
             },
+            "category": "Deadlight"
+        },
+        "assignations": {
             "Mixer": {
-                "name": "Apex Legends"
+                "name": "Deadlight"
+            },
+            "Twitch": {
+                "name": "Deadlight"
             },
             "Youtube": {
                 "name": "Gaming"
             }
         }
     },
-    "Void Bastards": {
-        "assignations" : {
+    "Dishonored": {
+        "appdata": {
+            "path": {
+                "win32": "Dishonored.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "Dishonored"
+        },
+        "assignations": {
             "Mixer": {
-                "name": "Void Bastards"
+                "name": "Dishonored"
             },
             "Twitch": {
-                "name": "Void Bastards"
+                "name": "Dishonored"
             },
             "Youtube": {
                 "name": "Gaming"
             }
         }
     },
-    "Dead Cells": {
-        "assignations" : {
+    "The Stillness of the Wind": {
+        "appdata": {
+            "path": {
+                "win32": "StillnessWin.exe",
+                "darwin": "",
+                "linux": ""
+            },
+            "category": "The Stillness of the Wind"
+        },
+        "assignations": {
             "Mixer": {
-                "name": "Dead Cells"
+                "name": "Stillness of the Wind"
             },
             "Twitch": {
-                "name": "Dead Cells"
-            },
-            "Youtube": {
-                "name": "Gaming"
-            }
-        }
-    },
-    "Void Bastard": {
-        "assignations" : {
-            "Mixer": {
-                "name": "Void Bastard"
-            },
-            "Twitch": {
-                "name": "Void Bastard"
-            },
-            "Youtube": {
-                "name": "Gaming"
-            }
-        }
-    },
-    "Stardew Valley": {
-        "assignations" : {
-            "Mixer": {
-                "name": "Stardew Valley"
-            },
-            "Twitch": {
-                "name": "Stardew Valley"
+                "name": "The Stillness of the Wind"
             },
             "Youtube": {
                 "name": "Gaming"
