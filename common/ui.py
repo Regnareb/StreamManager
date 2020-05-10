@@ -86,6 +86,7 @@ class DialogAddProcess(QtWidgets.QDialog):
     def __init__(self, database, parent=None):
         super().__init__(parent)
         self.completer = QtWidgets.QCompleter(list(database.keys()))
+        self.completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
         self.linedit = QtWidgets.QLineEdit()
         self.linedit.setMinimumWidth(200)
         self.linedit.setCompleter(self.completer)
@@ -359,6 +360,9 @@ class StreamManager_UI(common.systray.Window):
         self.gameslayout['category'] = LineEdit(icons)
         self.gameslayout['category'].setToolTip('Category')
         self.gameslayout['category'].editingFinished.connect(functools.partial(self.save_appdata, validate=True))
+        self.completer = QtWidgets.QCompleter(list(self.manager.database.keys()))
+        self.completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        self.gameslayout['category'].setCompleter(self.completer)
         self.gameslayout['category_layout'].addWidget(self.gameslayout['category_conflicts'])
         self.gameslayout['category_layout'].addWidget(self.gameslayout['category'])
         self.gameslayout['rlayout'].insertLayout(1, self.gameslayout['category_layout'])
