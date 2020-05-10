@@ -261,6 +261,13 @@ class StreamManager_UI(common.systray.Window):
         self.menuBar().setVisible(not self.menuBar().isVisible())
 
     def create_menu(self):
+        actionfile = self.menuBar().addMenu('File')
+        actionfile.addAction(QtWidgets.QAction('&Import Preferences', self, triggered=self.import_settings))
+        actionfile.addAction(QtWidgets.QAction('&Export Preferences', self, triggered=self.export_settings))
+        actionfile.addAction(QtWidgets.QAction('&Export Game Database', self, triggered=self.export_database))
+        actionfile.addSeparator()
+        actionfile.addAction(QtWidgets.QAction('&Quit', self, triggered=self.quit))
+
         actionview = self.menuBar().addMenu('View')
         preferences = QtWidgets.QAction('&Preferences', self, triggered=self.preferences.open)
         preferences.setMenuRole(QtWidgets.QAction.PreferencesRole)
@@ -273,9 +280,6 @@ class StreamManager_UI(common.systray.Window):
         actionview.addAction(self.log_panel.toggleViewAction())
         actionview.addSeparator()
         actionview.addAction(self.dockable)
-        if sys.platform == 'darwin':
-            menuquit = QtWidgets.QAction('Exit', self, triggered=self.quit)
-            actionview.addAction(menuquit)
 
     def create_gamelayout(self):
         self.gameslayout = {}
@@ -378,12 +382,12 @@ class StreamManager_UI(common.systray.Window):
         self.gameslayout['main'].addWidget(self.gameslayout['container_rlayout'])
         self.gameslayout['dock'].setWidget(self.gameslayout['main'])
 
-    def create_filedialog(self):
-        self.filedialog = QtWidgets.QFileDialog()
-        result = self.filedialog.exec_()
-        if result:
-            path = self.filedialog.selectedFiles()[0]
-            return path
+    def create_filedialog(self, action='open'):
+        if action == 'open':
+            path, _filters = QtWidgets.QFileDialog.getOpenFileName()
+        elif action == 'save':
+            path, _filters = QtWidgets.QFileDialog.getSaveFileName()
+        return path
 
     def get_processpath(self):
         path = self.create_filedialog()
@@ -434,6 +438,21 @@ class StreamManager_UI(common.systray.Window):
         if current:
             self.manager.remove_process(current.text())
             self.gameslayout['table'].removeRow(self.gameslayout['table'].currentRow())
+
+    def import_settings(self):
+        path = self.create_filedialog(action='open')
+        if path:
+            self.manager.load_config(path, backup=False)
+
+    def export_settings(self):
+        path = self.create_filedialog(action='save')
+        if path:
+            self.manager.save_config(path)
+
+    def export_database(self):
+        path = self.create_filedialog(action='save')
+        if path:
+            self.manager.export_database(path)
 
     def save_appdata(self, validate=False):
         current = self.gameslayout['table'].currentItem()

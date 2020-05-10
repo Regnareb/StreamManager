@@ -143,6 +143,13 @@ def parse_strings(infos):
             pass
     return infos
 
+def merge_dict(d1, d2):
+    for k in d2:
+        if k in d1 and isinstance(d1[k], dict) and isinstance(d2[k], dict):
+            merge_dict(d1[k], d2[k])
+        else:
+            d1[k] = d2[k]
+
 def load_json(path, backup=True):
     content = {}
     try:
@@ -158,11 +165,12 @@ def load_json(path, backup=True):
     return content
 
 def save_json(data, path):
+    if not path.endswith('.json'):
+        path = path + ('.json')
     with tempfile.NamedTemporaryFile('w', delete=False) as tmp:
         json.dump(data, tmp, indent=4)
     shutil.move(tmp.name, path)
     return True
-
 
 class Borg:
     __shared_state = {}

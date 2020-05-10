@@ -64,14 +64,16 @@ class ManageStream(tools.Borg):
             for k, v in value.items():
                 self.config[key].setdefault(k, v)
 
-    def load_config(self):
-        config = tools.load_json(self.config_filepath)
-        self.config = config or {}
-        return config
+    def load_config(self, path='', backup=True):
+        path = path or self.config_filepath
+        config = tools.load_json(path, backup)
+        if config:
+            self.config = config or {}
+            return config
+        return False
 
     def load_credentials(self, path=''):
-        if not path:
-            path = self.config_filepath.replace('settings.json', 'credentials.json')
+        path = path or self.config_filepath.replace('settings.json', 'credentials.json')
         config = tools.load_json(path, backup=False)
         for service, values in config.items() or {}:
             logger.info('Loading credentials for "{}" service'.format(service))
@@ -79,20 +81,30 @@ class ManageStream(tools.Borg):
                 self.config['streamservices'][service][k] = v
         return config
 
-    def load_database(self):
-        path = self.config_filepath.replace('settings.json', 'database.json')
+    def load_database(self, path=''):
+        path = path or self.config_filepath.replace('settings.json', 'database.json')
         self.database = tools.load_json(path) or {}
         return self.database
 
-    def save_config(self):
+    def save_config(self, path=''):
+        path = path or self.config_filepath
         for name, service in self.services.items():
             self.config['streamservices'][name] = service.config
         try:
-            return tools.save_json(self.config, self.config_filepath)
+            return tools.save_json(self.config, path)
         except:
             logger.critical(traceback.print_exc())
             logging.error(self.config)
             return False
+
+    def export_database(self, path=''):
+        database = self.config['assignations'].copy()
+        for k, v in database.items():
+            for y, z in v.items():
+                z.pop('valid', None)
+        database_paths = {outer_k: {inner_k: inner_v for inner_k, inner_v in outer_v.items() if inner_k == 'path'} for outer_k, outer_v in self.config['appdata'].items()}
+        tools.merge_dict(database, database_paths)
+        tools.save_json(database, path)
 
     def set_loglevel(self, level=''):
         level = logging.getLevelName(level.upper())
