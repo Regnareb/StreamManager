@@ -1271,6 +1271,7 @@ class OverlayWidget(QtWidgets.QWidget):
         self.fillColor = QtWidgets.QWidget().palette().color(QtWidgets.QWidget().backgroundRole())
         self.layout = QtWidgets.QVBoxLayout(self)
         self.label = QtWidgets.QLabel(self)
+        self.label.setWordWrap(True)
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setText(self.text)
         self.button = QtWidgets.QPushButton(self)
@@ -1365,12 +1366,15 @@ class ManagerStreamThread(common.manager.ManageStream, QtCore.QThread):
         return result
 
     def load_credentials(self, path=''):
-        if super().load_credentials(path) == False:
-            QtWidgets.QMessageBox.warning(None, "Can't Load Credentials File", "The JSON file must be wrong, check your file with text editor or the person who sent it to you.", QtWidgets.QMessageBox.StandardButton.Ok)
+        if not super().load_credentials(path):
+            QtWidgets.QMessageBox.warning(None, "Can't Load Credentials File", "The JSON file must be wrong, check your file with a text editor or the person who sent it to you.", QtWidgets.QMessageBox.StandardButton.Ok)
 
-    def load_config(self):
-        if super().load_config() == False:
-            msgBox = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Critical, "Can't Load Preference File", "The JSON file must be wrong, the preferences has been reset. The old preferences are still available at this path:\n{}".format(self.config_filepath+'_error'))
+    def load_config(self, path='', backup=True):
+        if not super().load_config(path, backup):
+            msg ="The JSON file must be wrong, check your file with a text editor or validator."
+            if backup:
+                msg += "The preferences has been reset, the old preferences are still available at this path:\n{}".format(self.config_filepath+'_error')
+            msgBox = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Critical, "Can't Load Preference File", msg)
             msgBox.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
             msgBox.exec_()
 
