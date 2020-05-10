@@ -70,7 +70,7 @@ class ManageStream(tools.Borg):
         if config:
             self.config = config or {}
             return config
-        return False
+        return config
 
     def load_credentials(self, path=''):
         path = path or self.config_filepath.replace('settings.json', 'credentials.json')

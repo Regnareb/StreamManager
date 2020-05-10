@@ -432,6 +432,7 @@ class StreamManager_UI(common.systray.Window):
         self.manager.rename_process(old, new)
         current._process = new
         self.gameslayout['table'].sortByColumn(0, QtCore.Qt.AscendingOrder)
+        return True
 
     def remove_process(self):
         current = self.gameslayout['table'].currentItem()
