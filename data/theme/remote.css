@@ -29,6 +29,8 @@ body {
 
 p {text-align:left;padding:0px 20px}
 
+ol {text-align: left; margin-left: 30px}
+
 ul.streams {padding: 0px; margin: 0px;}
 
 .streams > li {

@@ -95,7 +95,7 @@ class DialogAddProcess(QtWidgets.QDialog):
         self.layout.addWidget(self.buttons)
         self.setLayout(self.layout)
         self.setWindowTitle('Add Game')
-        self.buttons.accepted.connect(self.close)
+        self.buttons.accepted.connect(self.accept)
         self.buttons.rejected.connect(self.cancel)
 
     def cancel(self):

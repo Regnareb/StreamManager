@@ -71,10 +71,16 @@
     % end
     </ul>
     % else:
-    <p>Welcome to the Stream Manager, it can update your stream title and category automatically depending on which software is running on the foreground and has the focus.<br/>>You can also use it as a resource saver as it can save CPU and networks ressources by automatically pausing processes and services.</p>
+    <p>Welcome to the Stream Manager, you can update your stream title and category automatically depending on which software is running on the foreground and has the focus.</p>
+    <ol>
+        <li>activate <strong>Service</strong> in preferences</li>
+        <li>add <strong>Games</strong></li>
+        <li>press <strong>Start</strong></li>
+        <li><strong>Enjoy!</strong></li>
+    </ol>
+    <p>You can also use it as a resource saver as it can save CPU and networks ressources by automatically pausing processes and services.</p>
     <hr/>
     <p>No stream service has been activated, go into <strong>View > Preferences > Streams</strong> and activate some to be able to automatically check processes.</p>
-    <p>You then have to press the <strong>START</strong> button below to begin checking the foreground processes. Don't forget to add your programs in the "Games" tab.</p>
     % end
 
     <form method="POST" class="perspective" action="/">
