@@ -209,7 +209,10 @@ class ManageStream(tools.Borg):
         return config
 
     def is_validcategories(self, category):
-        isvalid = [i['valid'] for i in self.config['assignations'].get(category, {}).values()]
+        isvalid = []
+        for i in self.config['assignations'].get(category, {}).values():
+            if i in list(self.services.keys()):
+                isvalid += i.get('valid', False)
         return all(isvalid)
 
     def get_processfrompath(self, path, platform=None):
