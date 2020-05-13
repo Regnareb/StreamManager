@@ -207,7 +207,8 @@ class HtmlStreamHandler(logging.StreamHandler):
         text = logging.StreamHandler.format(self, record)
         text = re.sub(regex, r'<a href="file:///\g<1>">\g<1></a>', text)
         params = self._get_params(record.levelno)
-        result = '<span class="{1}" style="font-size:{size};{special}">{0}</span>{after}'.format(text, record.levelname.lower(), **params)
+        style = 'style="font-size:{size};{special}"'.format(**params)
         if params.get('color'):
-            result = result.replace('style="', 'style="color:{color};').format(**params)
+            style = style.replace('style="', 'style="color:{color};').format(**params)
+        result = '<span class="{0}" {1}>{2}</span>{after}'.format(record.levelname.lower(), style, text, **params)
         return result
