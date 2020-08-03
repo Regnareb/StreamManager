@@ -154,26 +154,14 @@ class ManageStream(tools.Borg):
         except KeyError:
             pass
 
-    def create_services(self, force=False, threading=False):
+    def create_services(self, force=False):
         if force:
             self.services = {}
-        if threading:
-            nb = len(SERVICES) or 1
-            pool = []
-            with concurrent.futures.ThreadPoolExecutor(max_workers=nb) as executor:
-                for service in SERVICES:
-                    if service not in self.services:
-                        pool.append(executor.submit(self.create_service, service, self.config['streamservices'].get(service), force=force))
-            concurrent.futures.wait(pool, timeout=5)
-            for service in pool:
-                if service.result():
-                    self.services[service.result().name] = service.result()
-        else:
-            for service in SERVICES:
-                if service not in self.services:
-                    result = self.create_service(service, self.config['streamservices'].get(service), force=force)
-                    if result:
-                        self.services[service] = result
+        for service in SERVICES:
+            if service not in self.services:
+                result = self.create_service(service, self.config['streamservices'].get(service), force=force)
+                if result:
+                    self.services[service] = result
 
     def create_service(self, service, config, force=False):
         try:
