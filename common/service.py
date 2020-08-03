@@ -25,7 +25,7 @@ class Service():
     def __init__(self, config):
         self.config = config
         self.conform_config()
-        self.infos = {'online': '', 'title': '', 'name': '', 'category': '', 'description': '', 'viewers': ''}
+        self.infos = {'online': '', 'title': '', 'name': '', 'category': '', 'viewers': ''}
         self.manager = common.manager.ManageStream()
         self.oauth2 = OAuth2Session(token=self.config['authorization'], client_id=self.config['client_id'], scope=self.config['scope'], redirect_uri=self.config['redirect_uri'])
         self.get_token()
@@ -127,6 +127,8 @@ class Service():
         return infos
 
     def request(self, action, address, headers=None, data=None, params=None):
+        if not tools.internet():
+            raise tools.NoInternet()
         if not headers:
             headers = self.headers
         action = getattr(requests, action)
@@ -142,8 +144,8 @@ class Service():
                 logger.warning('Error 401 for service {}, requesting another OAuth token'.format(self.name))
                 self.get_token()
             elif not response:
-                logger.error('{} - {}: {} {}'.format(self.name, action, address, response.json()))
+                logger.error('{} - {}: {} {}'.format(action, self.name, address, response.json()))
             else:
-                logger.debug(response.json())
+                logger.debug('{} - {}: {}'.format(action, self.name, response.json()))
         except:
             logger.info(response)  # Some reponse return an empty JSON

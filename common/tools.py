@@ -3,6 +3,7 @@ import os
 import sys
 import glob
 import json
+import socket
 import shutil
 import ctypes
 import logging
@@ -18,6 +19,24 @@ import psutil
 import requests
 from contextlib import contextmanager
 logger = logging.getLogger(__name__)
+
+
+class NoInternet(Exception):
+    pass
+
+def internet(host="8.8.8.8", port=53, timeout=3):
+  """
+  Host: 8.8.8.8 (google-public-dns-a.google.com)
+  OpenPort: 53/tcp
+  Service: domain (DNS/TCP)
+  """
+  try:
+    socket.setdefaulttimeout(timeout)
+    socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+    return True
+  except socket.error as ex:
+    logger.exception(ex)
+    return False
 
 @contextmanager
 def pause_services(services):
@@ -89,12 +108,12 @@ def getForegroundProcess():
         return str(AppKit.NSWorkspace.sharedWorkspace().activeApplication()['NSApplicationPath'])
     elif sys.platform in ['linux', 'linux2']:
         root = subprocess.Popen(['xprop', '-root', '_NET_ACTIVE_WINDOW'], stdout=subprocess.PIPE)
-        stdout, stderr = root.communicate()
+        stdout, _ = root.communicate()
         m = re.search(b'^_NET_ACTIVE_WINDOW.* ([\w]+)$', stdout)
         if m != None:
             window_id = m.group(1)
             window = subprocess.Popen(['xprop', '-id', window_id, 'WM_NAME'], stdout=subprocess.PIPE)
-            stdout, stderr = window.communicate()
+            stdout, _ = window.communicate()
         else:
             return ''
         match = re.match(b"WM_NAME\(\w+\) = (?P<name>.+)$", stdout)
@@ -130,7 +149,7 @@ def listprocesses():
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
         except FileNotFoundError:
-            logger.error('Strange process: {}'.format(proc.name(), proc.pid))
+            logger.error('Strange process: {} - {}'.format(proc.name(), proc.pid))
     return result
 
 def parse_strings(infos):
