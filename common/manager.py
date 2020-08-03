@@ -97,6 +97,11 @@ class ManageStream(tools.Borg):
         self.database = tools.load_json(path) or {}
         return self.database
 
+    def import_database(self, path=''):
+        database = tools.load_json(path)
+        tools.merge_dict(self.database, database)
+        tools.save_json(self.database, self.config_filepath.replace('settings.json', 'database.json'))
+
     def export_database(self, path=''):
         keys = list(set(list(self.config['assignations'].keys()) + list(self.config['appdata'].keys())))
         database = {}
