@@ -1,9 +1,11 @@
 # coding: utf-8
 import logging
 import functools
+import common.tools as tools
 from common.service import *
 logger = logging.getLogger(__name__)
 
+@tools.decorate_all_methods(tools.catch_exception(logger=logger))
 class Main(Service):
     name = 'Facebook'
     scope = "user_videos publish_video"
@@ -12,7 +14,7 @@ class Main(Service):
     redirect_uri = "http://localhost:60776/"
     apibase = 'https://graph.facebook.com/v5.0'
     devurl = 'https://developers.facebook.com/apps/'
-    features = {'title': True, 'category': False, 'description': True, 'tags': False, 'clips': False, 'markers': False}
+    features = {'title': True, 'category': False, 'tags': False, 'clips': False, 'markers': False}
 
     @functools.lru_cache(maxsize=128)
     def query_category(self, category):
@@ -37,7 +39,7 @@ class Main(Service):
         result = self.request('get', address, params=params).json()
         online = True if result['status'] == 'LIVE' else False
         viewers = result['live_views'] if online else None
-        self.infos = {'online': online, 'title': result['title'], 'name': '', 'category': '', 'description': '', 'viewers': viewers}
+        self.infos = {'online': online, 'title': result['title'], 'name': '', 'category': '', 'viewers': viewers}
         return self.infos
 
     @property
@@ -56,8 +58,6 @@ class Main(Service):
         data = {}
         if infos.get('title'):
             data['title'] = infos['title']
-        if infos.get('description'):
-            data['description'] = infos['description']
         if infos.get('category'):
             idtag = self.query_category(infos['category']).get(infos['category'])
             if idtag:

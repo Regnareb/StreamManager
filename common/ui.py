@@ -107,7 +107,7 @@ class DialogAddProcess(QtWidgets.QDialog):
         self.cancel()
         super().closeEvent(event)
 
-
+@common.tools.decorate_all_methods(common.tools.catch_exception(logger=logger))
 class StreamManager_UI(common.systray.Window):
     def __init__(self):
         super().__init__()

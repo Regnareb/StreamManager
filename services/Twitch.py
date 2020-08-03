@@ -6,7 +6,7 @@ import common.tools as tools
 from common.service import *
 logger = logging.getLogger(__name__)
 
-# create stream markers
+@tools.decorate_all_methods(tools.catch_exception(logger=logger))
 class Main(Service):
     name = 'Twitch'
     scope = "user:edit:broadcast channel_editor clips:edit"
@@ -16,7 +16,7 @@ class Main(Service):
     apibase = 'https://api.twitch.tv/kraken'
     apibase2 = 'https://api.twitch.tv/helix'
     devurl = 'https://dev.twitch.tv/console/apps'
-    features = {'title': True, 'category': True, 'description': False, 'tags': True, 'clips': True, 'markers': True}
+    features = {'title': True, 'category': True, 'tags': True, 'clips': True, 'markers': True}
 
     def set_headers(self):
         super().set_headers()
@@ -33,7 +33,7 @@ class Main(Service):
         except IndexError:
             viewers = None
             online = False
-        self.infos = {'online': online, 'title': result['status'], 'name': result['display_name'], 'category': result['game'], 'description': result['description'], 'viewers': viewers}
+        self.infos = {'online': online, 'title': result['status'], 'name': result['display_name'], 'category': result['game'], 'viewers': viewers}
         return self.infos
 
     @functools.lru_cache(maxsize=128)

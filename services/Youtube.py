@@ -1,8 +1,10 @@
 # coding: utf-8
 import logging
+import common.tools as tools
 from common.service import *
 logger = logging.getLogger(__name__)
 
+@tools.decorate_all_methods(tools.catch_exception(logger=logger))
 class Main(Service):
     name = 'Youtube'
     scope = "https://www.googleapis.com/auth/youtubepartner https://www.googleapis.com/auth/youtube https://www.googleapis.com/auth/youtube.force-ssl"
@@ -11,7 +13,7 @@ class Main(Service):
     redirect_uri = "http://localhost:60775/"
     apibase = 'https://www.googleapis.com/youtube/v3'
     devurl = 'https://console.developers.google.com/apis/credentials'
-    features = {'title': True, 'category': True, 'description': True, 'tags': False, 'clips': False, 'markers': False}
+    features = {'title': True, 'category': True, 'tags': False, 'clips': False, 'markers': False}
 
     def get_channel_info(self):
         address = '{}/liveBroadcasts?part=snippet,topicDetails&broadcastType=persistent&mine=true'.format(self.apibase)
@@ -30,7 +32,7 @@ class Main(Service):
             viewers = viewers['items'][0]['liveStreamingDetails'].get('concurrentViewers', 0)
         else:
             viewers = None
-        self.infos = {'online': online, 'title': result['items'][0]['snippet']['title'], 'name': name, 'category': category, 'description': result['items'][0]['snippet']['description'], 'viewers': viewers, 'channel_id': result['items'][0]['id']}
+        self.infos = {'online': online, 'title': result['items'][0]['snippet']['title'], 'name': name, 'category': category, 'viewers': viewers, 'channel_id': result['items'][0]['id']}
         return self.infos
 
     def query_category(self, category):
@@ -46,8 +48,6 @@ class Main(Service):
             data['snippet']['title'] = infos['title']
         else:
             data['snippet']['title'] = self.infos['title']
-        if infos.get('description'):
-            data['snippet']['description'] = infos['description']
         if infos.get('category'):
             gameid = self.gamesid.get(infos['category'], '')
             if gameid:

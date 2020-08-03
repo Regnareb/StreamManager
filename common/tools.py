@@ -9,6 +9,7 @@ import ctypes
 import logging
 import tempfile
 import importlib
+import traceback
 import functools
 import threading
 import subprocess
@@ -76,6 +77,29 @@ def download_pssuspend(path):
     pssuspend = zipfile.extract('pssuspend.exe', path)
     pssuspend = zipfile.extract('pssuspend64.exe', path)
     return pssuspend
+
+def catch_exception(exception=Exception, logger=logging.getLogger(__name__)):
+    def deco(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except exception as err:
+                logger.critical(traceback.print_exc())
+                logger.exception(err)
+                # raise
+        return wrapper
+    return deco
+
+def decorate_all_methods(decorator, exclude=None):
+    if exclude is None:
+        exclude = []
+    def decorate(cls):
+        for attr in cls.__dict__:
+            if callable(getattr(cls, attr)) and attr not in exclude:
+                setattr(cls, attr, decorator(getattr(cls, attr)))
+        return cls
+    return decorate
 
 def threaded(func):
     @functools.wraps(func)
