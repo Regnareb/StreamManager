@@ -170,9 +170,10 @@ class StreamManager_UI(common.systray.Window):
 
     def first_launch(self):
         logger.info('First launch.')
-        self.set_loglevel('Info')
+        self.set_loglevel('Warning')
         self.tabifyDockWidget(self.panel_status['dock'], self.gameslayout['dock'])
         self.tabifyDockWidget(self.gameslayout['dock'], self.log_panel)
+        self.log_panel.hide()
         self.preferences.open()
         self.preferences.tabs.setCurrentIndex(1)
         self.preferences.tabs.tabBar().hide()
