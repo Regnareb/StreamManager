@@ -6,6 +6,7 @@ import socket
 import logging
 import threading
 import functools
+import webbrowser
 logger = logging.getLogger(__name__)
 import keyboard
 from PySide2 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
@@ -65,10 +66,13 @@ class LogPanel(QtWidgets.QDockWidget):
         self.interface['levels'].currentIndexChanged.connect(self.changed_loglevel.emit)
         self.interface['textedit'] = QtWidgets.QTextBrowser()
         self.interface['textedit'].setOpenLinks(False)
+        self.interface['clear'] = QtWidgets.QPushButton('Clear')
+        self.interface['clear'].clicked.connect(self.interface['textedit'].clear)
         self.interface['layouth'].addStretch()
         self.interface['layouth'].addWidget(self.interface['label'])
         self.interface['layouth'].addWidget(self.interface['levels'])
         self.interface['layouth'].addStretch()
+        self.interface['layouth'].addWidget(self.interface['clear'])
         self.interface['layoutv'].addLayout(self.interface['layouth'])
         self.interface['layoutv'].addWidget(self.interface['textedit'])
         self.interface['main'].setLayout(self.interface['layoutv'])
@@ -275,6 +279,7 @@ class StreamManager_UI(common.systray.Window):
         actionfile.addSeparator()
         actionfile.addAction(QtWidgets.QAction('&Import Preferences', self, triggered=self.import_settings))
         actionfile.addAction(QtWidgets.QAction('&Export Preferences', self, triggered=self.export_settings))
+        actionfile.addAction(QtWidgets.QAction('&Import Game Database', self, triggered=self.import_database))
         actionfile.addAction(QtWidgets.QAction('&Export Game Database', self, triggered=self.export_database))
         actionfile.addSeparator()
         actionfile.addAction(QtWidgets.QAction('&Quit', self, triggered=self.quit))
@@ -287,6 +292,8 @@ class StreamManager_UI(common.systray.Window):
         actionview.addAction(self.log_panel.toggleViewAction())
         actionview.addSeparator()
         actionview.addAction(self.dockable)
+        actionhelp = self.menuBar().addMenu('Help')
+        actionhelp.addAction(QtWidgets.QAction('&Homepage', self, triggered=functools.partial(webbrowser.open, 'https://github.com/Regnareb/StreamManager')))
 
     def create_gamelayout(self):
         self.gameslayout = {}
@@ -458,6 +465,11 @@ class StreamManager_UI(common.systray.Window):
         if path:
             self.manager.save_config(path)
 
+    def import_database(self):
+        path = self.create_filedialog(action='open')
+        if path:
+            self.manager.import_database(path)
+
     def export_database(self):
         path = self.create_filedialog(action='save')
         if path:
@@ -620,7 +632,7 @@ class Preferences(QtWidgets.QDialog):
         self.tab_pauseprocesses = Preferences_Pauseprocesses(manager)
         self.tab_pauseservices = Preferences_Pauseservices(manager)
         self.tabs.addTab(self.tab_general, "General")
-        self.tabs.addTab(self.tab_streams, "Streams")
+        self.tabs.addTab(self.tab_streams, "Streams Services")
         self.tabs.addTab(self.tab_assignations, "Game Assignations")
         self.tabs.addTab(self.tab_pauseprocesses, "Pause Processes")
         if sys.platform == 'win32':
@@ -1225,7 +1237,8 @@ class Preferences_Pauseservices(Preferences_Pause):
                 self.show_overlay()
             admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
             if not admin:
-                self.panel_pause['label'].setText(self.panel_pause['label'].text() + '<br><b>Requires Admin Rights!</b> Unless you gave access to services management to your account (<a href="https://www.coretechnologies.com/products/ServiceSecurityEditor/">?</a>)')
+                self.panel_pause['label'].setText(self.panel_pause['label'].text() + '<br><b style="color:red">Requires Admin Rights!</b> Unless you gave access to services management to your account <a href="https://www.coretechnologies.com/products/ServiceSecurityEditor/">(?)</a>')
+                self.panel_pause['label'].setOpenExternalLinks(True)
 
     def disable_all(self):
         for i in self.panel_pause.values():
@@ -1385,7 +1398,7 @@ class ManagerStreamThread(common.manager.ManageStream, QtCore.QThread):
         if not super().load_config(path, backup):
             msg ="The JSON file must be wrong, check your file with a text editor or validator."
             if backup:
-                msg += "The preferences has been reset, the old preferences are still available at this path:\n{}".format(self.config_filepath+'_error')
+                msg += "The preferences have been reset, the old preferences are still available at this path:\n{}".format(self.config_filepath+'_error')
             msgBox = QtWidgets.QMessageBox(QtWidgets.QMessageBox.Critical, "Can't Load Preference File", msg)
             msgBox.setTextInteractionFlags(QtCore.Qt.TextSelectableByMouse)
             msgBox.exec_()
