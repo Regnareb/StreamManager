@@ -339,7 +339,7 @@ class StreamManager_UI(common.systray.Window):
         self.gameslayout['rlayout'].addWidget(self.gameslayout['stacked'])
         self.gameslayout['stacked'].setCurrentWidget(self.gameslayout['stacked_label'])
 
-        elements = ['title', 'description', 'tags']
+        elements = ['title', 'tags', 'description', 'command']
         folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'theme', 'images'))
         icons = {False: QtGui.QIcon(folder + "/unlock.png"), True: QtGui.QIcon(folder + "/lock.png")}
         for key in elements:
@@ -371,9 +371,7 @@ class StreamManager_UI(common.systray.Window):
         self.gameslayout['category'].setCompleter(self.completer)
         self.gameslayout['category_layout'].addWidget(self.gameslayout['category_conflicts'])
         self.gameslayout['category_layout'].addWidget(self.gameslayout['category'])
-        self.gameslayout['rlayout'].insertLayout(1, self.gameslayout['category_layout'])
-        self.gameslayout['description'].setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
-        self.gameslayout['rlayout'].addStretch()
+        self.gameslayout['rlayout'].labelForField(self.gameslayout['command']).setText('Command to execute:')
 
         self.gameslayout['container_llayout'] = QtWidgets.QWidget()
         self.gameslayout['container_llayout'].setLayout(self.gameslayout['llayout'])
@@ -471,8 +469,9 @@ class StreamManager_UI(common.systray.Window):
         title = self.gameslayout['title'].text()
         desc = self.gameslayout['description'].toPlainText()
         tags = self.gameslayout['tags'].text().split(',')
+        command = self.gameslayout['command'].text()
         tags = [i.strip() for i in tags if i]
-        data = {'category': cat, 'title': title, 'description': desc, 'tags': tags}
+        data = {'category': cat, 'title': title, 'tags': tags, 'description': description, 'command': command}
         if validate:
             self.manager.config['assignations'] = self.manager.validate_assignations(self.manager.config['assignations'], cat)
         if current and current.text():
@@ -546,12 +545,11 @@ class StreamManager_UI(common.systray.Window):
             self.gameslayout['title'].setText(val.get('title'))
             self.gameslayout['description'].setPlainText(val.get('description'))
             self.gameslayout['tags'].setText(', '.join(val.get('tags', [])))
-            self.gameslayout['title'].setPlaceholderText(finalvals.get('title') or 'title')
-            self.gameslayout['category'].setPlaceholderText(finalvals.get('category') or 'category')
-            self.gameslayout['description'].setPlaceholderText(finalvals.get('description') or 'description')
-            self.gameslayout['tags'].setPlaceholderText(', '.join(finalvals.get('tags')) or 'tags')
+            self.gameslayout['command'].setText(val.get('command'))
+            self.gameslayout['command'].setPlaceholderText(finalvals.get('command'))
             self.gameslayout['title'].setButtonVisibility(False)
             self.gameslayout['category'].setButtonVisibility(False)
+            self.gameslayout['command'].setButtonVisibility(False)
             self.gameslayout['description'].setButtonVisibility(False)
             self.gameslayout['tags'].setButtonVisibility(False)
             self.gameslayout['remove_process'].setEnabled(True)
@@ -564,19 +562,22 @@ class StreamManager_UI(common.systray.Window):
         self.gameslayout['table'].setCurrentCell(-1, -1)
         self.gameslayout['stacked'].setCurrentWidget(self.gameslayout['stacked_label'])
         val = self.manager.config['base']
-        elements = ['category', 'title', 'tags', 'description']
+        elements = ['category', 'title', 'tags', 'description', 'command']
         for key in elements:
             self.gameslayout[key].setPlaceholderText(key)
         self.gameslayout['category'].setText(val.get('category'))
         self.gameslayout['title'].setText(val.get('title'))
         self.gameslayout['description'].setPlainText(val.get('description'))
         self.gameslayout['tags'].setText(','.join(val.get('tags', [])))
+        self.gameslayout['command'].setText(val.get('command'))
         self.gameslayout['title'].setButtonVisibility(True)
         self.gameslayout['category'].setButtonVisibility(True)
+        self.gameslayout['command'].setButtonVisibility(True)
         self.gameslayout['description'].setButtonVisibility(True)
         self.gameslayout['tags'].setButtonVisibility(True)
         self.gameslayout['title'].changeButtonState(val.get('forced_title', ''))
         self.gameslayout['category'].changeButtonState(val.get('forced_category', ''))
+        self.gameslayout['command'].changeButtonState(val.get('forced_command', ''))
         self.gameslayout['description'].changeButtonState(val.get('forced_description', ''))
         self.gameslayout['tags'].changeButtonState(val.get('forced_tags', []))
         self.gameslayout['remove_process'].setEnabled(False)

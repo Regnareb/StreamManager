@@ -50,6 +50,7 @@ class ManageStream(tools.Borg):
             "tags": [],
             "forced_category": False,
             "forced_title": False,
+            "forced_command": False,
             "forced_description": False,
             "forced_tags": False
             },
@@ -230,6 +231,7 @@ class ManageStream(tools.Borg):
             infos = self.get_informations(process)
             logger.info(f"title: {infos['title']} | category: {infos['category']} | tags: {infos['tags']}")
             self.update_channel(infos)
+            self.launch_command(infos['command'])
             self.process = process
             return infos
 
@@ -239,10 +241,16 @@ class ManageStream(tools.Borg):
         infos['title'] = self.config['appdata'].get(name, {}).get('title') or self.config['base'].get('title', '')
         infos['category'] = self.config['appdata'].get(name, {}).get('category') or self.config['base'].get('category', '')
         infos['description'] = self.config['appdata'].get(name, {}).get('description') or self.config['base'].get('description', '')
+        infos['command'] = self.config['appdata'].get(name, {}).get('command', '') or self.config['base'].get('command', '')
         for element in ['title', 'description', 'category', 'tags']:
             if self.config['base'].get('forced_' + element):
                 infos[element] = self.config['base'].get(element)
         return infos
+
+    def launch_command(self, command):
+        if command:
+            logger.debug('Launching command:' + command)
+            subprocess.Popen(command, shell=True)
 
     def update_servicesinfos(self):
         nb = len(SERVICES) or 1
