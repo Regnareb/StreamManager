@@ -23,28 +23,46 @@ class Main(Service):
         self.headers['Accept'] = 'application/vnd.twitchtv.v5+json'
 
     def get_channel_info(self):
-        address = '{}/channels/{}'.format(self.apibase, self.config['channel_id'])
-        result = self.request('get', address, headers=self.headers).json()
+        self.get_token()
+        address = '{}/channels?broadcaster_id={}'.format(self.apibase2, self.config['channel_id'])
+        result = self.request('get', address, headers=self.headers2).json()['data'][0]
         address = '{}/streams?user_id={}'.format(self.apibase2, self.config['channel_id'])
-        online = self.request('get', address, headers=self.headers2).json()['data']
+        online = self.request('get', address, headers=self.headers2).json()
+        try:
+            online = online['data']
+        except KeyError:
+            print(online)
         try:
             viewers = online[0]['viewer_count']
             online = True
-        except IndexError:
+        except (IndexError, KeyError):
             viewers = None
             online = False
-        self.infos = {'online': online, 'title': result['status'], 'name': result['display_name'], 'category': result['game'], 'viewers': viewers}
+        self.infos = {'online': online, 'title': result['title'], 'name': result['broadcaster_name'], 'category': result['game_name'], 'viewers': viewers}
         return self.infos
+
+    def get_gamedescription(self):
+        general_description = self.manager.config['base']['description'] or ''
+        if self.manager.config['base']['forced_description']:
+            return general_description
+        infos = self.get_channel_info()
+        imlucky = self.manager.config.get('appdata', {}).get(infos['category'], {})
+        if imlucky and imlucky.get('Twitch', {}).get('name', '') == infos['category']:
+            return imlucky.get('description') or general_description
+        for i in self.manager.config.get('appdata', {}).values():
+            if infos['category'] == i.get('Twitch', {}).get('name', ''):
+                return i.get('description') or general_description
+        return general_description
 
     @functools.lru_cache(maxsize=128)
     def query_category(self, category):
         result = {}
         if category:
             params = {'query': category}
-            address = '{}/search/games'.format(self.apibase)
-            response = self.request('get', address, headers=self.headers, params=params)
-            for i in response.json()['games'] or []:
-                result[i['name']] = i['_id']
+            address = '{}/search/categories'.format(self.apibase2)
+            response = self.request('get', address, headers=self.headers2, params=params)
+            for i in response.json()['data'] or []:
+                result[i['name']] = str(i['id'])
         return result
 
     @functools.lru_cache(maxsize=128)
@@ -59,16 +77,15 @@ class Main(Service):
         infos = super().update_channel(infos)
         data = {}
         if infos.get('title'):
-            data['status'] = infos['title']
+            data['title'] = infos['title']
         if infos.get('category'):
-            data['game'] = infos['category']
+            data['game_id'] = self.query_category(infos['category'])[infos['category']]
         if infos.get('tags'):
             self.update_tags(infos['tags'])
         if data:
             self.get_token()
-            data = {'channel': data}
-            address = '{}/channels/{}'.format(self.apibase, self.config['channel_id'])
-            return self.request('put', address, headers=self.headers, data=data)
+            address = '{}/channels?broadcaster_id={}'.format(self.apibase2, self.config['channel_id'])
+            return self.request('patch', address, headers=self.headers2, data=data)
 
     def get_channel_id(self):
         address = '{}/users'.format(self.apibase2)
