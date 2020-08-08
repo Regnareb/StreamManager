@@ -30,6 +30,7 @@ class Service():
         self.oauth2 = OAuth2Session(token=self.config['authorization'], client_id=self.config['client_id'], scope=self.config['scope'], redirect_uri=self.config['redirect_uri'])
         self.get_token()
         self.get_channel_id()
+        self.create_commandbot()
 
     def conform_config(self):
         template = self.default_config()
@@ -101,6 +102,7 @@ class Service():
     def refresh_token(self):
         try:
             self.config['authorization'] = self.oauth2.refresh_token(self.config['token_url'], **{'client_id': self.config['client_id'], 'client_secret': self.config['client_secret']})
+            self.manager.commandbots[self.name] = None
         except (InvalidGrantError, MissingTokenError, InvalidClientIdError):
             logger.warning("Couldn't refresh the token")
             raise
@@ -115,6 +117,9 @@ class Service():
         return None
 
     def create_marker(self):
+        return None
+
+    def create_commandbot(self):
         return None
 
     def update_channel(self, infos):

@@ -1,15 +1,19 @@
 # coding: utf-8
 import time
 import logging
+import asyncio
+import threading
 import functools
 import common.tools as tools
 from common.service import *
 logger = logging.getLogger(__name__)
+import twitchio
+from twitchio.ext import commands
 
 @tools.decorate_all_methods(tools.catch_exception(logger=logger))
 class Main(Service):
     name = 'Twitch'
-    scope = "user:edit:broadcast channel_editor clips:edit"
+    scope = "user:edit:broadcast channel_editor clips:edit chat:read chat:edit"
     authorization_base_url = "https://id.twitch.tv/oauth2/authorize"
     token_url = "https://id.twitch.tv/oauth2/token"
     redirect_uri = "http://localhost:60779/"
@@ -91,6 +95,7 @@ class Main(Service):
         address = '{}/users'.format(self.apibase2)
         result = self.request('get', address, self.headers2).json()
         self.config['channel_id'] = result['data'][0]['id']
+        self.config['name'] = result['data'][0]['display_name']
 
     @property
     def alltags(self):
@@ -170,3 +175,45 @@ class Main(Service):
             return response
         else:
             logger.error("Can't create a marker if you are not streaming.")
+
+
+    def create_commandbot(self):
+        # Clean up the old bot if there is any
+        loop = asyncio.get_event_loop()
+        tasks = asyncio.all_tasks(loop)
+        [i.cancel() for i in tasks]
+        loop.stop()
+
+        asyncio.set_event_loop(asyncio.new_event_loop())  # Restart a new loop
+        loop = asyncio.get_event_loop()
+        def exception_handler(loop, context):
+            if "exception" not in context:
+                loop.default_exception_handler(context)
+            else:
+                self.manager.commandbots['Twitch'] = None
+                print('Bypass timeout exception and restart commandbot')
+
+        loop.set_exception_handler(exception_handler)
+        self.thread = threading.Thread(daemon=True, target=loop.run_forever)
+        self.thread.start()
+
+        self.manager.commandbots['Twitch'] = Bot(self.config['name'])
+        self.future = asyncio.run_coroutine_threadsafe(self.manager.commandbots['Twitch'].start(), loop)
+
+
+class Bot(commands.Bot):
+    def __init__(self, name):
+        self.manager = common.manager.ManageStream()
+        client_id = self.manager.config['streamservices']['Twitch']['client_id']
+        irc_token = 'oauth:' + self.manager.config['streamservices']['Twitch']['authorization']['access_token']
+        super().__init__(irc_token=irc_token, client_id=client_id, nick=name, prefix='!', initial_channels =['#' + name])
+
+    async def event_ready(self):
+        logger.info(f'Command bot for Twitch connected to chat')
+
+    async def event_message(self, message):
+        if message.content in ['!game']:
+            description = self.manager.services['Twitch'].get_gamedescription()
+            if description:
+                ctx = twitchio.Context(message=message, channel=message.channel, user=message.author, prefix='!')
+                await ctx.send(description)

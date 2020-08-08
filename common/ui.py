@@ -315,11 +315,9 @@ class StreamManager_UI(common.systray.Window):
         self.gameslayout['table'].setHorizontalHeaderLabels(['GENERAL'])
 
         self.gameslayout['add_process'] = QtWidgets.QPushButton('+')
-        self.gameslayout['add_process'].setFlat(True)
         self.gameslayout['add_process'].setFixedSize(30, 27)
         self.gameslayout['add_process'].clicked.connect(self.add_process)
         self.gameslayout['remove_process'] = QtWidgets.QPushButton('-')
-        self.gameslayout['remove_process'].setFlat(True)
         self.gameslayout['remove_process'].setFixedSize(30, 27)
         self.gameslayout['remove_process'].clicked.connect(self.remove_process)
         self.gameslayout['addremove_layout'] = QtWidgets.QHBoxLayout()
@@ -329,7 +327,8 @@ class StreamManager_UI(common.systray.Window):
         self.gameslayout['llayout'].addWidget(self.gameslayout['table'])
         self.gameslayout['llayout'].addLayout(self.gameslayout['addremove_layout'])
 
-        self.gameslayout['rlayout'] = QtWidgets.QVBoxLayout()
+        self.gameslayout['rlayout'] = QtWidgets.QFormLayout()
+        self.gameslayout['rlayout'].setRowWrapPolicy(QtWidgets.QFormLayout.WrapAllRows)
         self.gameslayout['stacked'] = QtWidgets.QStackedWidget()
         self.gameslayout['stacked'].setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed))
         self.gameslayout['stacked_processpath'] = LineEdit({True: QtWidgets.QApplication.style().standardIcon(QtWidgets.QStyle.SP_DirIcon)})
@@ -337,33 +336,23 @@ class StreamManager_UI(common.systray.Window):
         self.gameslayout['stacked_processpath'].editingFinished.connect(self.save_appdata)
         self.gameslayout['stacked_processpath'].buttonClicked.connect(self.get_processpath)
         self.gameslayout['stacked_processpath'].setToolTip('Process Name/Path')
+        self.gameslayout['stacked_processlayout'] = QtWidgets.QFormLayout()
+        self.gameslayout['stacked_processlayout'].setRowWrapPolicy(QtWidgets.QFormLayout.WrapAllRows)
+        self.gameslayout['stacked_processlayout'].addRow('Executable name:', self.gameslayout['stacked_processpath'])
+        self.gameslayout['stacked_process'] = QtWidgets.QWidget()
+        self.gameslayout['stacked_processlayout'].setContentsMargins(0, 0, 0, 0)
+        self.gameslayout['stacked_process'].setLayout(self.gameslayout['stacked_processlayout'])
         self.gameslayout['stacked_label'] = QtWidgets.QLabel()
-        self.gameslayout['stacked_label'].setText('Applied by default for all games if there is no data\nLocks will force this setting no matter what')
+        self.gameslayout['stacked_label'].setText('Applied by default for all games if there is no data\nLocks will force this setting no matter what for all games')
         self.gameslayout['stacked_label'].setAlignment(QtCore.Qt.AlignCenter)
-        self.gameslayout['stacked'].addWidget(self.gameslayout['stacked_processpath'])
+        self.gameslayout['stacked'].addWidget(self.gameslayout['stacked_process'])
         self.gameslayout['stacked'].addWidget(self.gameslayout['stacked_label'])
-
-        self.gameslayout['rlayout'].addWidget(self.gameslayout['stacked'])
+        self.gameslayout['rlayout'].addRow(self.gameslayout['stacked'])
         self.gameslayout['stacked'].setCurrentWidget(self.gameslayout['stacked_label'])
 
-        elements = ['title', 'tags', 'description', 'command']
+        elements = ['title', 'tags', 'command', 'description']
         folder = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'theme', 'images'))
         icons = {False: QtGui.QIcon(folder + "/unlock.png"), True: QtGui.QIcon(folder + "/lock.png")}
-        for key in elements:
-            if key == 'description':
-                self.gameslayout[key] = PlainTextEdit(icons)
-                self.gameslayout[key].setMinimumHeight(150)
-            else:
-                self.gameslayout[key] = LineEdit(icons)
-                self.gameslayout[key].setMinimumHeight(30)
-            self.gameslayout[key].editingFinished.connect(self.save_appdata)
-            s = self.gameslayout[key].sizePolicy()
-            s.setRetainSizeWhenHidden(True)
-            self.gameslayout[key].setSizePolicy(s)
-            self.gameslayout[key].setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed))
-            self.gameslayout['rlayout'].addWidget(self.gameslayout[key])
-            self.gameslayout[key].setToolTip(key.title())
-
         self.gameslayout['category_layout'] = QtWidgets.QHBoxLayout()
         self.gameslayout['category_layout'].setSpacing(0)
         self.gameslayout['category_conflicts'] = QtWidgets.QPushButton('...')
@@ -378,6 +367,19 @@ class StreamManager_UI(common.systray.Window):
         self.gameslayout['category'].setCompleter(self.completer)
         self.gameslayout['category_layout'].addWidget(self.gameslayout['category_conflicts'])
         self.gameslayout['category_layout'].addWidget(self.gameslayout['category'])
+        self.gameslayout['rlayout'].addRow('Category:', self.gameslayout['category_layout'])
+
+        for key in elements:
+            self.gameslayout[key] = LineEdit(icons)
+            self.gameslayout[key].setMinimumHeight(30)
+            self.gameslayout[key].editingFinished.connect(self.save_appdata)
+            s = self.gameslayout[key].sizePolicy()
+            s.setRetainSizeWhenHidden(True)
+            self.gameslayout[key].setSizePolicy(s)
+            self.gameslayout[key].setSizePolicy(QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Fixed))
+            self.gameslayout['rlayout'].addRow(key.title() + ':', self.gameslayout[key])
+            self.gameslayout[key].setToolTip(key.title())
+        self.gameslayout['rlayout'].labelForField(self.gameslayout['description']).setText('Game Description <span style="color:grey;">(!game)</span>:')
         self.gameslayout['rlayout'].labelForField(self.gameslayout['command']).setText('Command to execute:')
 
         self.gameslayout['container_llayout'] = QtWidgets.QWidget()
@@ -479,7 +481,7 @@ class StreamManager_UI(common.systray.Window):
         current = self.gameslayout['table'].currentItem()
         cat = self.gameslayout['category'].text()
         title = self.gameslayout['title'].text()
-        desc = self.gameslayout['description'].toPlainText()
+        description = self.gameslayout['description'].text()
         tags = self.gameslayout['tags'].text().split(',')
         command = self.gameslayout['command'].text()
         tags = [i.strip() for i in tags if i]
@@ -549,15 +551,19 @@ class StreamManager_UI(common.systray.Window):
         current = self.gameslayout['table'].currentItem()
         if current:
             process = current.text()
-            self.gameslayout['stacked'].setCurrentWidget(self.gameslayout['stacked_processpath'])
+            self.gameslayout['stacked'].setCurrentWidget(self.gameslayout['stacked_process'])
             val = self.manager.config['appdata'].get(process, {})
             finalvals = self.manager.get_informations(process)
             self.gameslayout['stacked_processpath'].setText(val.get('path', {}).get(sys.platform, ''))
             self.gameslayout['category'].setText(val.get('category'))
             self.gameslayout['title'].setText(val.get('title'))
-            self.gameslayout['description'].setPlainText(val.get('description'))
+            self.gameslayout['description'].setText(val.get('description'))
             self.gameslayout['tags'].setText(', '.join(val.get('tags', [])))
             self.gameslayout['command'].setText(val.get('command'))
+            self.gameslayout['title'].setPlaceholderText(finalvals.get('title'))
+            self.gameslayout['category'].setPlaceholderText(finalvals.get('category'))
+            self.gameslayout['tags'].setPlaceholderText(', '.join(finalvals.get('tags')))
+            self.gameslayout['description'].setPlaceholderText(finalvals.get('description'))
             self.gameslayout['command'].setPlaceholderText(finalvals.get('command'))
             self.gameslayout['title'].setButtonVisibility(False)
             self.gameslayout['category'].setButtonVisibility(False)
@@ -576,10 +582,10 @@ class StreamManager_UI(common.systray.Window):
         val = self.manager.config['base']
         elements = ['category', 'title', 'tags', 'description', 'command']
         for key in elements:
-            self.gameslayout[key].setPlaceholderText(key)
+            self.gameslayout[key].setPlaceholderText('')
         self.gameslayout['category'].setText(val.get('category'))
         self.gameslayout['title'].setText(val.get('title'))
-        self.gameslayout['description'].setPlainText(val.get('description'))
+        self.gameslayout['description'].setText(val.get('description'))
         self.gameslayout['tags'].setText(','.join(val.get('tags', [])))
         self.gameslayout['command'].setText(val.get('command'))
         self.gameslayout['title'].setButtonVisibility(True)
@@ -1374,6 +1380,7 @@ class ManagerStreamThread(common.manager.ManageStream, QtCore.QThread):
                 self.exec_()
 
     def main(self):
+        self.create_commandbots()
         result = self.check_application()
         if result:
             self.updated.emit(result)

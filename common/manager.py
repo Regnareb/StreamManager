@@ -24,6 +24,7 @@ class ManageStream(tools.Borg):
             self.process = ''
             self.config = {}
             self.services = {}
+            self.commandbots = {}
             self.currentkey = set()
             self.config_filepath = os.path.join(os.path.dirname(__file__), '..', 'data', 'settings.json')
             self.load_config()
@@ -179,6 +180,11 @@ class ManageStream(tools.Borg):
 
     def deactivate_service(self, service):
         self.services.pop(service, None)
+
+    def create_commandbots(self, force=False):
+        for name, service in self.services.items():
+            if not self.commandbots.get(name) or force:
+                service.create_commandbot()
 
     def create_clip(self):
         for service in self.services.values():
