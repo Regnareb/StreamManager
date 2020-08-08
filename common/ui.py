@@ -406,7 +406,7 @@ class StreamManager_UI(common.systray.Window):
             path, _filters = QtWidgets.QFileDialog.getSaveFileName()
         return path
 
-    def get_processpath(self):
+    def get_processpath(self, *args):
         path = self.create_filedialog()
         if path:
             self.gameslayout['stacked_processpath'].setText(path)
@@ -423,7 +423,7 @@ class StreamManager_UI(common.systray.Window):
                 self.gameslayout['table'].removeRow(index.row())
             self.load_appsettings()
 
-    def rename_process(self):
+    def rename_process(self, *args):
         current = self.gameslayout['table'].currentItem()
         new = current.text()
         old = current._process
@@ -1402,7 +1402,7 @@ class ManagerStreamThread(common.manager.ManageStream, QtCore.QThread):
             QtWidgets.QMessageBox.warning(None, "Can't Load Credentials File", "The JSON file must be wrong, check your file with a text editor or the person who sent it to you.", QtWidgets.QMessageBox.StandardButton.Ok)
 
     def load_config(self, path='', backup=True):
-        if not super().load_config(path, backup):
+        if super().load_config(path, backup) == False:
             msg ="The JSON file must be wrong, check your file with a text editor or validator."
             if backup:
                 msg += "The preferences have been reset, the old preferences are still available at this path:\n{}".format(self.config_filepath+'_error')
